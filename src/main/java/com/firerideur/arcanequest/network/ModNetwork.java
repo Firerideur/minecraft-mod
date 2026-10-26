@@ -1,0 +1,41 @@
+package com.firerideur.arcanequest.network;
+
+import com.firerideur.arcanequest.ArcaneQuest;
+import com.firerideur.arcanequest.stats.StatsCapability;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.network.ChannelBuilder;
+import net.minecraftforge.network.NetworkDirection;
+import net.minecraftforge.network.PacketDistributor;
+import net.minecraftforge.network.SimpleChannel;
+
+public final class ModNetwork {
+    private static final int PROTOCOL_VERSION = 1;
+
+    public static final SimpleChannel CHANNEL = ChannelBuilder.named(ArcaneQuest.id("main"))
+            .networkProtocolVersion(PROTOCOL_VERSION)
+            .simpleChannel();
+
+    private ModNetwork() {}
+
+    public static void register() {
+        CHANNEL.messageBuilder(SyncStatsPacket.class, NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(SyncStatsPacket::encode)
+                .decoder(SyncStatsPacket::decode)
+                .consumerMainThread(SyncStatsPacket::handle)
+                .add();
+        CHANNEL.messageBuilder(SpendPointPacket.class, NetworkDirection.PLAY_TO_SERVER)
+                .encoder(SpendPointPacket::encode)
+                .decoder(SpendPointPacket::decode)
+                .consumerMainThread(SpendPointPacket::handle)
+                .add();
+    }
+
+    public static void sync(ServerPlayer player) {
+        StatsCapability.get(player).ifPresent(stats ->
+                CHANNEL.send(new SyncStatsPacket(stats.save()), PacketDistributor.PLAYER.with(player)));
+    }
+
+    public static void sendToServer(Object packet) {
+        CHANNEL.send(packet, PacketDistributor.SERVER.noArg());
+    }
+}

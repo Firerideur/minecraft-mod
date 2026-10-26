@@ -1,0 +1,31 @@
+{
+  "key.categories.arcanequest": "Arcane Quest",
+  "key.arcanequest.open_stats": "Fiche de personnage",
+
+  "stat.arcanequest.strength": "Force",
+  "stat.arcanequest.strength.desc": "+0,5 dégât de mêlée par point",
+  "stat.arcanequest.vitality": "Vitalité",
+  "stat.arcanequest.vitality.desc": "+1 point de vie (½ cœur) par point",
+  "stat.arcanequest.agility": "Agilité",
+  "stat.arcanequest.agility.desc": "+0,5 % de vitesse de déplacement et +1 % de vitesse d'attaque par point",
+  "stat.arcanequest.intelligence": "Intelligence",
+  "stat.arcanequest.intelligence.desc": "Alimentera la magie (mana, puissance des sorts) — bientôt !",
+
+  "screen.arcanequest.stats": "Fiche de personnage",
+  "screen.arcanequest.level": "Niveau %s",
+  "screen.arcanequest.xp": "XP : %s / %s",
+  "screen.arcanequest.max_level": "Niveau maximum !",
+  "screen.arcanequest.points": "Points à répartir : %s",
+  "screen.arcanequest.bonus.strength": "+%s dégâts",
+  "screen.arcanequest.bonus.vitality": "+%s cœurs",
+  "screen.arcanequest.bonus.agility": "+%s %% vitesse",
+  "screen.arcanequest.bonus.intelligence": "(magie à venir)",
+
+  "hud.arcanequest.level": "Niv. %s",
+  "message.arcanequest.level_up": "Niveau supérieur ! Vous êtes niveau %s (+%s points de stats, touche K)",
+
+  "command.arcanequest.xp_added": "%s XP donnés à %s",
+  "command.arcanequest.level_set": "%s est maintenant niveau %s",
+  "command.arcanequest.reset": "Stats de %s réinitialisées",
+  "command.arcanequest.info": "%s — niveau %s, XP %s/%s, %s points libres"
+}

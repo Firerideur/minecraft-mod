@@ -1,0 +1,31 @@
+{
+  "key.categories.arcanequest": "Arcane Quest",
+  "key.arcanequest.open_stats": "Character sheet",
+
+  "stat.arcanequest.strength": "Strength",
+  "stat.arcanequest.strength.desc": "+0.5 melee damage per point",
+  "stat.arcanequest.vitality": "Vitality",
+  "stat.arcanequest.vitality.desc": "+1 health (½ heart) per point",
+  "stat.arcanequest.agility": "Agility",
+  "stat.arcanequest.agility.desc": "+0.5% movement speed and +1% attack speed per point",
+  "stat.arcanequest.intelligence": "Intelligence",
+  "stat.arcanequest.intelligence.desc": "Will power magic (mana, spell power) — coming soon!",
+
+  "screen.arcanequest.stats": "Character Sheet",
+  "screen.arcanequest.level": "Level %s",
+  "screen.arcanequest.xp": "XP: %s / %s",
+  "screen.arcanequest.max_level": "Max level!",
+  "screen.arcanequest.points": "Points to spend: %s",
+  "screen.arcanequest.bonus.strength": "+%s damage",
+  "screen.arcanequest.bonus.vitality": "+%s hearts",
+  "screen.arcanequest.bonus.agility": "+%s%% speed",
+  "screen.arcanequest.bonus.intelligence": "(magic coming soon)",
+
+  "hud.arcanequest.level": "Lv. %s",
+  "message.arcanequest.level_up": "Level up! You are now level %s (+%s stat points, press K)",
+
+  "command.arcanequest.xp_added": "Gave %s XP to %s",
+  "command.arcanequest.level_set": "%s is now level %s",
+  "command.arcanequest.reset": "Reset stats of %s",
+  "command.arcanequest.info": "%s — level %s, XP %s/%s, %s unspent points"
+}
