@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "arcanequest:raw_adamantite_block"
+    }
+  ],
+  "result": {
+    "id": "arcanequest:raw_adamantite",
+    "count": 9
+  }
+}

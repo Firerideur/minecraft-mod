@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    " BC",
+    " SB",
+    "S  "
+  ],
+  "key": {
+    "C": {
+      "item": "arcanequest:arcanite"
+    },
+    "B": {
+      "item": "minecraft:blaze_powder"
+    },
+    "S": {
+      "tag": "c:rods/wooden"
+    }
+  },
+  "result": {
+    "id": "arcanequest:fire_staff",
+    "count": 1
+  }
+}

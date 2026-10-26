@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    " BC",
+    " SB",
+    "S  "
+  ],
+  "key": {
+    "C": {
+      "item": "arcanequest:arcanite"
+    },
+    "B": {
+      "item": "minecraft:packed_ice"
+    },
+    "S": {
+      "tag": "c:rods/wooden"
+    }
+  },
+  "result": {
+    "id": "arcanequest:frost_staff",
+    "count": 1
+  }
+}

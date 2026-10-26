@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "arcanequest:fire_staff",
+    "arcanequest:frost_staff",
+    "arcanequest:healing_staff",
+    "arcanequest:arcane_staff",
+    "arcanequest:lightning_staff",
+    "arcanequest:archmage_staff"
+  ]
+}

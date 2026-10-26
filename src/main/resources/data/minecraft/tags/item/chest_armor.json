@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "arcanequest:mithril_chestplate",
+    "arcanequest:arcanite_chestplate",
+    "arcanequest:adamantite_chestplate"
+  ]
+}

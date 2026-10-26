@@ -1,0 +1,12 @@
+{
+  "replace": false,
+  "values": [
+    "arcanequest:mithril_ore",
+    "arcanequest:deepslate_mithril_ore",
+    "arcanequest:arcanite_ore",
+    "arcanequest:deepslate_arcanite_ore",
+    "arcanequest:mithril_block",
+    "arcanequest:raw_mithril_block",
+    "arcanequest:arcanite_block"
+  ]
+}

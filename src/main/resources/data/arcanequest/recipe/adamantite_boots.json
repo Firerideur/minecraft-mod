@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "X X",
+    "X X"
+  ],
+  "key": {
+    "X": {
+      "item": "arcanequest:adamantite_ingot"
+    }
+  },
+  "result": {
+    "id": "arcanequest:adamantite_boots",
+    "count": 1
+  }
+}

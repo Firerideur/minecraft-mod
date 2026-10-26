@@ -1,0 +1,6 @@
+{
+  "type": "forge:add_features",
+  "biomes": "#minecraft:is_overworld",
+  "features": "arcanequest:ore_arcanite",
+  "step": "underground_ores"
+}

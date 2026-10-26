@@ -1,7 +1,14 @@
 package com.firerideur.arcanequest;
 
 import com.firerideur.arcanequest.client.ClientSetup;
+import com.firerideur.arcanequest.mobs.MobEvents;
 import com.firerideur.arcanequest.network.ModNetwork;
+import com.firerideur.arcanequest.registry.ModArmorMaterials;
+import com.firerideur.arcanequest.registry.ModBlocks;
+import com.firerideur.arcanequest.registry.ModCreativeTabs;
+import com.firerideur.arcanequest.registry.ModEntities;
+import com.firerideur.arcanequest.registry.ModItems;
+import com.firerideur.arcanequest.stats.ClassEvents;
 import com.firerideur.arcanequest.stats.StatsEvents;
 import com.mojang.logging.LogUtils;
 import net.minecraft.resources.ResourceLocation;
@@ -22,10 +29,20 @@ public class ArcaneQuest {
     public ArcaneQuest(FMLJavaModLoadingContext context) {
         IEventBus modEventBus = context.getModEventBus();
 
-        modEventBus.addListener(this::commonSetup);
+        // Blocks first: they also register their block items
+        ModBlocks.BLOCKS.register(modEventBus);
+        ModItems.ITEMS.register(modEventBus);
+        ModArmorMaterials.ARMOR_MATERIALS.register(modEventBus);
+        ModEntities.ENTITIES.register(modEventBus);
+        ModCreativeTabs.TABS.register(modEventBus);
 
-        // Game events (kills, login, respawn, commands...)
+        modEventBus.addListener(this::commonSetup);
+        modEventBus.addListener(ModEntities::registerAttributes);
+
+        // Game events (kills, login, respawn, commands, mobs...)
         MinecraftForge.EVENT_BUS.register(StatsEvents.class);
+        MinecraftForge.EVENT_BUS.register(ClassEvents.class);
+        MinecraftForge.EVENT_BUS.register(MobEvents.class);
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
             ClientSetup.init(modEventBus);

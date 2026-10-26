@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "ingredient": [
+    {
+      "item": "arcanequest:arcanite_ore"
+    },
+    {
+      "item": "arcanequest:deepslate_arcanite_ore"
+    }
+  ],
+  "result": {
+    "id": "arcanequest:arcanite"
+  },
+  "experience": 1.0,
+  "cookingtime": 200
+}

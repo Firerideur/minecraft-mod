@@ -6,7 +6,7 @@ import net.minecraftforge.common.capabilities.AutoRegisterCapability;
 import java.util.Arrays;
 
 /**
- * RPG data of a player: level, experience, unspent points and allocated stats.
+ * RPG data of a player: level, experience, unspent points, allocated stats, class and mana.
  * The same class is used on the server (authoritative) and on the client (synced copy).
  */
 @AutoRegisterCapability
@@ -18,6 +18,8 @@ public class PlayerStats {
     private long xp;
     private int points;
     private final int[] stats = new int[Stat.values().length];
+    private PlayerClass playerClass = PlayerClass.NONE;
+    private float mana;
 
     /** Experience needed to go from {@code level} to {@code level + 1}. */
     public static long xpForNextLevel(int level) {
@@ -38,6 +40,28 @@ public class PlayerStats {
 
     public int get(Stat stat) {
         return stats[stat.ordinal()];
+    }
+
+    public PlayerClass getPlayerClass() {
+        return playerClass;
+    }
+
+    public void setPlayerClass(PlayerClass playerClass) {
+        this.playerClass = playerClass;
+    }
+
+    public float getMana() {
+        return mana;
+    }
+
+    public void setMana(float mana) {
+        this.mana = Math.max(0, mana);
+    }
+
+    /** Multiplier applied to spell damage and healing. */
+    public float spellPower() {
+        float power = 1.0F + 0.05F * get(Stat.INTELLIGENCE);
+        return playerClass == PlayerClass.MAGE ? power * 1.25F : power;
     }
 
     public boolean isMaxLevel() {
@@ -94,6 +118,8 @@ public class PlayerStats {
         xp = other.xp;
         points = other.points;
         System.arraycopy(other.stats, 0, stats, 0, stats.length);
+        playerClass = other.playerClass;
+        mana = other.mana;
     }
 
     public CompoundTag save() {
@@ -104,6 +130,8 @@ public class PlayerStats {
         for (Stat stat : Stat.values()) {
             tag.putInt(stat.key(), get(stat));
         }
+        tag.putString("class", playerClass.key());
+        tag.putFloat("mana", mana);
         return tag;
     }
 
@@ -114,5 +142,7 @@ public class PlayerStats {
         for (Stat stat : Stat.values()) {
             stats[stat.ordinal()] = tag.getInt(stat.key());
         }
+        playerClass = PlayerClass.byKey(tag.getString("class"));
+        mana = tag.getFloat("mana");
     }
 }

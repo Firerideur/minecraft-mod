@@ -1,7 +1,10 @@
 package com.firerideur.arcanequest.client;
 
+import com.firerideur.arcanequest.magic.Mana;
+import com.firerideur.arcanequest.network.ChooseClassPacket;
 import com.firerideur.arcanequest.network.ModNetwork;
 import com.firerideur.arcanequest.network.SpendPointPacket;
+import com.firerideur.arcanequest.stats.PlayerClass;
 import com.firerideur.arcanequest.stats.PlayerStats;
 import com.firerideur.arcanequest.stats.Stat;
 import com.firerideur.arcanequest.stats.StatEffects;
@@ -14,14 +17,17 @@ import net.minecraft.network.chat.Component;
 import java.util.EnumMap;
 import java.util.Map;
 
-/** Character sheet: level, experience and stat allocation. Opened with K by default. */
+/** Character sheet: level, experience, class choice and stat allocation. Opened with K by default. */
 public class StatsScreen extends Screen {
     private static final int PANEL_WIDTH = 240;
-    private static final int PANEL_HEIGHT = 170;
+    private static final int PANEL_HEIGHT = 214;
     private static final int ROW_HEIGHT = 24;
     private static final int ROWS_TOP = 62;
 
+    private static final int CLASS_TOP = 166;
+
     private final Map<Stat, Button> plusButtons = new EnumMap<>(Stat.class);
+    private final Map<PlayerClass, Button> classButtons = new EnumMap<>(PlayerClass.class);
     private int left;
     private int top;
 
@@ -42,6 +48,18 @@ public class StatsScreen extends Screen {
                     .build();
             plusButtons.put(stat, addRenderableWidget(button));
         }
+        classButtons.clear();
+        PlayerClass[] choices = {PlayerClass.WARRIOR, PlayerClass.MAGE, PlayerClass.ARCHER, PlayerClass.ASSASSIN};
+        int buttonWidth = (PANEL_WIDTH - 24 - 3 * 4) / 4;
+        for (int i = 0; i < choices.length; i++) {
+            PlayerClass playerClass = choices[i];
+            Button button = Button.builder(playerClass.displayName(),
+                            b -> ModNetwork.sendToServer(new ChooseClassPacket(playerClass.ordinal())))
+                    .bounds(left + 12 + i * (buttonWidth + 4), top + CLASS_TOP + 16, buttonWidth, 20)
+                    .tooltip(Tooltip.create(playerClass.description()))
+                    .build();
+            classButtons.put(playerClass, addRenderableWidget(button));
+        }
         updateButtons();
     }
 
@@ -54,6 +72,8 @@ public class StatsScreen extends Screen {
     private void updateButtons() {
         boolean canSpend = ClientStats.get().getPoints() > 0;
         plusButtons.values().forEach(button -> button.active = canSpend);
+        boolean noClass = ClientStats.get().getPlayerClass() == PlayerClass.NONE;
+        classButtons.values().forEach(button -> button.visible = noClass);
     }
 
     @Override
@@ -73,6 +93,22 @@ public class StatsScreen extends Screen {
 
         Component points = Component.translatable("screen.arcanequest.points", stats.getPoints());
         graphics.drawString(font, points, left + 12, top + 48, stats.getPoints() > 0 ? 0x7CFC00 : 0xAAAAAA);
+        if (minecraft != null && minecraft.player != null) {
+            Component mana = Component.translatable("hud.arcanequest.mana", (int) stats.getMana(),
+                    (int) Mana.max(minecraft.player, stats));
+            graphics.drawString(font, mana, left + PANEL_WIDTH - 12 - font.width(mana), top + 48, 0x6FA8FF);
+        }
+
+        PlayerClass playerClass = stats.getPlayerClass();
+        if (playerClass == PlayerClass.NONE) {
+            graphics.drawString(font, Component.translatable("screen.arcanequest.choose_class"), left + 12,
+                    top + CLASS_TOP + 2, 0x55FFFF);
+        } else {
+            graphics.drawString(font, Component.translatable("screen.arcanequest.class", playerClass.displayName()),
+                    left + 12, top + CLASS_TOP + 2, playerClass.color());
+            graphics.drawWordWrap(font, playerClass.description(), left + 12, top + CLASS_TOP + 16,
+                    PANEL_WIDTH - 24, 0xAAAAAA);
+        }
 
         for (Stat stat : Stat.values()) {
             int y = top + ROWS_TOP + stat.ordinal() * ROW_HEIGHT + 2;
@@ -97,7 +133,8 @@ public class StatsScreen extends Screen {
                     format(value * StatEffects.HEALTH_PER_VITALITY / 2.0));
             case AGILITY -> Component.translatable("screen.arcanequest.bonus.agility",
                     format(value * StatEffects.SPEED_PER_AGILITY * 100));
-            case INTELLIGENCE -> Component.translatable("screen.arcanequest.bonus.intelligence");
+            case INTELLIGENCE -> Component.translatable("screen.arcanequest.bonus.intelligence",
+                    format(value * Mana.MANA_PER_INTELLIGENCE), value * 5);
         };
     }
 

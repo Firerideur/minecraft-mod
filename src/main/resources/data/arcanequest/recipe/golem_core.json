@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "AIA",
+    "IMI",
+    "AIA"
+  ],
+  "key": {
+    "A": {
+      "item": "arcanequest:adamantite_ingot"
+    },
+    "I": {
+      "item": "minecraft:iron_block"
+    },
+    "M": {
+      "item": "arcanequest:mithril_block"
+    }
+  },
+  "result": {
+    "id": "arcanequest:golem_core",
+    "count": 1
+  }
+}

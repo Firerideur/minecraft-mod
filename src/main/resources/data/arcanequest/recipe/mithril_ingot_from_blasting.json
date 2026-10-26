@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:blasting",
+  "category": "misc",
+  "ingredient": [
+    {
+      "item": "arcanequest:raw_mithril"
+    },
+    {
+      "item": "arcanequest:mithril_ore"
+    },
+    {
+      "item": "arcanequest:deepslate_mithril_ore"
+    }
+  ],
+  "result": {
+    "id": "arcanequest:mithril_ingot"
+  },
+  "experience": 1.0,
+  "cookingtime": 100
+}

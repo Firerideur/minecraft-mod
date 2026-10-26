@@ -1,0 +1,6 @@
+{
+  "type": "forge:add_features",
+  "biomes": "#minecraft:is_overworld",
+  "features": "arcanequest:ore_mithril",
+  "step": "underground_ores"
+}

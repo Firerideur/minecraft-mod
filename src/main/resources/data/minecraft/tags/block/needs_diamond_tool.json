@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "arcanequest:adamantite_ore",
+    "arcanequest:adamantite_block",
+    "arcanequest:raw_adamantite_block"
+  ]
+}

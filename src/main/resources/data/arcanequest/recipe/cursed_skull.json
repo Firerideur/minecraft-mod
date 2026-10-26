@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "BMB",
+    "MCM",
+    "BMB"
+  ],
+  "key": {
+    "B": {
+      "item": "minecraft:bone_block"
+    },
+    "M": {
+      "item": "arcanequest:mithril_ingot"
+    },
+    "C": {
+      "item": "arcanequest:arcanite"
+    }
+  },
+  "result": {
+    "id": "arcanequest:cursed_skull",
+    "count": 1
+  }
+}

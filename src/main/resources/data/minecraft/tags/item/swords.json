@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "arcanequest:mithril_sword",
+    "arcanequest:adamantite_sword",
+    "arcanequest:kings_blade",
+    "arcanequest:adamantite_hammer"
+  ]
+}

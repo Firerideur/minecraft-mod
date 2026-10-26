@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:blasting",
+  "category": "misc",
+  "ingredient": [
+    {
+      "item": "arcanequest:raw_adamantite"
+    },
+    {
+      "item": "arcanequest:adamantite_ore"
+    }
+  ],
+  "result": {
+    "id": "arcanequest:adamantite_ingot"
+  },
+  "experience": 2.0,
+  "cookingtime": 100
+}

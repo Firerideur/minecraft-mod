@@ -1,6 +1,8 @@
 package com.firerideur.arcanequest.stats;
 
 import com.firerideur.arcanequest.command.ArcaneQuestCommand;
+import com.firerideur.arcanequest.mobs.MobLevels;
+import com.firerideur.arcanequest.magic.Mana;
 import com.firerideur.arcanequest.network.ModNetwork;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -41,12 +43,20 @@ public final class StatsEvents {
     @SubscribeEvent
     public static void onLogin(PlayerEvent.PlayerLoggedInEvent event) {
         refresh(event.getEntity());
+        StatsCapability.get(event.getEntity()).ifPresent(stats -> {
+            if (stats.getPlayerClass() == PlayerClass.NONE) {
+                event.getEntity().sendSystemMessage(Component.translatable("message.arcanequest.choose_class")
+                        .withStyle(ChatFormatting.AQUA));
+            }
+        });
     }
 
     @SubscribeEvent
     public static void onRespawn(PlayerEvent.PlayerRespawnEvent event) {
-        refresh(event.getEntity());
-        event.getEntity().setHealth(event.getEntity().getMaxHealth());
+        Player player = event.getEntity();
+        StatsCapability.get(player).ifPresent(stats -> stats.setMana(Mana.max(player, stats)));
+        refresh(player);
+        player.setHealth(player.getMaxHealth());
     }
 
     @SubscribeEvent
@@ -61,18 +71,13 @@ public final class StatsEvents {
             return;
         }
         if (event.getSource().getEntity() instanceof ServerPlayer player) {
-            addXp(player, xpForKill(victim));
+            addXp(player, MobLevels.xpForKill(victim));
         }
     }
 
     @SubscribeEvent
     public static void registerCommands(RegisterCommandsEvent event) {
         ArcaneQuestCommand.register(event.getDispatcher());
-    }
-
-    /** Experience given for killing an entity: tougher mobs give more. */
-    public static long xpForKill(LivingEntity victim) {
-        return Math.max(1, Math.round(victim.getMaxHealth() / 2.0));
     }
 
     public static void addXp(ServerPlayer player, long amount) {

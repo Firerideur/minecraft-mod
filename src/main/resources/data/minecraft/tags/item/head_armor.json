@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "arcanequest:mithril_helmet",
+    "arcanequest:arcanite_helmet",
+    "arcanequest:adamantite_helmet"
+  ]
+}

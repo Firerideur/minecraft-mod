@@ -1,6 +1,7 @@
 package com.firerideur.arcanequest.command;
 
 import com.firerideur.arcanequest.network.ModNetwork;
+import com.firerideur.arcanequest.stats.PlayerClass;
 import com.firerideur.arcanequest.stats.PlayerStats;
 import com.firerideur.arcanequest.stats.StatEffects;
 import com.firerideur.arcanequest.stats.StatsCapability;
@@ -21,6 +22,7 @@ import java.util.function.Consumer;
  *     <li>/aq xp add &lt;amount&gt; [player]</li>
  *     <li>/aq level set &lt;level&gt; [player]</li>
  *     <li>/aq reset [player] — refunds every stat point</li>
+ *     <li>/aq class &lt;warrior|mage|archer|assassin|none&gt; [player] — none lets the player pick again</li>
  *     <li>/aq info [player]</li>
  * </ul>
  */
@@ -53,6 +55,15 @@ public final class ArcaneQuestCommand {
                         .then(Commands.argument("player", EntityArgument.player())
                                 .executes(ctx -> info(ctx.getSource(), EntityArgument.getPlayer(ctx, "player"))))));
 
+        var classCommand = Commands.literal("class");
+        for (PlayerClass playerClass : PlayerClass.values()) {
+            classCommand.then(Commands.literal(playerClass.key())
+                    .executes(ctx -> setClass(ctx.getSource(), ctx.getSource().getPlayerOrException(), playerClass))
+                    .then(Commands.argument("player", EntityArgument.player())
+                            .executes(ctx -> setClass(ctx.getSource(), EntityArgument.getPlayer(ctx, "player"), playerClass))));
+        }
+        root.addChild(classCommand.build());
+
         dispatcher.register(Commands.literal("aq").requires(source -> source.hasPermission(2)).redirect(root));
     }
 
@@ -71,6 +82,13 @@ public final class ArcaneQuestCommand {
     private static int reset(CommandSourceStack source, ServerPlayer player) {
         modify(player, PlayerStats::resetStats);
         source.sendSuccess(() -> Component.translatable("command.arcanequest.reset", player.getDisplayName()), true);
+        return 1;
+    }
+
+    private static int setClass(CommandSourceStack source, ServerPlayer player, PlayerClass playerClass) {
+        modify(player, stats -> stats.setPlayerClass(playerClass));
+        source.sendSuccess(() -> Component.translatable("command.arcanequest.class_set", player.getDisplayName(),
+                playerClass.displayName()), true);
         return 1;
     }
 

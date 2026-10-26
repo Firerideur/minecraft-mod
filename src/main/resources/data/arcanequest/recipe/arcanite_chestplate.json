@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "X X",
+    "XXX",
+    "XXX"
+  ],
+  "key": {
+    "X": {
+      "item": "arcanequest:arcanite"
+    }
+  },
+  "result": {
+    "id": "arcanequest:arcanite_chestplate",
+    "count": 1
+  }
+}
