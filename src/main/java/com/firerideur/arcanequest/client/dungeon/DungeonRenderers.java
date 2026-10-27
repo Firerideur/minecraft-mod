@@ -83,7 +83,7 @@ public final class DungeonRenderers {
         event.registerEntityRenderer(ModEntities.DEMON_KNIGHT.get(), c -> new DungeonMobRenderer<>(c,
                 new BipedMobModel<>(c.bakeLayer(DEMON_KNIGHT), Style.MELEE), "demon_knight", 0.6F, 1.1F));
         event.registerEntityRenderer(ModEntities.STEELFANG_WOLF.get(), c -> new DungeonMobRenderer<>(c,
-                new QuadMobModel<>(c.bakeLayer(STEELFANG_WOLF)), "steelfang_wolf", 0.6F, 1.0F));
+                new QuadMobModel<>(c.bakeLayer(STEELFANG_WOLF)), "steelfang_wolf", 0.8F, 1.4F));
         event.registerEntityRenderer(ModEntities.ANT_SOLDIER.get(), c -> new DungeonMobRenderer<>(c,
                 new QuadMobModel<>(c.bakeLayer(ANT_SOLDIER)), "ant_soldier", 0.7F, 1.0F));
         event.registerEntityRenderer(ModEntities.TROLL.get(), c -> new DungeonMobRenderer<>(c,

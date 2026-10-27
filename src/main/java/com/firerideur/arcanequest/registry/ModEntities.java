@@ -52,7 +52,7 @@ public final class ModEntities {
 
     public static final RegistryObject<EntityType<DungeonMobs.SteelfangWolf>> STEELFANG_WOLF = ENTITIES.register("steelfang_wolf",
             () -> EntityType.Builder.of(DungeonMobs.SteelfangWolf::new, MobCategory.MONSTER)
-                    .sized(0.9F, 1.0F).clientTrackingRange(8).build("steelfang_wolf"));
+                    .sized(1.2F, 1.4F).clientTrackingRange(8).build("steelfang_wolf"));
 
     public static final RegistryObject<EntityType<DungeonMobs.IceElf>> ICE_ELF = ENTITIES.register("ice_elf",
             () -> EntityType.Builder.of(DungeonMobs.IceElf::new, MobCategory.MONSTER)

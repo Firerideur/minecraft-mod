@@ -270,7 +270,7 @@ public final class FantasyMobs {
         public void aiStep() {
             super.aiStep();
             if (level().isClientSide() && random.nextInt(3) == 0) {
-                level().addParticle(ParticleTypes.SOUL_FIRE_FLAME, getRandomX(0.5), getRandomY(), getRandomZ(0.5), 0, 0.02, 0);
+                level().addParticle(ParticleTypes.WITCH, getRandomX(0.5), getRandomY(), getRandomZ(0.5), 0, 0.02, 0);
             }
         }
 

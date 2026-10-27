@@ -273,8 +273,10 @@ def demon_parts():
     head = find(root, "head")
     ht = a["head_top"]
     head.children += [
-        Part("right_horn", (-3.5, ht + 1, 0), [Cube("horn", (-4.5, ht - 4, -1), (2, 5, 2))], rot=(0.2, 0, -0.45)),
-        Part("left_horn", (3.5, ht + 1, 0), [Cube("horn", (2.5, ht - 4, -1), (2, 5, 2), True)], rot=(0.2, 0, 0.45)),
+        Part("right_horn", (-3.5, ht + 1, 0), [Cube("horn", (-6.5, ht - 1, -1), (4, 2, 2)),
+                                               Cube("horn_tip", (-6.5, ht - 5, -1), (2, 4, 2))], rot=(0.15, 0, -0.2)),
+        Part("left_horn", (3.5, ht + 1, 0), [Cube("horn", (2.5, ht - 1, -1), (4, 2, 2), True),
+                                             Cube("horn_tip", (4.5, ht - 5, -1), (2, 4, 2), True)], rot=(0.15, 0, 0.2)),
     ]
     body = find(root, "body")
     body.children.append(Part("cape", (0, a["body_top"] + 0.5, 2.5),
@@ -294,22 +296,26 @@ def demon_parts():
 
 
 def demon_details(tex, f):
-    if tex in ("head", "body", "arm", "leg", "pauldron"):
-        # Glowing cracks in the black armor
+    if tex in ("head", "body", "arm", "leg", "pauldron") and f.side:
+        # Glowing lava veins running down the black armor, with a few branches
         for i in range(1 if f.w < 6 else 2):
-            x = int(f.n(i, 7, 3) * f.w)
+            x = int((i + 0.5) * f.w / (1 if f.w < 6 else 2))
             for y in range(f.h):
-                if f.n(x, y, 11) > 0.35:
-                    f.put(x, y, mix(EMBER, (120, 20, 10), 0.4), rgba(EMBER, 150))
-                x = max(0, min(f.w - 1, x + (1 if f.n(y, i, 5) > 0.6 else -1 if f.n(y, i, 5) < 0.3 else 0)))
+                f.put(x, y, mix(EMBER, (255, 200, 90), 0.25), rgba(EMBER, 190))
+                if f.n(y, i, 23) > 0.8 and 0 < x < f.w - 1:
+                    bx = x + (1 if f.n(y, i, 29) > 0.5 else -1)
+                    f.put(bx, y, mix(EMBER, (140, 30, 10), 0.4), rgba(EMBER, 130))
+                drift = f.n(y, i, 5)
+                x = max(0, min(f.w - 1, x + (1 if drift > 0.75 else -1 if drift < 0.25 else 0)))
     if tex == "head" and f.name == "north":
         for x in range(1, 7):
             f.put(x, 3, (10, 6, 8))
         eyes(f, 3, (2, 5), (255, 150, 40), 255)
         for x in range(2, 6):
             f.put(x, 5, (10, 6, 8))
-    if tex == "horn":
-        f.fill(lambda x, y: mix((40, 30, 30), (200, 190, 170), 1 - y / max(1, f.h - 1)))
+    if tex in ("horn", "horn_tip"):
+        f.fill(lambda x, y: mix((40, 30, 30), (200, 190, 170), 1 - y / max(1, f.h - 1)) if tex == "horn_tip"
+               else (50, 40, 38))
     if tex == "sword_blade":
         f.fill(lambda x, y: mix((90, 20, 20), EMBER, f.n(x, y)))
         for y in range(f.h):
@@ -322,7 +328,7 @@ def demon_details(tex, f):
                 f.put(x, y, CLEAR)
 
 
-DEMON_COLORS = {"head": DEMON_IRON, "body": DEMON_IRON, "arm": DEMON_IRON, "leg": DEMON_IRON, "pauldron": (60, 46, 56),
+DEMON_COLORS = {"horn_tip": (120, 100, 90), "head": DEMON_IRON, "body": DEMON_IRON, "arm": DEMON_IRON, "leg": DEMON_IRON, "pauldron": (60, 46, 56),
                 "horn": (40, 30, 30), "cape": (100, 14, 20), "sword_grip": (40, 30, 30), "sword_guard": (90, 70, 40),
                 "sword_blade": (140, 30, 20)}
 
@@ -343,8 +349,9 @@ def wolf_parts():
         Cube("snout", (-2, 9, -16), (4, 3, 3)),
         Cube("ear", (-3, 4, -11), (2, 2, 1)),
         Cube("ear", (1, 4, -11), (2, 2, 1), True),
-        Cube("fang", (-1.5, 12, -15.5), (1, 1, 1)),
-        Cube("fang", (0.5, 12, -15.5), (1, 1, 1)),
+        Cube("fang", (-1.5, 12, -15.5), (1, 2, 1)),
+        Cube("fang", (0.5, 12, -15.5), (1, 2, 1)),
+        Cube("lower_jaw", (-1.5, 13, -15.5), (3, 1, 3)),
     ])
     tail = Part("tail", (0, 9, 7), [Cube("tail", (-1, 8, 7), (2, 2, 8))], rot=(-0.6, 0, 0))
     body = Part("body", (0, 12, 0), [
@@ -352,6 +359,11 @@ def wolf_parts():
         Cube("mane", (-4.5, 7, -8), (9, 9, 5)),
         Cube("plate", (-1, 6, -4), (2, 2, 3)),
         Cube("plate", (-1, 6, 1), (2, 2, 3)),
+        Cube("spike", (-3, 4, -7), (1, 3, 1)),
+        Cube("spike", (2, 4, -7), (1, 3, 1)),
+        Cube("spike", (-0.5, 4, -6), (1, 3, 1)),
+        Cube("spike", (-0.5, 4, -1), (1, 3, 1)),
+        Cube("spike", (-0.5, 4, 4), (1, 3, 1)),
     ], [head, tail])
     return Part("base", (0, 0, 0), [], [body] + legs)
 
@@ -359,6 +371,10 @@ def wolf_parts():
 def wolf_details(tex, f):
     if tex == "head" and f.name == "north":
         eyes(f, 2, (1, 5), (255, 50, 40), 230)
+    if tex == "spike":
+        f.fill(lambda x, y: mix((200, 205, 215), (90, 92, 100), y / max(1, f.h - 1)))
+    if tex == "lower_jaw":
+        f.fill(lambda x, y: (90, 20, 24) if f.name == "up" else mul(FUR, 0.8))
     if tex in ("plate", "fang"):
         material(STEEL, grain=0.08, gradient=0.4)(f)
     if tex in ("body", "mane") and f.side:
@@ -371,7 +387,7 @@ def wolf_details(tex, f):
             f.put(f.w // 2, y, STEEL)
 
 
-WOLF_COLORS = {"head": FUR, "snout": mul(FUR, 0.8), "ear": mul(FUR, 0.9), "fang": STEEL, "tail": FUR, "body": FUR,
+WOLF_COLORS = {"spike": STEEL, "lower_jaw": mul(FUR, 0.8), "head": FUR, "snout": mul(FUR, 0.8), "ear": mul(FUR, 0.9), "fang": STEEL, "tail": FUR, "body": FUR,
                "mane": mul(FUR, 0.8), "plate": STEEL, "leg": mul(FUR, 0.85)}
 
 
@@ -419,7 +435,7 @@ ANT_COLORS = {"head": CHITIN, "mandible": (40, 20, 16), "antenna": mul(CHITIN, 0
 # ---------------------------------------------------------------------------
 # Troll
 # ---------------------------------------------------------------------------
-TROLL_SKIN = (112, 126, 100)
+TROLL_SKIN = (118, 110, 130)
 
 
 def troll_parts():
@@ -434,9 +450,12 @@ def troll_parts():
     body = find(root, "body")
     body.cubes += [Cube("hump", (-4, a["body_top"] - 1, 2.5), (8, 4, 3)),
                    Cube("loincloth", (-5, a["leg_top"] - 2, -4), (10, 4, 1))]
-    right = find(root, "right_arm")
-    hx, hy = -a["arm_x"], a["hand_y"]
-    right.children.append(Part("club", (hx, hy, 0), [Cube("club", (hx - 1.5, hy - 1.5, -11), (3, 3, 10))]))
+    for side, sign in (("right", -1), ("left", 1)):
+        arm = find(root, side + "_arm")
+        x = sign * a["arm_x"]
+        arm.cubes.append(Cube("fist", (x - 3, a["hand_y"] - 3, -3), (6, 5, 6), sign > 0))
+        arm.cubes.append(Cube("moss", (x - 3, a["body_top"] - 1.5, -3), (6, 2, 6), sign > 0))
+    head.cubes.append(Cube("brow", (-4, ht + 1, -4.5), (8, 2, 2)))
     return root
 
 
@@ -445,11 +464,16 @@ def troll_details(tex, f):
         eyes(f, 2, (1, 5), (255, 200, 60), 200)
         for x in range(1, 6):
             f.put(x, 5, (40, 36, 30))
-    if tex in ("body", "arm", "leg", "head", "hump") and f.side:
+    if tex in ("body", "arm", "leg", "head", "hump", "fist", "brow") and f.side:
         for y in range(f.h):
             for x in range(f.w):
-                if f.n(x, y, 21) > 0.82:
-                    f.put(x, y, (70, 100, 50))
+                if f.n(x, y, 21) > 0.8:
+                    f.put(x, y, (82, 118, 58))
+    if tex == "moss" or (tex in ("hump", "head") and f.name == "up"):
+        f.fill(lambda x, y: mix((70, 110, 50), (110, 150, 70), f.n(x, y)))
+    if tex == "fist" and f.name == "north":
+        for x in range(f.w):
+            f.put(x, 1, mul(TROLL_SKIN, 0.6))
     if tex == "club":
         f.fill(lambda x, y: mix((80, 56, 34), (110, 80, 50), f.n(x, y)))
         if f.name == "north":
@@ -459,7 +483,7 @@ def troll_details(tex, f):
         f.fill(lambda x, y: (232, 224, 196))
 
 
-TROLL_COLORS = {"head": TROLL_SKIN, "nose": mul(TROLL_SKIN, 0.85), "tusk": (232, 224, 196), "body": TROLL_SKIN,
+TROLL_COLORS = {"fist": mul(TROLL_SKIN, 0.95), "moss": (82, 118, 58), "brow": mul(TROLL_SKIN, 0.85), "head": TROLL_SKIN, "nose": mul(TROLL_SKIN, 0.85), "tusk": (232, 224, 196), "body": TROLL_SKIN,
                 "hump": mul(TROLL_SKIN, 0.9), "loincloth": (120, 90, 60), "arm": TROLL_SKIN, "leg": mul(TROLL_SKIN, 0.85),
                 "club": (90, 64, 40)}
 
@@ -481,11 +505,16 @@ def minotaur_parts():
         Cube("ear", (3, ht + 2, -0.5), (2, 1, 2), True),
     ]
     head.children += [
-        Part("right_horn", (-3.5, ht + 1, 0), [Cube("horn", (-7.5, ht, -1), (4, 2, 2)),
-                                               Cube("horn_tip", (-8.5, ht - 2, -1), (2, 3, 2))]),
-        Part("left_horn", (3.5, ht + 1, 0), [Cube("horn", (3.5, ht, -1), (4, 2, 2), True),
-                                             Cube("horn_tip", (6.5, ht - 2, -1), (2, 3, 2), True)]),
+        Part("right_horn", (-3.5, ht + 1, 0), [Cube("horn", (-8.5, ht, -1.5), (5, 3, 3)),
+                                               Cube("horn_mid", (-10.5, ht - 3, -1.5), (3, 4, 3)),
+                                               Cube("horn_tip", (-10, ht - 6, -1), (2, 3, 2))]),
+        Part("left_horn", (3.5, ht + 1, 0), [Cube("horn", (3.5, ht, -1.5), (5, 3, 3), True),
+                                             Cube("horn_mid", (7.5, ht - 3, -1.5), (3, 4, 3), True),
+                                             Cube("horn_tip", (8, ht - 6, -1), (2, 3, 2), True)]),
     ]
+    body = find(root, "body")
+    body.cubes += [Cube("strap", (-5.5, a["body_top"], -3.5), (11, 2, 7)),
+                   Cube("belt", (-5.5, a["leg_top"] - 2, -3.5), (11, 3, 7))]
     right = find(root, "right_arm")
     hx, hy = -a["arm_x"], a["hand_y"]
     right.children.append(Part("axe", (hx, hy, 0), [
@@ -506,8 +535,11 @@ def minotaur_details(tex, f):
         for y in range(f.h - 3, f.h):
             for x in range(f.w):
                 f.put(x, y, (40, 34, 30))
-    if tex in ("horn", "horn_tip"):
-        f.fill(lambda x, y: mix(IVORY, (60, 50, 40), 0.15 if tex == "horn_tip" else 0.0))
+    if tex in ("horn", "horn_mid", "horn_tip"):
+        dark = {"horn": 0.0, "horn_mid": 0.15, "horn_tip": 0.45}[tex]
+        f.fill(lambda x, y: mix(IVORY, (50, 40, 32), dark + 0.1 * f.n(x, y)))
+    if tex == "strap":
+        f.fill(lambda x, y: (70, 46, 28) if (x + y) % 6 else (170, 150, 90))
     if tex == "double_blade":
         f.fill(lambda x, y: mix((180, 180, 186), (110, 110, 116), abs(y - f.h / 2) / (f.h / 2)))
     if tex == "body" and f.name == "north":
@@ -515,7 +547,7 @@ def minotaur_details(tex, f):
             f.put(f.w // 2, y, mul(BULL, 0.75))
 
 
-MINOTAUR_COLORS = {"head": BULL, "snout": mul(BULL, 1.15), "ear": BULL, "horn": IVORY, "horn_tip": IVORY,
+MINOTAUR_COLORS = {"horn_mid": IVORY, "strap": (70, 46, 28), "belt": (60, 40, 24), "head": BULL, "snout": mul(BULL, 1.15), "ear": BULL, "horn": IVORY, "horn_tip": IVORY,
                    "body": mul(BULL, 0.95), "arm": BULL, "leg": mul(BULL, 0.85), "axe_handle": WOOD,
                    "double_blade": (160, 160, 165)}
 
@@ -534,8 +566,8 @@ def gargoyle_parts():
     body = find(root, "body")
     bt = a["body_top"]
     body.children += [
-        Part("right_wing", (-1.5, bt + 1, 2.5), [Cube("wing", (-11.5, bt - 3, 2.5), (10, 13, 1))], rot=(0, 0.45, 0)),
-        Part("left_wing", (1.5, bt + 1, 2.5), [Cube("wing", (1.5, bt - 3, 2.5), (10, 13, 1), True)], rot=(0, -0.45, 0)),
+        Part("right_wing", (-1.5, bt + 1, 2.5), [Cube("wing", (-15.5, bt - 6, 2.5), (14, 17, 1))], rot=(0, 0.6, 0.15)),
+        Part("left_wing", (1.5, bt + 1, 2.5), [Cube("wing", (1.5, bt - 6, 2.5), (14, 17, 1), True)], rot=(0, -0.6, -0.15)),
     ]
     return root
 
@@ -547,7 +579,7 @@ def gargoyle_details(tex, f):
             if f.n(crack_x, y, 9) > 0.45:
                 f.put(crack_x, y, mul(STONE, 0.55))
     if tex == "head" and f.name == "north":
-        eyes(f, 3, (1, 5), (255, 40, 30), 255)
+        eyes(f, 3, (1, 5), (190, 90, 255), 255)
         for x in range(1, 6):
             f.put(x, 5, (40, 40, 44) if x % 2 else (190, 190, 190))
     if tex == "wing" and f.side:
@@ -567,8 +599,8 @@ GARGOYLE_COLORS = {"head": STONE, "small_horn": mul(STONE, 0.7), "body": STONE, 
 # ---------------------------------------------------------------------------
 # Lich
 # ---------------------------------------------------------------------------
-LICH_ROBE = (44, 26, 56)
-SOUL_GREEN = (90, 255, 160)
+LICH_ROBE = (58, 28, 92)
+SOUL_GREEN = (200, 100, 255)
 
 
 def lich_parts():
@@ -605,8 +637,11 @@ def lich_details(tex, f):
         material((200, 192, 168), grain=0.1)(f)
     if tex in ("body", "robe") and f.side:
         for y in range(f.h):
-            f.put(0, y, (150, 120, 40))
-            f.put(f.w - 1, y, (150, 120, 40))
+            f.put(0, y, (214, 168, 60))
+            f.put(f.w - 1, y, (214, 168, 60))
+        if f.name == "north":
+            for y in range(f.h):
+                f.put(f.w // 2, y, (214, 168, 60))
         if tex == "robe":
             for x in range(f.w):
                 tear = int(f.n(x, 3, 7) * 3)
@@ -620,11 +655,11 @@ def lich_details(tex, f):
             for x in range(f.w):
                 f.glow[y][x] = rgba(SOUL_GREEN, 230)
     if tex in ("crown", "crown_spike"):
-        material((120, 110, 60), grain=0.1, gradient=0.3)(f)
+        material((220, 176, 64), grain=0.1, gradient=0.3)(f)
 
 
 LICH_COLORS = {"head": (214, 206, 182), "crown": (120, 110, 60), "crown_spike": (120, 110, 60), "body": LICH_ROBE,
-               "robe": LICH_ROBE, "arm": (200, 192, 168), "leg": (200, 192, 168), "staff": (50, 40, 50),
+               "robe": LICH_ROBE, "arm": (200, 192, 168), "leg": (200, 192, 168), "staff": (190, 150, 60),
                "staff_gem": SOUL_GREEN}
 
 
@@ -638,7 +673,10 @@ GOLD = (230, 180, 60)
 
 def naga_parts():
     head = Part("head", (0, -4, 0), [Cube("head", (-3.5, -11, -3.5), (7, 7, 7)),
-                                     Cube("hair", (-3.5, -11.5, 0.5), (7, 9, 3))])
+                                     Cube("hair", (-3.5, -11.5, 0.5), (7, 9, 3)),
+                                     Cube("fin", (-5.5, -11, -1), (2, 5, 4)),
+                                     Cube("fin", (3.5, -11, -1), (2, 5, 4), True),
+                                     Cube("fin_crest", (-0.5, -14, -2), (1, 3, 6))])
     arms = [
         Part("right_arm", (-5.5, -3, 0), [Cube("arm", (-7, -4, -1.5), (3, 11, 3))], [
             Part("spear", (-5.5, 6, 0), [Cube("spear", (-6, 5.5, -14), (1, 1, 18)),
@@ -647,7 +685,8 @@ def naga_parts():
     ]
     tail4 = Part("tail4", (0, 20, 21), [Cube("tail4", (-2, 20, 21), (4, 4, 8))])
     tail3 = Part("tail3", (0, 20, 11), [Cube("tail3", (-3, 18, 11), (6, 6, 10))], [tail4])
-    tail2 = Part("tail2", (0, 16, 0), [Cube("tail2", (-4, 16, -3), (8, 8, 14))], [tail3])
+    tail2 = Part("tail2", (0, 16, 0), [Cube("tail2", (-4, 16, -3), (8, 8, 14)), Cube("fin_crest", (-0.5, 14, 1), (1, 3, 6))],
+                 [tail3])
     tail = Part("tail", (0, 8, 0), [Cube("tail1", (-4.5, 8, -3), (9, 8, 6))], [tail2])
     body = Part("body", (0, 8, 0), [Cube("body", (-4, -4, -2), (8, 12, 4)),
                                     Cube("jewel", (-2, -3, -2.5), (4, 2, 1))], [head] + arms + [tail])
@@ -666,11 +705,13 @@ def naga_details(tex, f):
                     f.put(x, y, mul(f.get(x, y), 0.8))
         if f.name in ("down", "north") and tex.startswith("tail"):
             f.fill(lambda x, y: mix((220, 210, 150), (180, 170, 110), (y % 3) / 2))
+    if tex in ("fin", "fin_crest"):
+        f.fill(lambda x, y: mix((60, 200, 170), (20, 90, 90), y / max(1, f.h - 1)) if (x + y) % 3 else (230, 200, 90))
     if tex == "jewel" or tex == "spear_tip":
         material(GOLD, grain=0.08, gradient=0.4)(f)
 
 
-NAGA_COLORS = {"head": NAGA_SKIN, "hair": (20, 30, 26), "arm": NAGA_SKIN, "body": NAGA_SKIN, "jewel": GOLD,
+NAGA_COLORS = {"fin": (60, 200, 170), "fin_crest": (60, 200, 170), "head": NAGA_SKIN, "hair": (20, 30, 26), "arm": NAGA_SKIN, "body": NAGA_SKIN, "jewel": GOLD,
                "tail1": NAGA_SCALES, "tail2": NAGA_SCALES, "tail3": NAGA_SCALES, "tail4": mul(NAGA_SCALES, 0.9),
                "spear": WOOD, "spear_tip": GOLD}
 
@@ -754,7 +795,7 @@ def treant_details(tex, f):
     if tex == "head" and f.name == "north":
         for x in range(1, 7):
             f.put(x, 3, (30, 20, 12))
-        eyes(f, 3, (2, 5), (255, 180, 40), 230)
+        eyes(f, 3, (2, 5), (130, 255, 80), 240)
         for x in range(2, 6):
             f.put(x, 6, (30, 20, 12))
     if tex in ("foliage", "leaves"):
@@ -771,7 +812,7 @@ TREANT_COLORS = {"head": BARK, "foliage": LEAVES, "leaves": LEAVES, "body": BARK
 # ---------------------------------------------------------------------------
 # Basilisk (huge lizard with a crest)
 # ---------------------------------------------------------------------------
-LIZARD = (52, 92, 52)
+LIZARD = (44, 76, 48)
 
 
 def basilisk_parts():
@@ -783,7 +824,12 @@ def basilisk_parts():
         Cube("head", (-3.5, 11, -16), (7, 5, 7)),
         Cube("jaw", (-3, 16, -16), (6, 2, 6)),
         Cube("crest", (-0.5, 7, -15), (1, 4, 9)),
+        Cube("frill", (-5.5, 8, -10), (11, 7, 1)),
+        Cube("horn", (-3.5, 8, -13), (1, 3, 1)),
+        Cube("horn", (2.5, 8, -13), (1, 3, 1)),
     ])
+    wings = [Part("right_wing", (-3, 12, -3), [Cube("wing", (-17, 4, -3), (14, 10, 1))], rot=(0.3, 0.3, -0.5)),
+             Part("left_wing", (3, 12, -3), [Cube("wing", (3, 4, -3), (14, 10, 1), True)], rot=(0.3, -0.3, 0.5))]
     tail = Part("tail", (0, 14, 9), [Cube("tail", (-2.5, 12, 9), (5, 4, 10))], [
         Part("tail_end", (0, 14, 19), [Cube("tail_end", (-1.5, 13, 19), (3, 3, 10))])])
     body = Part("body", (0, 15, 0), [
@@ -791,7 +837,7 @@ def basilisk_parts():
         Cube("spike", (-1, 10, -6), (2, 2, 3)),
         Cube("spike", (-1, 10, -1), (2, 2, 3)),
         Cube("spike", (-1, 10, 4), (2, 2, 3)),
-    ], [head, tail] + legs)
+    ], [head, tail] + legs + wings)
     return Part("base", (0, 0, 0), [], [body])
 
 
@@ -807,12 +853,16 @@ def basilisk_details(tex, f):
                     f.put(x, y, mul(f.get(x, y), 0.8))
     if tex in ("body", "tail", "jaw") and f.name == "down":
         f.fill(lambda x, y: (170, 170, 110))
+    if tex == "frill" and f.side:
+        f.fill(lambda x, y: mix((60, 110, 60), (170, 50, 40), y / max(1, f.h - 1)) if (x % 3) else (30, 50, 30))
+    if tex == "wing" and f.side:
+        f.fill(lambda x, y: mix((40, 70, 44), (90, 130, 70), y / max(1, f.h - 1)) if y < f.h - (x % 4) else CLEAR)
     if tex in ("crest", "spike"):
         f.fill(lambda x, y: mix((200, 40, 40), (120, 20, 20), y / max(1, f.h - 1)))
 
 
-BASILISK_COLORS = {"head": LIZARD, "jaw": mul(LIZARD, 0.9), "crest": (190, 40, 40), "body": LIZARD,
-                   "spike": (190, 40, 40), "tail": LIZARD, "tail_end": mul(LIZARD, 0.9), "leg": mul(LIZARD, 0.85)}
+BASILISK_COLORS = {"frill": (60, 110, 60), "wing": (50, 80, 50), "head": LIZARD, "jaw": mul(LIZARD, 0.9), "crest": (190, 40, 40), "body": LIZARD,
+                   "spike": (190, 40, 40), "horn": (200, 190, 160), "tail": LIZARD, "tail_end": mul(LIZARD, 0.9), "leg": mul(LIZARD, 0.85)}
 
 
 # ===========================================================================
@@ -1322,6 +1372,21 @@ GREATER_DEMON_COLORS = {"head": DEMON_SKIN, "big_horn": (20, 18, 18), "jaw": mul
                         "demon_tail": DEMON_SKIN, "flame_grip": (30, 20, 20), "flame_blade": (255, 140, 40)}
 
 
+import hd
+
+MATERIALS = {
+    "goblin": ("skin", {}), "goblin_shaman": ("skin", {}), "ice_elf": ("skin", {"body": "metal", "leg": "metal"}),
+    "high_orc": ("skin", {"body": "cloth", "leg": "cloth"}), "demon_knight": ("metal", {}),
+    "steelfang_wolf": ("fur", {}), "ant_soldier": ("chitin", {}), "troll": ("stone", {"moss": "leaf", "loincloth": "cloth"}),
+    "minotaur": ("fur", {"strap": "smooth", "belt": "metal"}), "gargoyle": ("stone", {"wing": "stone"}),
+    "lich": ("bone", {"body": "cloth", "staff": "metal"}), "naga": ("scales", {"head": "skin", "arm": "skin", "body": "skin", "fin": "membrane"}),
+    "mimic": ("wood", {}), "treant": ("wood", {}), "basilisk": ("scales", {"frill": "membrane"}),
+    "giant_spider": ("fur", {"abdomen": "chitin"}), "mantis": ("chitin", {}), "beetle": ("chitin", {}),
+    "giant_wasp": ("chitin", {}), "werewolf": ("fur", {}), "ratman": ("fur", {"body": "cloth"}),
+    "lizardman": ("scales", {"shield": "wood"}), "ghoul": ("skin", {}), "imp": ("skin", {}), "succubus": ("skin", {"body": "smooth"}),
+    "greater_demon": ("stone", {}),
+}
+
 MOBS = {
     "goblin": ("goblin", lambda: goblin_parts(False), painter(GOBLIN_COLORS, goblin_details(False))),
     "goblin_shaman": ("goblinShaman", lambda: goblin_parts(True), painter(SHAMAN_COLORS, goblin_details(True))),
@@ -1385,7 +1450,8 @@ def generate(assets: Path = ASSETS, java: Path = JAVA):
     for key, (method, parts, paint) in MOBS.items():
         root = parts()
         placed, width, height = pack(root)
-        color, glow = paint_atlas(placed, width, height, paint)
+        default, overrides = MATERIALS.get(key, ("smooth", {}))
+        color, glow = paint_atlas(placed, width, height, paint, hd.pattern_for(default, overrides))
         color.save(out / f"{key}.png")
         glow.save(out / f"{key}_glow.png")
         lines = []

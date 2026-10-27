@@ -12,6 +12,8 @@ from pathlib import Path
 
 from PIL import Image
 
+import hd
+
 ROOT = Path(__file__).resolve().parent.parent
 ASSETS = ROOT / "src" / "main" / "resources" / "assets" / "arcanequest"
 JAVA = ROOT / "src" / "main" / "java" / "com" / "firerideur" / "arcanequest" / "client" / "boss" / "BossGeometry.java"
@@ -539,8 +541,8 @@ def paint_mage(tex, face):
 STEEL = (70, 64, 78)
 STEEL_DARK = (40, 36, 46)
 STEEL_LIGHT = (118, 110, 128)
-ADAMANT = (235, 30, 70)
-MAGMA = (255, 110, 40)
+ADAMANT = (40, 150, 255)
+MAGMA = (90, 220, 255)
 
 
 def golem_parts():
@@ -635,10 +637,10 @@ def paint_golem(tex, face):
             for x in range(f.w):
                 f.put(x, f.h // 2, STEEL_DARK)
     elif tex == "core":
-        f.fill(lambda x, y: mix((255, 230, 140), MAGMA, abs(x - 1.5) / 2 + abs(y - 1.5) / 3))
+        f.fill(lambda x, y: mix((220, 250, 255), MAGMA, abs(x - 1.5) / 2 + abs(y - 1.5) / 3))
         for y in range(f.h):
             for x in range(f.w):
-                f.glow[y][x] = rgba(mix((255, 220, 130), MAGMA, abs(x - 1.5) / 2 + abs(y - 1.5) / 3), 255)
+                f.glow[y][x] = rgba(mix((210, 245, 255), MAGMA, abs(x - 1.5) / 2 + abs(y - 1.5) / 3), 255)
     elif tex == "waist":
         plates(f, mul(STEEL, 0.85), seam_every=3, salt=2)
     elif tex == "head":
@@ -648,7 +650,7 @@ def paint_golem(tex, face):
             for x in range(1, f.w - 1):
                 f.put(x, 4, STEEL_DARK)
             for x in (2, 6):
-                f.put(x, 4, MAGMA, (255, 170, 70))
+                f.put(x, 4, MAGMA, (170, 240, 255))
                 f.put(x + 1, 4, mix(MAGMA, ADAMANT, 0.4), rgba(MAGMA, 220))
             for x in range(1, f.w - 1):
                 f.put(x, 5, mul(STEEL_DARK, 1.2))
@@ -698,7 +700,7 @@ def paint_golem(tex, face):
     elif tex in ("shard_big", "shard_small"):
         def crystal(x, y):
             t = y / max(1, f.h - 1)
-            c = mix(mix(ADAMANT, (255, 190, 200), 0.45), mul(ADAMANT, 0.55), t)
+            c = mix(mix(ADAMANT, (200, 235, 255), 0.45), mul(ADAMANT, 0.55), t)
             return mix(c, (255, 255, 255), 0.35) if x == 0 and f.side else c
 
         f.fill(crystal)
@@ -817,20 +819,37 @@ def face_rects(u, v, w, h, d):
     }
 
 
-def paint_atlas(placed, width, height, painter):
-    color = Image.new("RGBA", (width, height), CLEAR)
-    glow = Image.new("RGBA", (width, height), CLEAR)
+def paint_atlas(placed, width, height, painter, pattern=None):
+    """Paints every face; with {@code pattern} (tex -> material name) the atlas is rendered in HD (see hd.py)."""
+    if pattern is None:
+        color = Image.new("RGBA", (width, height), CLEAR)
+        glow = Image.new("RGBA", (width, height), CLEAR)
+        for i, (tex, (u, v, (w, h, d))) in enumerate(sorted(placed.items())):
+            for name, (fx, fy, fw, fh) in face_rects(u, v, w, h, d).items():
+                if fw == 0 or fh == 0:
+                    continue
+                face = Face(name, fw, fh, seed=i * 13 + len(name))
+                painter(tex, face)
+                for y in range(fh):
+                    for x in range(fw):
+                        color.putpixel((fx + x, fy + y), face.color[y][x])
+                        glow.putpixel((fx + x, fy + y), face.glow[y][x])
+        return color, glow
+    import numpy as np
+    import hd
+    s = hd.SCALE
+    color = np.zeros((height * s, width * s, 4), dtype=np.uint8)
+    glow = np.zeros((height * s, width * s, 4), dtype=np.uint8)
     for i, (tex, (u, v, (w, h, d))) in enumerate(sorted(placed.items())):
         for name, (fx, fy, fw, fh) in face_rects(u, v, w, h, d).items():
             if fw == 0 or fh == 0:
                 continue
             face = Face(name, fw, fh, seed=i * 13 + len(name))
             painter(tex, face)
-            for y in range(fh):
-                for x in range(fw):
-                    color.putpixel((fx + x, fy + y), face.color[y][x])
-                    glow.putpixel((fx + x, fy + y), face.glow[y][x])
-    return color, glow
+            hc, hg = hd.upscale_face(face.color, face.glow, pattern(tex), face.side, seed=i * 97 + len(name) * 7)
+            color[fy * s:(fy + fh) * s, fx * s:(fx + fw) * s] = hc
+            glow[fy * s:(fy + fh) * s, fx * s:(fx + fw) * s] = hg
+    return Image.fromarray(color, "RGBA"), Image.fromarray(glow, "RGBA")
 
 
 def num(v):
@@ -865,12 +884,20 @@ def java_parts(part, parent_var, parent_pivot, placed, lines):
         java_parts(child, var, part.pivot, placed, lines)
 
 
+BOSS_MATERIALS = {
+    "skeleton_king": ("bone", {"crown": "smooth"}),
+    "corrupted_archmage": ("cloth", {"head": "skin"}),
+    "adamantite_golem": ("metal", {"shard_big": "crystal", "shard_small": "crystal"}),
+}
+
+
 def generate(assets: Path = ASSETS, java: Path = JAVA):
     methods = []
     for key, (method, parts, painter) in BOSSES.items():
         root = parts()
         placed, width, height = pack(root)
-        color, glow = paint_atlas(placed, width, height, painter)
+        default, overrides = BOSS_MATERIALS[key]
+        color, glow = paint_atlas(placed, width, height, painter, hd.pattern_for(default, overrides))
         out = assets / "textures" / "entity" / "boss"
         out.mkdir(parents=True, exist_ok=True)
         color.save(out / f"{key}.png")
