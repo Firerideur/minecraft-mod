@@ -91,6 +91,10 @@ MAPPING.update({
     "item/kings_blade": ("item/golden_sword", (255, 200, 60), {}),
     "item/adamantite_hammer": ("item/golden_axe", ADAMANTITE, {"value_scale": 0.9}),
     "item/golem_core": ("item/diamond", ADAMANTITE, {}),
+    "item/orichalcum_ingot": ("item/gold_ingot", (255, 150, 45), {}),
+    "item/arcanium_ingot": ("item/gold_ingot", (235, 80, 215), {}),
+    "item/starsteel_ingot": ("item/gold_ingot", (150, 160, 255), {}),
+    "item/steel_ingot": ("item/iron_ingot", (150, 168, 185), {"gray_scale": 0.8}),
 })
 
 

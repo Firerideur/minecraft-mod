@@ -1,6 +1,8 @@
 package com.firerideur.arcanequest.registry;
 
 import com.firerideur.arcanequest.ArcaneQuest;
+import com.firerideur.arcanequest.forge.WeaponForgeBlock;
+import com.firerideur.arcanequest.fusion.FusionForgeBlock;
 import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.DropExperienceBlock;
@@ -36,6 +38,15 @@ public final class ModBlocks {
     public static final RegistryObject<Block> ADAMANTITE_ORE = register("adamantite_ore", () -> ore(MapColor.DEEPSLATE, 6.0F, SoundType.DEEPSLATE));
     public static final RegistryObject<Block> ADAMANTITE_BLOCK = register("adamantite_block", () -> metal(MapColor.COLOR_RED, 7.0F));
     public static final RegistryObject<Block> RAW_ADAMANTITE_BLOCK = register("raw_adamantite_block", () -> metal(MapColor.COLOR_RED, 7.0F));
+
+    // Workstations
+    public static final RegistryObject<Block> FUSION_FORGE = register("fusion_forge",
+            () -> new FusionForgeBlock(BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_BLACK).requiresCorrectToolForDrops()
+                    .strength(4.0F, 8.0F).sound(SoundType.NETHER_BRICKS)
+                    .lightLevel(state -> state.getValue(FusionForgeBlock.LIT) ? 13 : 0)));
+    public static final RegistryObject<Block> WEAPON_FORGE = register("weapon_forge",
+            () -> new WeaponForgeBlock(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).requiresCorrectToolForDrops()
+                    .strength(4.0F, 1200.0F).sound(SoundType.ANVIL)));
 
     private ModBlocks() {}
 

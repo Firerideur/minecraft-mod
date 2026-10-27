@@ -1,0 +1,19 @@
+{
+  "type": "arcanequest:weapon_forging",
+  "template": {
+    "item": "arcanequest:spear_template"
+  },
+  "material": {
+    "ingredient": {
+      "item": "arcanequest:steel_ingot"
+    },
+    "count": 2
+  },
+  "handle": {
+    "item": "arcanequest:weapon_shaft"
+  },
+  "result": {
+    "id": "arcanequest:steel_spear",
+    "count": 1
+  }
+}

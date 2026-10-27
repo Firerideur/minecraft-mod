@@ -1,0 +1,19 @@
+{
+  "type": "arcanequest:weapon_forging",
+  "template": {
+    "item": "arcanequest:longsword_template"
+  },
+  "material": {
+    "ingredient": {
+      "item": "arcanequest:mithril_ingot"
+    },
+    "count": 4
+  },
+  "handle": {
+    "item": "arcanequest:weapon_grip"
+  },
+  "result": {
+    "id": "arcanequest:mithril_longsword",
+    "count": 1
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "arcanequest:block/weapon_forge_top",
+    "side": "arcanequest:block/weapon_forge_side",
+    "bottom": "arcanequest:block/weapon_forge_bottom"
+  }
+}

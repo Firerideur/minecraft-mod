@@ -1,0 +1,19 @@
+{
+  "type": "arcanequest:weapon_forging",
+  "template": {
+    "item": "arcanequest:katana_template"
+  },
+  "material": {
+    "ingredient": {
+      "item": "arcanequest:steel_ingot"
+    },
+    "count": 3
+  },
+  "handle": {
+    "item": "arcanequest:weapon_grip"
+  },
+  "result": {
+    "id": "arcanequest:steel_katana",
+    "count": 1
+  }
+}

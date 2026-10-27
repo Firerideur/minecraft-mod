@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "MMM",
+    "AFA",
+    "BBB"
+  ],
+  "key": {
+    "M": {
+      "item": "arcanequest:mithril_ingot"
+    },
+    "A": {
+      "item": "arcanequest:arcanite"
+    },
+    "F": {
+      "item": "minecraft:blast_furnace"
+    },
+    "B": {
+      "item": "minecraft:polished_blackstone_bricks"
+    }
+  },
+  "result": {
+    "id": "arcanequest:fusion_forge",
+    "count": 1
+  }
+}

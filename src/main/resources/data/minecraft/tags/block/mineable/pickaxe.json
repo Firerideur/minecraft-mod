@@ -10,6 +10,8 @@
     "arcanequest:raw_mithril_block",
     "arcanequest:arcanite_block",
     "arcanequest:adamantite_block",
-    "arcanequest:raw_adamantite_block"
+    "arcanequest:raw_adamantite_block",
+    "arcanequest:fusion_forge",
+    "arcanequest:weapon_forge"
   ]
 }

@@ -605,3 +605,393 @@ def generate(assets: Path):
     save(mask_icon(SKULL, m["bone"]), item / "cursed_skull.png")
     save(mask_icon(GRIMOIRE, m["dark"], {"a": m["arcanite"]}), item / "forbidden_grimoire.png")
     save(gem(m["adamantite"], inner=m["fire"]), item / "golem_core.png")
+    generate_forging(assets)
+
+
+# ---------------------------------------------------------------------------
+# Forged weapons (32x32), same style as the tools
+# ---------------------------------------------------------------------------
+
+WEAPON_COLORS = {
+    "iron": (225, 228, 235),
+    "steel": (150, 168, 185),
+    "diamond": (70, 230, 225),
+    "mithril": MATERIALS["mithril"],
+    "orichalcum": (255, 150, 45),
+    "adamantite": MATERIALS["adamantite"],
+    "arcanium": (235, 80, 215),
+    "starsteel": (150, 160, 255),
+}
+LEATHER = (90, 55, 30)
+
+
+def wrapped_grip(c, start, end, accent):
+    """Grip wrapped in alternating dark and colored bands."""
+    for i, (t, x, y) in enumerate(segment(start, end)):
+        band = shade(accent, 0.45) if (int(x) + int(y)) % 3 == 0 else HANDLE
+        c.put(x, y, band)
+        c.put(x + 1, y, shade(band, 0.7))
+
+
+def dagger(accent):
+    c = Canvas()
+    wrapped_grip(c, (7, 25), (11, 21), accent)
+    pommel_at(c, (6, 26), accent)
+    for t, x, y in segment((13, 19), (23, 9)):
+        c.put(x, y, lerp(DARK, shade(accent, 0.6), t))
+        c.put(x, y + 1, lerp(shade(accent, 0.5), mix_white(accent, 0.2), t))
+    c.put(24, 8, mix_white(accent, 0.6))
+    for t, x, y in segment((10, 18), (14, 22)):
+        c.put(x, y, (40, 40, 44))
+    return c.image()
+
+
+def katana(accent):
+    c = Canvas()
+    wrapped_grip(c, (3, 28), (9, 22), accent)
+    pommel_at(c, (2, 29), accent)
+    # Slightly curved, thin blade
+    for t, x, y in bezier((12, 19), (22, 12), (30, 1), steps=60):
+        c.put(x, y, lerp(DARK, shade(accent, 0.55), t ** 1.3))
+        c.put(x + 1, y + 1, lerp(shade(accent, 0.5), mix_white(accent, 0.3), t))
+    c.put(30, 1, mix_white(accent, 0.7))
+    # Round tsuba
+    for x, y in ((9, 19), (10, 19), (11, 20), (11, 21), (12, 22), (9, 20), (10, 21), (11, 22)):
+        c.put(x, y, GOLD if (x + y) % 2 else shade(GOLD, 0.6))
+    return c.image()
+
+
+def longsword(accent):
+    c = Canvas()
+    wrapped_grip(c, (2, 29), (8, 23), accent)
+    pommel_at(c, (1, 30), accent)
+    # Wide blade with a dark fuller in the middle
+    for t, x, y in segment((11, 20), (29, 2)):
+        c.put(x - 1, y, lerp(shade(accent, 0.35), shade(accent, 0.7), t))
+        c.put(x, y, lerp(DARK, shade(accent, 0.45), t ** 1.5))
+        c.put(x, y + 1, lerp(shade(accent, 0.55), mix_white(accent, 0.25), t))
+        c.put(x + 1, y + 1, lerp(shade(accent, 0.4), accent, t))
+    c.put(30, 1, mix_white(accent, 0.7))
+    # Big cross guard
+    for t, x, y in segment((5, 17), (14, 26)):
+        c.put(x, y, shade(accent, 0.5) if 0.3 < t < 0.7 else DARK)
+        c.put(x + 1, y, (40, 40, 44))
+    for x, y in ((5, 17), (14, 26)):
+        c.put(x, y, accent)
+    return c.image()
+
+
+def spear(accent):
+    c = Canvas()
+    handle(c, (2, 29), (21, 10))
+    # Leaf shaped head
+    for t, x, y in segment((21, 10), (30, 1)):
+        width = 1.6 * math.sin(math.pi * min(1.0, t * 1.15))
+        c.brush(x, y, max(0.5, width), lerp(shade(accent, 0.5), mix_white(accent, 0.15), t))
+    for t, x, y in segment((22, 9), (29, 2)):
+        c.put(x, y, mix_white(accent, 0.45))
+    for x, y in ((19, 11), (20, 12), (21, 11), (20, 10)):
+        c.put(x, y, GOLD)
+    return c.image()
+
+
+def scythe(accent):
+    c = Canvas()
+    handle(c, (6, 30), (20, 3))
+    # Large curved blade sweeping to the left from the top of the shaft
+    c.stroke(bezier((21, 4), (10, -2), (1, 11), steps=70),
+             lambda t: 0.5 + 1.6 * math.sin(math.pi * min(1.0, 0.25 + t * 0.75)),
+             lambda t: lerp(DARK, accent, t * 1.2))
+    for t, x, y in bezier((19, 2), (9, -3), (1, 10), steps=70):
+        if t > 0.2:
+            c.put(x, y, lerp(shade(accent, 0.7), mix_white(accent, 0.3), t))
+    pommel_at(c, (5, 31), accent)
+    return c.image()
+
+
+def pommel_at(c, pos, accent):
+    x, y = pos
+    c.put(x, y, accent)
+    c.put(x + 1, y - 1, mix_white(accent, 0.4))
+
+
+WEAPON_DRAWERS = {"dagger": dagger, "katana": katana, "longsword": longsword, "spear": spear, "scythe": scythe}
+
+
+def template_icon(weapon_img):
+    """Parchment blueprint with the weapon drawn in ink."""
+    c = Canvas()
+    for y in range(3, 29):
+        for x in range(4, 28):
+            edge = x in (4, 27) or y in (3, 28)
+            c.put(x, y, (170, 140, 95) if edge else lerp((240, 225, 185), (215, 190, 140), (x + y - 7) / 48))
+    img = c.image()
+    ink = weapon_img.resize((22, 22), Image.NEAREST)
+    for y in range(22):
+        for x in range(22):
+            if ink.getpixel((x, y))[3] > 0:
+                img.putpixel((x + 5, y + 5), (40, 60, 120, 255))
+    return img
+
+
+def grip_icon():
+    c = Canvas()
+    for i, (t, x, y) in enumerate(segment((8, 24), (23, 9))):
+        band = LEATHER if (int(x) + int(y)) % 3 else shade(LEATHER, 0.6)
+        c.brush(x, y, 1.3, band)
+    c.brush(7, 25, 1.6, GOLD)
+    c.brush(24, 8, 1.6, GOLD)
+    return c.image()
+
+
+def shaft_icon():
+    c = Canvas()
+    for t, x, y in segment((3, 29), (29, 3)):
+        c.put(x, y, lerp((120, 85, 50), (165, 120, 70), t))
+        c.put(x + 1, y, (90, 60, 35))
+    for t in (0.33, 0.66):
+        x, y = 3 + 26 * t, 29 - 26 * t
+        c.brush(x, y, 1.2, (150, 150, 155))
+    return c.image()
+
+
+def catalyst_icon():
+    c = Canvas()
+    cx, cy, r = 16.0, 16.0, 9.0
+    for y in range(32):
+        for x in range(32):
+            d = math.hypot(x - cx, y - cy)
+            if d <= r:
+                swirl = 0.5 + 0.5 * math.sin(math.atan2(y - cy, x - cx) * 3 + d * 0.6)
+                col = lerp(MATERIALS["arcanite"], MATERIALS["fire"], swirl)
+                glow = 1 - math.hypot(x - (cx - 3), y - (cy - 3)) / (r * 1.8)
+                c.put(x, y, mix_white(shade(col, 0.55 + 0.6 * glow), max(0.0, glow - 0.5)))
+    c.put(12, 11, WHITE)
+    c.put(13, 11, WHITE)
+    c.put(12, 12, mix_white(MATERIALS["arcanite"], 0.7))
+    return c.image(outline=shade(MATERIALS["arcanite"], 0.2))
+
+
+# ---------------------------------------------------------------------------
+# Workstation blocks (16x16)
+# ---------------------------------------------------------------------------
+
+BRICK = (48, 44, 56)
+TRIM = (200, 160, 60)
+
+
+def dark_bricks(seed):
+    noise = smooth_noise(seed)
+    img = Image.new("RGBA", (16, 16))
+    for y in range(16):
+        for x in range(16):
+            mortar = y % 4 == 3 or (x + (4 if (y // 4) % 2 else 0)) % 8 == 7
+            f = 0.55 if mortar else 0.9 + 0.25 * noise[y][x]
+            img.putpixel((x, y), shade(BRICK, f) + (255,))
+    return img
+
+
+def forge_front(lit):
+    img = dark_bricks(60)
+    for y in range(6, 14):
+        for x in range(4, 12):
+            edge = x in (4, 11) or y in (6, 13)
+            if edge:
+                color = TRIM
+            elif lit:
+                t = (y - 7) / 6
+                color = lerp(mix_white(MATERIALS["fire"], 0.35), MATERIALS["arcanite"], t)
+            else:
+                color = (20, 18, 24)
+            img.putpixel((x, y), color + (255,))
+    for x in range(2, 14):
+        img.putpixel((x, 2), TRIM + (255,))
+    return img
+
+
+def forge_side():
+    img = dark_bricks(61)
+    for x in range(16):
+        img.putpixel((x, 0), shade(TRIM, 0.8) + (255,))
+        img.putpixel((x, 15), shade(TRIM, 0.6) + (255,))
+    return img
+
+
+def forge_top():
+    img = dark_bricks(62)
+    for y in range(4, 12):
+        for x in range(4, 12):
+            ring = min(x - 4, y - 4, 11 - x, 11 - y)
+            color = TRIM if ring == 0 else lerp((255, 120, 30), (120, 30, 160), math.hypot(x - 7.5, y - 7.5) / 4)
+            img.putpixel((x, y), color + (255,))
+    return img
+
+
+def weapon_forge_top():
+    noise = smooth_noise(70)
+    img = Image.new("RGBA", (16, 16))
+    for y in range(16):
+        for x in range(16):
+            edge = x in (0, 15) or y in (0, 15)
+            f = 0.5 if edge else 0.85 + 0.25 * noise[y][x] - 0.01 * (x + y)
+            img.putpixel((x, y), shade((150, 155, 165), f) + (255,))
+    for t, x, y in segment((3, 12), (12, 3)):
+        img.putpixel((int(x), int(y)), (70, 70, 80, 255))
+    return img
+
+
+def weapon_forge_side():
+    noise = smooth_noise(71)
+    img = Image.new("RGBA", (16, 16))
+    for y in range(16):
+        for x in range(16):
+            if y < 3 or y > 12:
+                color = shade((140, 145, 155), 0.75 + 0.2 * noise[y][x])
+            else:
+                plank = (y - 3) // 5
+                color = shade((140, 95, 55), 0.75 + 0.25 * noise[y][x] - 0.1 * plank)
+                if (y - 3) % 5 == 4:
+                    color = shade(color, 0.6)
+            img.putpixel((x, y), color + (255,))
+    for y in (1, 14):
+        for x in (2, 13):
+            img.putpixel((x, y), (60, 60, 70, 255))
+    return img
+
+
+def weapon_forge_bottom():
+    noise = smooth_noise(72)
+    img = Image.new("RGBA", (16, 16))
+    for y in range(16):
+        for x in range(16):
+            img.putpixel((x, y), shade((120, 82, 48), 0.75 + 0.25 * noise[y][x]) + (255,))
+    return img
+
+
+# ---------------------------------------------------------------------------
+# GUI textures (256x256, panel 176x166, vanilla-like)
+# ---------------------------------------------------------------------------
+
+PANEL = (198, 198, 198)
+
+
+def gui_panel():
+    img = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
+    w, h = 176, 166
+    for y in range(h):
+        for x in range(w):
+            corner = (x < 2 or x > w - 3) and (y < 2 or y > h - 3)
+            if corner and not ((x in (1, w - 2)) and (y in (1, h - 2))):
+                continue
+            if x == 0 or y == 0 or x == w - 1 or y == h - 1:
+                color = BLACK
+            elif x <= 2 or y <= 2:
+                color = WHITE
+            elif x >= w - 3 or y >= h - 3:
+                color = (85, 85, 85)
+            else:
+                color = PANEL
+            img.putpixel((x, y), color + (255,))
+    for row in range(3):
+        for col in range(9):
+            gui_slot(img, 8 + col * 18, 84 + row * 18)
+    for col in range(9):
+        gui_slot(img, 8 + col * 18, 142)
+    return img
+
+
+def gui_slot(img, x, y, size=18):
+    """Slot whose item area starts at (x, y): frame drawn one pixel outside it."""
+    x0, y0 = x - 1, y - 1
+    for j in range(size):
+        for i in range(size):
+            if i == 0 or j == 0:
+                color = (55, 55, 55)
+            elif i == size - 1 or j == size - 1:
+                color = WHITE
+            else:
+                color = (139, 139, 139)
+            img.putpixel((x0 + i, y0 + j), color + (255,))
+
+
+def gui_arrow(img, x, y, fill=None):
+    """30x17 arrow; outline only when fill is None."""
+    for j in range(17):
+        for i in range(30):
+            in_shaft = i < 20 and 5 <= j <= 11
+            in_head = i >= 20 and abs(j - 8) <= (29 - i) * 0.85
+            if not (in_shaft or in_head):
+                continue
+            if fill:
+                color = lerp(fill[0], fill[1], i / 29)
+            else:
+                color = (139, 139, 139)
+            img.putpixel((x + i, y + j), color + (255,))
+
+
+def fusion_forge_gui():
+    img = gui_panel()
+    gui_slot(img, 38, 17)
+    gui_slot(img, 38, 53)
+    gui_slot(img, 8, 35)
+    gui_slot(img, 112, 31, size=26)
+    # "+" between the two inputs
+    for i in range(-3, 4):
+        img.putpixel((46 + i, 43), (85, 85, 85, 255))
+        img.putpixel((46, 43 + i), (85, 85, 85, 255))
+    gui_arrow(img, 74, 34)
+    # Charge gauge frame
+    for j in range(20):
+        for i in range(6):
+            img.putpixel((27 + i, 34 + j), ((55, 55, 55) if i == 0 or j == 0 else
+                                            WHITE if i == 5 or j == 19 else (40, 40, 40)) + (255,))
+    # Sprites: filled arrow at (176, 0), charge fill at (176, 17)
+    gui_arrow(img, 176, 0, fill=(MATERIALS["fire"], MATERIALS["arcanite"]))
+    for j in range(18):
+        for i in range(4):
+            img.putpixel((176 + i, 17 + j), lerp(mix_white(MATERIALS["arcanite"], 0.3),
+                                                  shade(MATERIALS["arcanite"], 0.6), j / 17) + (255,))
+    return img
+
+
+def weapon_forge_gui():
+    img = gui_panel()
+    for x in (8, 26, 44):
+        gui_slot(img, x, 48)
+    gui_slot(img, 98, 48)
+    gui_arrow(img, 63, 47)
+    # Error sprite at (176, 0): red cross
+    for i in range(16):
+        for d in (-1, 0, 1):
+            for x, y in ((i, i + d), (i, 15 - i + d)):
+                if 0 <= y < 16:
+                    img.putpixel((176 + x, y), (200, 30, 30, 255))
+    return img
+
+
+def generate_forging(assets: Path):
+    item = assets / "textures" / "item"
+    block = assets / "textures" / "block"
+    gui = assets / "textures" / "gui" / "container"
+
+    for alloy in ("steel", "orichalcum", "arcanium", "starsteel"):
+        save(ingot(WEAPON_COLORS[alloy]), item / f"{alloy}_ingot.png")
+    for material, color in WEAPON_COLORS.items():
+        for weapon, draw in WEAPON_DRAWERS.items():
+            save(draw(color), item / f"{material}_{weapon}.png")
+    for weapon, draw in WEAPON_DRAWERS.items():
+        save(template_icon(draw(WEAPON_COLORS["iron"])), item / f"{weapon}_template.png")
+    save(grip_icon(), item / "weapon_grip.png")
+    save(shaft_icon(), item / "weapon_shaft.png")
+    save(catalyst_icon(), item / "fusion_catalyst.png")
+
+    save(forge_front(False), block / "fusion_forge_front.png")
+    save(forge_front(True), block / "fusion_forge_front_on.png")
+    save(forge_side(), block / "fusion_forge_side.png")
+    save(forge_top(), block / "fusion_forge_top.png")
+    save(weapon_forge_top(), block / "weapon_forge_top.png")
+    save(weapon_forge_side(), block / "weapon_forge_side.png")
+    save(weapon_forge_bottom(), block / "weapon_forge_bottom.png")
+
+    save(fusion_forge_gui(), gui / "fusion_forge.png")
+    save(weapon_forge_gui(), gui / "weapon_forge.png")

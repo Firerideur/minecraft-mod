@@ -1,0 +1,20 @@
+{
+  "type": "arcanequest:fusion",
+  "first": {
+    "ingredient": {
+      "item": "minecraft:iron_ingot"
+    },
+    "count": 1
+  },
+  "second": {
+    "ingredient": {
+      "tag": "minecraft:coals"
+    },
+    "count": 2
+  },
+  "result": {
+    "id": "arcanequest:steel_ingot",
+    "count": 1
+  },
+  "time": 100
+}

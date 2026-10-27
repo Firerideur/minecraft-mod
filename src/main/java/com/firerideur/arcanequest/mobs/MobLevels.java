@@ -7,6 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
@@ -21,6 +22,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.Tags;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Hostile mobs get a level when they first spawn, based on where they spawn:
@@ -87,6 +89,10 @@ public final class MobLevels {
         if (data.contains(LEVEL_TAG)) {
             return;
         }
+        if (isChampionName(mob.getCustomName())) {
+            // Slimes split from a Champion copy its name, but they are not Champions themselves.
+            mob.setCustomName(null);
+        }
         int mobLevel = computeLevel(level, mob.blockPosition(), mob.getRandom());
         boolean elite = mobLevel >= ELITE_MIN_LEVEL && mob.getRandom().nextFloat() < ELITE_CHANCE;
         setLevel(mob, mobLevel, elite);
@@ -115,6 +121,11 @@ public final class MobLevels {
             mob.setCustomName(Component.translatable("entity.arcanequest.champion", mob.getType().getDescription())
                     .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
         }
+    }
+
+    private static boolean isChampionName(@Nullable Component name) {
+        return name != null && name.getContents() instanceof TranslatableContents contents
+                && contents.getKey().equals("entity.arcanequest.champion");
     }
 
     /** Experience given for killing {@code victim}. */

@@ -3,12 +3,14 @@ package com.firerideur.arcanequest.client;
 import com.firerideur.arcanequest.ArcaneQuest;
 import com.firerideur.arcanequest.magic.Mana;
 import com.firerideur.arcanequest.registry.ModEntities;
+import com.firerideur.arcanequest.registry.ModMenus;
 import com.firerideur.arcanequest.stats.PlayerStats;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.entity.EvokerRenderer;
 import net.minecraft.client.renderer.entity.IronGolemRenderer;
 import net.minecraft.client.renderer.entity.ThrownItemRenderer;
@@ -23,6 +25,7 @@ import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import org.lwjgl.glfw.GLFW;
 
 public final class ClientSetup {
@@ -37,6 +40,7 @@ public final class ClientSetup {
         modEventBus.addListener(ClientSetup::registerKeys);
         modEventBus.addListener(ClientSetup::registerOverlays);
         modEventBus.addListener(ClientSetup::registerRenderers);
+        modEventBus.addListener(ClientSetup::clientSetup);
         MinecraftForge.EVENT_BUS.addListener(ClientSetup::onClientTick);
         MinecraftForge.EVENT_BUS.addListener(ClientSetup::onLoggingOut);
     }
@@ -55,6 +59,13 @@ public final class ClientSetup {
         event.registerEntityRenderer(ModEntities.SKELETON_KING.get(), WitherSkeletonRenderer::new);
         event.registerEntityRenderer(ModEntities.CORRUPTED_ARCHMAGE.get(), EvokerRenderer::new);
         event.registerEntityRenderer(ModEntities.ADAMANTITE_GOLEM.get(), IronGolemRenderer::new);
+    }
+
+    private static void clientSetup(FMLClientSetupEvent event) {
+        event.enqueueWork(() -> {
+            MenuScreens.register(ModMenus.FUSION_FORGE.get(), FusionForgeScreen::new);
+            MenuScreens.register(ModMenus.WEAPON_FORGE.get(), WeaponForgeScreen::new);
+        });
     }
 
     private static void onClientTick(TickEvent.ClientTickEvent.Post event) {

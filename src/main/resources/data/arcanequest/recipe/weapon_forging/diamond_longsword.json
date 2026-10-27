@@ -1,0 +1,19 @@
+{
+  "type": "arcanequest:weapon_forging",
+  "template": {
+    "item": "arcanequest:longsword_template"
+  },
+  "material": {
+    "ingredient": {
+      "item": "minecraft:diamond"
+    },
+    "count": 4
+  },
+  "handle": {
+    "item": "arcanequest:weapon_grip"
+  },
+  "result": {
+    "id": "arcanequest:diamond_longsword",
+    "count": 1
+  }
+}

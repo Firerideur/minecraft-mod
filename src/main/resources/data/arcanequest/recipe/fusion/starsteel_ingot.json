@@ -1,0 +1,20 @@
+{
+  "type": "arcanequest:fusion",
+  "first": {
+    "ingredient": {
+      "item": "arcanequest:mithril_ingot"
+    },
+    "count": 2
+  },
+  "second": {
+    "ingredient": {
+      "item": "arcanequest:adamantite_ingot"
+    },
+    "count": 1
+  },
+  "result": {
+    "id": "arcanequest:starsteel_ingot",
+    "count": 1
+  },
+  "time": 400
+}

@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "front": "arcanequest:block/fusion_forge_front",
+    "side": "arcanequest:block/fusion_forge_side",
+    "top": "arcanequest:block/fusion_forge_top"
+  }
+}

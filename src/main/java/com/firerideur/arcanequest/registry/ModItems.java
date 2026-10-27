@@ -6,6 +6,8 @@ import com.firerideur.arcanequest.item.BossSummonItem;
 import com.firerideur.arcanequest.item.LegendaryWeaponItem;
 import com.firerideur.arcanequest.item.StaffItem;
 import com.firerideur.arcanequest.magic.Spell;
+import com.firerideur.arcanequest.weapon.WeaponItem;
+import com.firerideur.arcanequest.weapon.WeaponType;
 import net.minecraft.core.Holder;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterial;
@@ -19,6 +21,7 @@ import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.ShovelItem;
 import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.item.Tier;
+import net.minecraft.world.item.Tiers;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.common.ForgeSpawnEggItem;
 import net.minecraftforge.registries.DeferredRegister;
@@ -27,7 +30,9 @@ import net.minecraftforge.registries.RegistryObject;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 public final class ModItems {
@@ -102,6 +107,58 @@ public final class ModItems {
             () -> new ForgeSpawnEggItem(ModEntities.CORRUPTED_ARCHMAGE, 0x3B1F5C, 0xB070E0, new Item.Properties()));
     public static final RegistryObject<Item> ADAMANTITE_GOLEM_SPAWN_EGG = register("adamantite_golem_spawn_egg",
             () -> new ForgeSpawnEggItem(ModEntities.ADAMANTITE_GOLEM, 0x5A1010, 0xC03030, new Item.Properties()));
+
+    // Fusion Forge
+    public static final RegistryObject<Item> FUSION_CATALYST = simple("fusion_catalyst");
+    public static final RegistryObject<Item> STEEL_INGOT = simple("steel_ingot");
+    public static final RegistryObject<Item> ORICHALCUM_INGOT = simple("orichalcum_ingot");
+    public static final RegistryObject<Item> ARCANIUM_INGOT = register("arcanium_ingot", () -> new Item(new Item.Properties().rarity(Rarity.UNCOMMON)));
+    public static final RegistryObject<Item> STARSTEEL_INGOT = register("starsteel_ingot", () -> new Item(new Item.Properties().rarity(Rarity.RARE).fireResistant()));
+
+    // Weapon Forge parts: templates are not consumed
+    public static final Map<WeaponType, RegistryObject<Item>> TEMPLATES = new EnumMap<>(WeaponType.class);
+    static {
+        for (WeaponType type : WeaponType.values()) {
+            TEMPLATES.put(type, register(type.key() + "_template", () -> new Item(new Item.Properties().stacksTo(1))));
+        }
+    }
+    public static final RegistryObject<Item> WEAPON_GRIP = simple("weapon_grip");
+    public static final RegistryObject<Item> WEAPON_SHAFT = simple("weapon_shaft");
+
+    /** Weapon materials, in progression order. */
+    public enum WeaponMaterial {
+        IRON("iron", () -> Tiers.IRON, false),
+        STEEL("steel", () -> ModTiers.STEEL, false),
+        DIAMOND("diamond", () -> Tiers.DIAMOND, false),
+        MITHRIL("mithril", () -> ModTiers.MITHRIL, false),
+        ORICHALCUM("orichalcum", () -> ModTiers.ORICHALCUM, false),
+        ADAMANTITE("adamantite", () -> ModTiers.ADAMANTITE, true),
+        ARCANIUM("arcanium", () -> ModTiers.ARCANIUM, true),
+        STARSTEEL("starsteel", () -> ModTiers.STARSTEEL, true);
+
+        public final String key;
+        private final Supplier<Tier> tier;
+        private final boolean fireResistant;
+
+        WeaponMaterial(String key, Supplier<Tier> tier, boolean fireResistant) {
+            this.key = key;
+            this.tier = tier;
+            this.fireResistant = fireResistant;
+        }
+    }
+
+    /** Every new weapon, by material then type: e.g. WEAPONS.get(MITHRIL).get(KATANA). */
+    public static final Map<WeaponMaterial, Map<WeaponType, RegistryObject<Item>>> WEAPONS = new EnumMap<>(WeaponMaterial.class);
+    static {
+        for (WeaponMaterial material : WeaponMaterial.values()) {
+            Map<WeaponType, RegistryObject<Item>> byType = new EnumMap<>(WeaponType.class);
+            for (WeaponType type : WeaponType.values()) {
+                byType.put(type, register(material.key + "_" + type.key(),
+                        () -> new WeaponItem(material.tier.get(), type, props(material.fireResistant))));
+            }
+            WEAPONS.put(material, byType);
+        }
+    }
 
     private ModItems() {}
 

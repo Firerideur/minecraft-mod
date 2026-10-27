@@ -243,14 +243,14 @@ def generate_recipes():
 def generate_tags():
     ores = ["mithril_ore", "deepslate_mithril_ore", "arcanite_ore", "deepslate_arcanite_ore", "adamantite_ore"]
     blocks = ores + ["mithril_block", "raw_mithril_block", "arcanite_block", "adamantite_block", "raw_adamantite_block"]
-    tag("block", "mineable/pickaxe", blocks)
+    tag("block", "mineable/pickaxe", blocks + ["fusion_forge", "weapon_forge"])
     tag("block", "needs_iron_tool", ["mithril_ore", "deepslate_mithril_ore", "arcanite_ore", "deepslate_arcanite_ore",
                                      "mithril_block", "raw_mithril_block", "arcanite_block"])
     tag("block", "needs_diamond_tool", ["adamantite_ore", "adamantite_block", "raw_adamantite_block"])
     tag("block", "ores", ores, namespace="c")
     tag("item", "ores", ores, namespace="c")
 
-    tag("item", "swords", ["mithril_sword", "adamantite_sword", "kings_blade", "adamantite_hammer"])
+    tag("item", "swords", ["mithril_sword", "adamantite_sword", "kings_blade", "adamantite_hammer"] + ALL_WEAPONS)
     for tool in ("pickaxe", "axe", "shovel", "hoe"):
         tag("item", f"{tool}s", [f"mithril_{tool}", f"adamantite_{tool}"])
     for piece, tag_name in (("helmet", "head_armor"), ("chestplate", "chest_armor"), ("leggings", "leg_armor"), ("boots", "foot_armor")):
@@ -267,7 +267,133 @@ def generate_worldgen():
     ore_feature("ore_adamantite", 4, 3, -64, -24, None, "adamantite_ore", air_discard=0.5)
 
 
+# ---------------------------------------------------------------------------
+# Weapons, Fusion Forge and Weapon Forge
+# ---------------------------------------------------------------------------
+
+WEAPON_TYPES = {  # type -> (ingots needed, handle item, in-hand scale)
+    "dagger": (1, "weapon_grip", 0.75),
+    "katana": (3, "weapon_grip", 1.15),
+    "longsword": (4, "weapon_grip", 1.4),
+    "spear": (2, "weapon_shaft", 1.5),
+    "scythe": (3, "weapon_shaft", 1.45),
+}
+WEAPON_MATERIALS = {  # material -> ingredient used in the Weapon Forge
+    "iron": "minecraft:iron_ingot",
+    "steel": "steel_ingot",
+    "diamond": "minecraft:diamond",
+    "mithril": "mithril_ingot",
+    "orichalcum": "orichalcum_ingot",
+    "adamantite": "adamantite_ingot",
+    "arcanium": "arcanium_ingot",
+    "starsteel": "starsteel_ingot",
+}
+ALL_WEAPONS = [f"{m}_{t}" for m in WEAPON_MATERIALS for t in WEAPON_TYPES]
+ALLOYS = ("steel", "orichalcum", "arcanium", "starsteel")
+
+
+def weapon_model(name, scale):
+    """Handheld model, bigger (or smaller) in hand depending on the weapon."""
+    write_json(ASSETS / "models" / "item" / f"{name}.json", {
+        "parent": "minecraft:item/handheld",
+        "textures": {"layer0": f"{MODID}:item/{name}"},
+        "display": {
+            "thirdperson_righthand": {"rotation": [0, -90, 55], "translation": [0, 4.0 * scale, 0.5],
+                                      "scale": [0.85 * scale] * 3},
+            "thirdperson_lefthand": {"rotation": [0, 90, -55], "translation": [0, 4.0 * scale, 0.5],
+                                     "scale": [0.85 * scale] * 3},
+            "firstperson_righthand": {"rotation": [0, -90, 25], "translation": [1.13, 3.2, 1.13],
+                                      "scale": [0.68 * min(scale, 1.0)] * 3},
+            "firstperson_lefthand": {"rotation": [0, 90, -25], "translation": [1.13, 3.2, 1.13],
+                                     "scale": [0.68 * min(scale, 1.0)] * 3},
+        },
+    })
+
+
+def fusion(name, first, second, result, count=1, time=200):
+    def counted(entry):
+        item, amount = entry
+        return {"ingredient": ingredient(item), "count": amount}
+    write_json(DATA / MODID / "recipe" / "fusion" / f"{name}.json", {
+        "type": f"{MODID}:fusion", "first": counted(first), "second": counted(second),
+        "result": {"id": rl(result), "count": count}, "time": time,
+    })
+
+
+def generate_forging():
+    for name in ALL_WEAPONS:
+        weapon_model(name, WEAPON_TYPES[name.split("_", 1)[1]][2])
+    for alloy in ALLOYS:
+        item_model(f"{alloy}_ingot")
+    for weapon in WEAPON_TYPES:
+        item_model(f"{weapon}_template")
+    for item in ("weapon_grip", "weapon_shaft", "fusion_catalyst"):
+        item_model(item)
+
+    # Fusion Forge: rotates with its facing, glows while working
+    for suffix, front in (("", "fusion_forge_front"), ("_on", "fusion_forge_front_on")):
+        write_json(ASSETS / "models" / "block" / f"fusion_forge{suffix}.json", {
+            "parent": "minecraft:block/orientable",
+            "textures": {"front": f"{MODID}:block/{front}", "side": f"{MODID}:block/fusion_forge_side",
+                         "top": f"{MODID}:block/fusion_forge_top"},
+        })
+    rotations = {"north": 0, "east": 90, "south": 180, "west": 270}
+    write_json(ASSETS / "blockstates" / "fusion_forge.json", {"variants": {
+        f"facing={facing},lit={str(lit).lower()}": {"model": f"{MODID}:block/fusion_forge{'_on' if lit else ''}",
+                                                     **({"y": rot} if rot else {})}
+        for facing, rot in rotations.items() for lit in (False, True)
+    }})
+    write_json(ASSETS / "models" / "item" / "fusion_forge.json", {"parent": f"{MODID}:block/fusion_forge"})
+
+    write_json(ASSETS / "models" / "block" / "weapon_forge.json", {
+        "parent": "minecraft:block/cube_bottom_top",
+        "textures": {"top": f"{MODID}:block/weapon_forge_top", "side": f"{MODID}:block/weapon_forge_side",
+                     "bottom": f"{MODID}:block/weapon_forge_bottom"},
+    })
+    write_json(ASSETS / "blockstates" / "weapon_forge.json", {"variants": {"": {"model": f"{MODID}:block/weapon_forge"}}})
+    write_json(ASSETS / "models" / "item" / "weapon_forge.json", {"parent": f"{MODID}:block/weapon_forge"})
+    loot_self("fusion_forge")
+    loot_self("weapon_forge")
+
+    # Crafting
+    shaped("fusion_forge", "fusion_forge", ["MMM", "AFA", "BBB"],
+           {"M": "mithril_ingot", "A": "arcanite", "F": "minecraft:blast_furnace", "B": "minecraft:polished_blackstone_bricks"},
+           category="misc")
+    shaped("weapon_forge", "weapon_forge", ["III", "PAP", "PPP"],
+           {"I": "minecraft:iron_ingot", "A": "minecraft:anvil", "P": "#minecraft:planks"}, category="misc")
+    shapeless("fusion_catalyst", "fusion_catalyst", ["arcanite", "minecraft:blaze_powder", "minecraft:redstone"], 2)
+    shapeless("weapon_grip", "weapon_grip", ["minecraft:stick", "minecraft:leather", "minecraft:string"], 2)
+    shapeless("weapon_shaft", "weapon_shaft", ["minecraft:stick", "minecraft:stick", "minecraft:stick", "minecraft:string"])
+    template_extras = {
+        "dagger": ["minecraft:iron_nugget"],
+        "katana": ["minecraft:iron_ingot", "minecraft:string"],
+        "longsword": ["minecraft:iron_ingot", "minecraft:iron_ingot"],
+        "spear": ["minecraft:iron_ingot", "minecraft:stick"],
+        "scythe": ["minecraft:iron_ingot", "minecraft:wheat"],
+    }
+    for weapon, extras in template_extras.items():
+        shapeless(f"{weapon}_template", f"{weapon}_template", ["minecraft:paper"] + extras)
+
+    # Fusion
+    fusion("steel_ingot", ("minecraft:iron_ingot", 1), ("#minecraft:coals", 2), "steel_ingot", time=100)
+    fusion("orichalcum_ingot", ("mithril_ingot", 1), ("minecraft:gold_ingot", 1), "orichalcum_ingot", time=200)
+    fusion("arcanium_ingot", ("arcanite", 2), ("adamantite_ingot", 1), "arcanium_ingot", time=300)
+    fusion("starsteel_ingot", ("mithril_ingot", 2), ("adamantite_ingot", 1), "starsteel_ingot", time=400)
+
+    # Weapon Forge
+    for material, ingot in WEAPON_MATERIALS.items():
+        for weapon, (cost, handle, _) in WEAPON_TYPES.items():
+            write_json(DATA / MODID / "recipe" / "weapon_forging" / f"{material}_{weapon}.json", {
+                "type": f"{MODID}:weapon_forging",
+                "template": ingredient(f"{weapon}_template"),
+                "material": {"ingredient": ingredient(ingot), "count": cost},
+                "handle": ingredient(handle),
+                "result": {"id": rl(f"{material}_{weapon}"), "count": 1},
+            })
+
+
 if __name__ == "__main__":
+    generate_forging()
     generate_textures_and_models()
     generate_loot()
     generate_recipes()

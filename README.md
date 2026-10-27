@@ -64,6 +64,33 @@ Invoqués en utilisant leur objet sur un bloc.
 | **Archimage corrompu** (260 PV) | Grimoire interdit | 45 | Crocs et vex, traits de feu, se téléporte, foudre quand enragé | Bâton de l'Archimage, arcanite, totem d'immortalité |
 | **Golem d'adamantite** (400 PV) | Cœur de golem | 60 | Coups dévastateurs, onde de choc qui projette en l'air, enragé à 50 % | Marteau d'adamantite (onde de choc), adamantite |
 
+### Armes forgées
+5 types d'armes, chacun avec sa mécanique et son animation (1re et 3e personne) :
+
+| Arme | Dégâts / vitesse | Spécial | Animation |
+|------|------------------|---------|-----------|
+| **Dague** | +1 / très rapide | ×1,75 dans le dos, portée -0,5 | Estoc rapide vers l'avant |
+| **Katana** | +3 / rapide | Clic droit : ruée de 6 blocs qui tranche tout sur le passage (3 s) | Taille horizontale |
+| **Épée longue** | +6 / lente | À deux mains, chaque coup fend les ennemis devant (60 %), portée +0,5 | Lever puis frappe verticale |
+| **Lance** | +4 / lente | Portée +2 blocs | Estoc long |
+| **Faux** | +5 / lente | Fauche tout autour (50 %) et soigne (10 % par cible) | Grand balayage |
+
+8 matériaux : fer, acier, diamant, mithril, orichalque, adamantite, arcanium (chaque coup rend 2 mana), acier stellaire.
+
+**Forge d'armes** : plan (non consommé) + lingots (1 à 4 selon l'arme) + poignée (dague, katana, épée longue) ou hampe (lance, faux).
+
+### Fusion de minerais
+**Forge de fusion** : deux ingrédients (dans n'importe quel ordre) + un catalyseur de fusion (4 fusions par catalyseur).
+
+| Alliage | Recette | Temps |
+|---------|---------|-------|
+| Acier | 1 lingot de fer + 2 charbons | 5 s |
+| Orichalque | 1 mithril + 1 or | 10 s |
+| Arcanium | 2 arcanite + 1 adamantite | 15 s |
+| Acier stellaire | 2 mithril + 1 adamantite | 20 s |
+
+Fabrication : forge de fusion (3 mithril, 2 arcanite, haut fourneau, 3 briques de pierre noire polie), forge d'armes (3 fer, 2 planches + enclume + 3 planches), catalyseur (arcanite + poudre de blaze + redstone → 2), poignée (bâton + cuir + ficelle → 2), hampe (3 bâtons + ficelle), plans (papier + fer/pépite + ingrédient selon l'arme).
+
 ### Commandes (op)
 - `/aq xp add <montant> [joueur]`
 - `/aq level set <niveau> [joueur]`
@@ -78,6 +105,7 @@ Prérequis : Java 21.
 ```bash
 ./gradlew build              # compile le mod -> build/libs/arcanequest-<version>.jar
 ./gradlew runClient          # lance Minecraft avec le mod
+./gradlew runClient -PquickPlay="Mon monde"  # ouvre directement un monde solo
 ./gradlew runGameTestServer  # lance les tests automatiques
 python3 tools/generate_resources.py  # régénère textures, modèles, recettes, loots, tags, worldgen
 ```

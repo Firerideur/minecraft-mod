@@ -4,12 +4,16 @@ import com.firerideur.arcanequest.client.ClientSetup;
 import com.firerideur.arcanequest.mobs.MobEvents;
 import com.firerideur.arcanequest.network.ModNetwork;
 import com.firerideur.arcanequest.registry.ModArmorMaterials;
+import com.firerideur.arcanequest.registry.ModBlockEntities;
 import com.firerideur.arcanequest.registry.ModBlocks;
 import com.firerideur.arcanequest.registry.ModCreativeTabs;
 import com.firerideur.arcanequest.registry.ModEntities;
 import com.firerideur.arcanequest.registry.ModItems;
+import com.firerideur.arcanequest.registry.ModMenus;
+import com.firerideur.arcanequest.registry.ModRecipes;
 import com.firerideur.arcanequest.stats.ClassEvents;
 import com.firerideur.arcanequest.stats.StatsEvents;
+import com.firerideur.arcanequest.weapon.WeaponEvents;
 import com.mojang.logging.LogUtils;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
@@ -35,6 +39,10 @@ public class ArcaneQuest {
         ModArmorMaterials.ARMOR_MATERIALS.register(modEventBus);
         ModEntities.ENTITIES.register(modEventBus);
         ModCreativeTabs.TABS.register(modEventBus);
+        ModBlockEntities.BLOCK_ENTITIES.register(modEventBus);
+        ModMenus.MENUS.register(modEventBus);
+        ModRecipes.TYPES.register(modEventBus);
+        ModRecipes.SERIALIZERS.register(modEventBus);
 
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(ModEntities::registerAttributes);
@@ -43,6 +51,7 @@ public class ArcaneQuest {
         MinecraftForge.EVENT_BUS.register(StatsEvents.class);
         MinecraftForge.EVENT_BUS.register(ClassEvents.class);
         MinecraftForge.EVENT_BUS.register(MobEvents.class);
+        MinecraftForge.EVENT_BUS.register(WeaponEvents.class);
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
             ClientSetup.init(modEventBus);

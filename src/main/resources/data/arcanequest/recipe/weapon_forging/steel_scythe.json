@@ -1,0 +1,19 @@
+{
+  "type": "arcanequest:weapon_forging",
+  "template": {
+    "item": "arcanequest:scythe_template"
+  },
+  "material": {
+    "ingredient": {
+      "item": "arcanequest:steel_ingot"
+    },
+    "count": 3
+  },
+  "handle": {
+    "item": "arcanequest:weapon_shaft"
+  },
+  "result": {
+    "id": "arcanequest:steel_scythe",
+    "count": 1
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "type": "arcanequest:weapon_forging",
+  "template": {
+    "item": "arcanequest:dagger_template"
+  },
+  "material": {
+    "ingredient": {
+      "item": "arcanequest:orichalcum_ingot"
+    },
+    "count": 1
+  },
+  "handle": {
+    "item": "arcanequest:weapon_grip"
+  },
+  "result": {
+    "id": "arcanequest:orichalcum_dagger",
+    "count": 1
+  }
+}
