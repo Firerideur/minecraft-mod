@@ -1,10 +1,10 @@
 package com.firerideur.arcanequest.client;
 
 import com.firerideur.arcanequest.ArcaneQuest;
-import com.firerideur.arcanequest.magic.Mana;
+import com.firerideur.arcanequest.network.ModNetwork;
+import com.firerideur.arcanequest.network.OpenCharacterMenuPacket;
 import com.firerideur.arcanequest.registry.ModEntities;
 import com.firerideur.arcanequest.registry.ModMenus;
-import com.firerideur.arcanequest.stats.PlayerStats;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.KeyMapping;
@@ -16,7 +16,6 @@ import net.minecraft.client.renderer.entity.IronGolemRenderer;
 import net.minecraft.client.renderer.entity.ThrownItemRenderer;
 import net.minecraft.client.renderer.entity.WitherSkeletonRenderer;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
 import net.minecraftforge.client.event.AddGuiOverlayLayersEvent;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.EntityRenderersEvent;
@@ -50,7 +49,8 @@ public final class ClientSetup {
     }
 
     private static void registerOverlays(AddGuiOverlayLayersEvent event) {
-        event.getLayeredDraw().add(ArcaneQuest.id("level_hud"), ClientSetup::renderHud);
+        event.getLayeredDraw().add(ArcaneQuest.id("status_hud"), ArcaneHud::renderStatus);
+        event.getLayeredDraw().add(ArcaneQuest.id("compass"), ArcaneHud::renderCompass);
         event.getLayeredDraw().add(ArcaneQuest.id("target_hud"), TargetHud::render);
     }
 
@@ -65,6 +65,7 @@ public final class ClientSetup {
         event.enqueueWork(() -> {
             MenuScreens.register(ModMenus.FUSION_FORGE.get(), FusionForgeScreen::new);
             MenuScreens.register(ModMenus.WEAPON_FORGE.get(), WeaponForgeScreen::new);
+            MenuScreens.register(ModMenus.CHARACTER.get(), CharacterScreen::new);
         });
     }
 
@@ -72,7 +73,7 @@ public final class ClientSetup {
         Minecraft mc = Minecraft.getInstance();
         while (OPEN_STATS.consumeClick()) {
             if (mc.player != null && mc.screen == null) {
-                mc.setScreen(new StatsScreen());
+                ModNetwork.sendToServer(new OpenCharacterMenuPacket());
             }
         }
     }
@@ -80,37 +81,6 @@ public final class ClientSetup {
     private static void onLoggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
         ClientStats.get().load(new CompoundTag());
         ClientMobLevels.clear();
-    }
-
-    /** Level, XP bar and mana bar in the top-left corner. */
-    private static void renderHud(GuiGraphics graphics, DeltaTracker deltaTracker) {
-        Minecraft mc = Minecraft.getInstance();
-        if (mc.player == null || mc.options.hideGui || mc.getDebugOverlay().showDebugScreen()) {
-            return;
-        }
-        PlayerStats stats = ClientStats.get();
-        int x = 4;
-        int y = 4;
-        int barWidth = 80;
-
-        Component label = Component.translatable("hud.arcanequest.level", stats.getLevel());
-        graphics.drawString(mc.font, label, x, y, 0xFFD700);
-        if (stats.getPoints() > 0) {
-            graphics.drawString(mc.font, Component.literal(" (+" + stats.getPoints() + ")"),
-                    x + mc.font.width(label), y, 0x7CFC00);
-        }
-        drawXpBar(graphics, x, y + 11, barWidth, 3, stats);
-
-        float maxMana = Mana.max(mc.player, stats);
-        drawBar(graphics, x, y + 17, barWidth, 3, stats.getMana() / maxMana, 0xFF3080FF);
-        graphics.drawString(mc.font, Component.translatable("hud.arcanequest.mana", (int) stats.getMana(), (int) maxMana),
-                x + barWidth + 4, y + 14, 0x6FA8FF);
-    }
-
-    static void drawXpBar(GuiGraphics graphics, int x, int y, int width, int height, PlayerStats stats) {
-        float progress = stats.isMaxLevel() ? 1.0F
-                : (float) stats.getXp() / PlayerStats.xpForNextLevel(stats.getLevel());
-        drawBar(graphics, x, y, width, height, progress, 0xFF7CFC00);
     }
 
     static void drawBar(GuiGraphics graphics, int x, int y, int width, int height, float progress, int color) {

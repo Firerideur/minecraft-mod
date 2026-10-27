@@ -28,12 +28,7 @@ minecraft {
             systemProperty 'forge.enabledGameTestNamespaces', 'arcanequest'
         }
 
-        register('client') {
-            // ./gradlew runClient -PquickPlay="<world name>" opens that singleplayer world directly
-            if (project.hasProperty('quickPlay')) {
-                args '--quickPlaySingleplayer', project.property('quickPlay')
-            }
-        }
+        register('client')
 
         register('server') {
             args '--nogui'

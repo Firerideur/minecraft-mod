@@ -105,7 +105,6 @@ Prérequis : Java 21.
 ```bash
 ./gradlew build              # compile le mod -> build/libs/arcanequest-<version>.jar
 ./gradlew runClient          # lance Minecraft avec le mod
-./gradlew runClient -PquickPlay="Mon monde"  # ouvre directement un monde solo
 ./gradlew runGameTestServer  # lance les tests automatiques
 python3 tools/generate_resources.py  # régénère textures, modèles, recettes, loots, tags, worldgen
 ```

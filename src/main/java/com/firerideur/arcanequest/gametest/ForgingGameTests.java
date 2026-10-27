@@ -114,4 +114,23 @@ public class ForgingGameTests {
                 "expected one forging recipe per weapon, got " + weapons);
         helper.succeed();
     }
+
+    @GameTest(template = EMPTY)
+    public static void weaponForgeShiftClick(GameTestHelper helper) {
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        player.getInventory().setItem(0, new ItemStack(ModItems.WEAPON_GRIP.get(), 2));
+        player.getInventory().setItem(1, new ItemStack(ModItems.MITHRIL_INGOT.get(), 5));
+        player.getInventory().setItem(2, new ItemStack(ModItems.TEMPLATES.get(WeaponType.KATANA).get()));
+        WeaponForgeMenu menu = new WeaponForgeMenu(1, player.getInventory(),
+                ContainerLevelAccess.create(helper.getLevel(), helper.absolutePos(new BlockPos(1, 2, 1))));
+        // Hotbar slots come after the 4 forge slots and the 27 inventory slots
+        int hotbarStart = 4 + 27;
+        menu.quickMoveStack(player, hotbarStart);
+        menu.quickMoveStack(player, hotbarStart + 1);
+        menu.quickMoveStack(player, hotbarStart + 2);
+        helper.assertTrue(menu.getSlot(0).getItem().is(ModItems.TEMPLATES.get(WeaponType.KATANA).get()), "blueprint should go to slot 1");
+        helper.assertTrue(menu.getSlot(1).getItem().is(ModItems.MITHRIL_INGOT.get()), "ingots should go to slot 2");
+        helper.assertTrue(menu.getSlot(2).getItem().is(ModItems.WEAPON_GRIP.get()), "grip should go to slot 3");
+        helper.succeed();
+    }
 }

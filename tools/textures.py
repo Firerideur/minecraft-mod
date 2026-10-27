@@ -606,6 +606,7 @@ def generate(assets: Path):
     save(mask_icon(GRIMOIRE, m["dark"], {"a": m["arcanite"]}), item / "forbidden_grimoire.png")
     save(gem(m["adamantite"], inner=m["fire"]), item / "golem_core.png")
     generate_forging(assets)
+    generate_ui(assets)
 
 
 # ---------------------------------------------------------------------------
@@ -868,111 +869,9 @@ def weapon_forge_bottom():
     return img
 
 
-# ---------------------------------------------------------------------------
-# GUI textures (256x256, panel 176x166, vanilla-like)
-# ---------------------------------------------------------------------------
-
-PANEL = (198, 198, 198)
-
-
-def gui_panel():
-    img = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
-    w, h = 176, 166
-    for y in range(h):
-        for x in range(w):
-            corner = (x < 2 or x > w - 3) and (y < 2 or y > h - 3)
-            if corner and not ((x in (1, w - 2)) and (y in (1, h - 2))):
-                continue
-            if x == 0 or y == 0 or x == w - 1 or y == h - 1:
-                color = BLACK
-            elif x <= 2 or y <= 2:
-                color = WHITE
-            elif x >= w - 3 or y >= h - 3:
-                color = (85, 85, 85)
-            else:
-                color = PANEL
-            img.putpixel((x, y), color + (255,))
-    for row in range(3):
-        for col in range(9):
-            gui_slot(img, 8 + col * 18, 84 + row * 18)
-    for col in range(9):
-        gui_slot(img, 8 + col * 18, 142)
-    return img
-
-
-def gui_slot(img, x, y, size=18):
-    """Slot whose item area starts at (x, y): frame drawn one pixel outside it."""
-    x0, y0 = x - 1, y - 1
-    for j in range(size):
-        for i in range(size):
-            if i == 0 or j == 0:
-                color = (55, 55, 55)
-            elif i == size - 1 or j == size - 1:
-                color = WHITE
-            else:
-                color = (139, 139, 139)
-            img.putpixel((x0 + i, y0 + j), color + (255,))
-
-
-def gui_arrow(img, x, y, fill=None):
-    """30x17 arrow; outline only when fill is None."""
-    for j in range(17):
-        for i in range(30):
-            in_shaft = i < 20 and 5 <= j <= 11
-            in_head = i >= 20 and abs(j - 8) <= (29 - i) * 0.85
-            if not (in_shaft or in_head):
-                continue
-            if fill:
-                color = lerp(fill[0], fill[1], i / 29)
-            else:
-                color = (139, 139, 139)
-            img.putpixel((x + i, y + j), color + (255,))
-
-
-def fusion_forge_gui():
-    img = gui_panel()
-    gui_slot(img, 38, 17)
-    gui_slot(img, 38, 53)
-    gui_slot(img, 8, 35)
-    gui_slot(img, 112, 31, size=26)
-    # "+" between the two inputs
-    for i in range(-3, 4):
-        img.putpixel((46 + i, 43), (85, 85, 85, 255))
-        img.putpixel((46, 43 + i), (85, 85, 85, 255))
-    gui_arrow(img, 74, 34)
-    # Charge gauge frame
-    for j in range(20):
-        for i in range(6):
-            img.putpixel((27 + i, 34 + j), ((55, 55, 55) if i == 0 or j == 0 else
-                                            WHITE if i == 5 or j == 19 else (40, 40, 40)) + (255,))
-    # Sprites: filled arrow at (176, 0), charge fill at (176, 17)
-    gui_arrow(img, 176, 0, fill=(MATERIALS["fire"], MATERIALS["arcanite"]))
-    for j in range(18):
-        for i in range(4):
-            img.putpixel((176 + i, 17 + j), lerp(mix_white(MATERIALS["arcanite"], 0.3),
-                                                  shade(MATERIALS["arcanite"], 0.6), j / 17) + (255,))
-    return img
-
-
-def weapon_forge_gui():
-    img = gui_panel()
-    for x in (8, 26, 44):
-        gui_slot(img, x, 48)
-    gui_slot(img, 98, 48)
-    gui_arrow(img, 63, 47)
-    # Error sprite at (176, 0): red cross
-    for i in range(16):
-        for d in (-1, 0, 1):
-            for x, y in ((i, i + d), (i, 15 - i + d)):
-                if 0 <= y < 16:
-                    img.putpixel((176 + x, y), (200, 30, 30, 255))
-    return img
-
-
 def generate_forging(assets: Path):
     item = assets / "textures" / "item"
     block = assets / "textures" / "block"
-    gui = assets / "textures" / "gui" / "container"
 
     for alloy in ("steel", "orichalcum", "arcanium", "starsteel"):
         save(ingot(WEAPON_COLORS[alloy]), item / f"{alloy}_ingot.png")
@@ -993,5 +892,116 @@ def generate_forging(assets: Path):
     save(weapon_forge_side(), block / "weapon_forge_side.png")
     save(weapon_forge_bottom(), block / "weapon_forge_bottom.png")
 
-    save(fusion_forge_gui(), gui / "fusion_forge.png")
-    save(weapon_forge_gui(), gui / "weapon_forge.png")
+
+
+# ---------------------------------------------------------------------------
+# Dark fantasy UI kit (256x256 atlas): dark charcoal panels, thin gold trims
+# ---------------------------------------------------------------------------
+
+UI_GOLD = (201, 162, 90)
+UI_GOLD_LIGHT = (240, 210, 140)
+UI_GOLD_DARK = (110, 82, 40)
+UI_BG = (22, 20, 18)
+
+
+def ui_atlas():
+    img = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
+    rng = random.Random(90)
+    noise = smooth_noise(91, size=64, cells=8)
+
+    # (0,0) 64x64 panel background tile: charcoal with soft noise and faint scratches
+    for y in range(64):
+        for x in range(64):
+            f = 0.8 + 0.4 * noise[y][x]
+            img.putpixel((x, y), shade(UI_BG, f) + (238,))
+    for _ in range(14):
+        x, y = rng.randrange(64), rng.randrange(64)
+        for i in range(rng.randrange(4, 10)):
+            px, py = (x + i) % 64, (y + i // 2) % 64
+            img.putpixel((px, py), shade(UI_BG, 1.35) + (238,))
+
+    # (64,0) 18x18 slot and (82,0) highlighted slot: engraved dark stone, thin border
+    slot_noise = smooth_noise(92, size=18, cells=3)
+    for ox, border in ((64, shade(UI_GOLD, 0.45)), (82, UI_GOLD_LIGHT)):
+        for y in range(18):
+            for x in range(18):
+                if x in (0, 17) or y in (0, 17):
+                    color = border
+                elif x == 1 or y == 1:
+                    color = (8, 8, 8)
+                else:
+                    color = shade((34, 31, 28), 0.85 + 0.3 * slot_noise[y][x])
+                img.putpixel((ox + x, y), color + (255,))
+        for i in range(3, 9):  # diagonal scratch like engraved stone
+            img.putpixel((ox + i + 4, 12 - i // 2), shade((34, 31, 28), 1.3) + (255,))
+
+    # (100,0) four 9x9 corner flourishes: TL, TR, BL, BR
+    corner = [
+        "ggggg....",
+        "gLLLgg...",
+        "gL..gLg..",
+        "gL...gg..",
+        "gggg..g..",
+        ".g.g.....",
+        ".gg......",
+        "..g......",
+        ".........",
+    ]
+    def put_corner(ox, oy, flip_x, flip_y):
+        for y, row in enumerate(corner):
+            for x, ch in enumerate(row):
+                if ch == ".":
+                    continue
+                tx = 8 - x if flip_x else x
+                ty = 8 - y if flip_y else y
+                img.putpixel((ox + tx, oy + ty), (UI_GOLD_LIGHT if ch == "L" else UI_GOLD) + (255,))
+    put_corner(100, 0, False, False)
+    put_corner(109, 0, True, False)
+    put_corner(100, 9, False, True)
+    put_corner(109, 9, True, True)
+
+    # (118,0) 7x7 diamond ornament
+    for y in range(7):
+        for x in range(7):
+            d = abs(x - 3) + abs(y - 3)
+            if d <= 3:
+                img.putpixel((118 + x, y), (UI_GOLD_LIGHT if d <= 1 else UI_GOLD) + (255,))
+
+    # (128,0) 24x15 crafting arrow (gold)
+    for y in range(15):
+        for x in range(24):
+            shaft = x < 15 and 5 <= y <= 9
+            head = x >= 15 and abs(y - 7) <= (23 - x)
+            if shaft or head:
+                img.putpixel((128 + x, y), lerp(UI_GOLD_LIGHT, UI_GOLD_DARK, y / 14) + (255,))
+
+    # (0,64) 40x40 medallion ring with thorny gold rim
+    cx = cy = 19.5
+    for y in range(40):
+        for x in range(40):
+            d = math.hypot(x - cx, y - cy)
+            angle = math.atan2(y - cy, x - cx)
+            spike = 0.8 * max(0.0, math.cos(angle * 12)) ** 6
+            if 15.5 <= d <= 18.0 + spike:
+                t = (d - 15.5) / 3
+                img.putpixel((x, 64 + y), lerp(UI_GOLD_LIGHT, UI_GOLD_DARK, t) + (255,))
+            elif 14.5 <= d < 15.5:
+                img.putpixel((x, 64 + y), (10, 9, 8, 255))
+            elif d < 14.5:
+                img.putpixel((x, 64 + y), shade(UI_BG, 0.7 + 0.2 * (d / 14.5)) + (255,))
+
+    # (0,104) selected tab 96x24: gold glow fading to the right, gold frame
+    for y in range(24):
+        for x in range(96):
+            edge = y in (0, 23) or x == 0
+            glow = max(0.0, 1 - x / 96) * (1 - abs(y - 11.5) / 12)
+            if edge:
+                color = UI_GOLD if x < 90 else UI_GOLD_DARK
+            else:
+                color = lerp(UI_BG, (120, 90, 40), glow * 0.8)
+            img.putpixel((x, 104 + y), color + (235,))
+    return img
+
+
+def generate_ui(assets: Path):
+    save(ui_atlas(), assets / "textures" / "gui" / "arcane_ui.png")

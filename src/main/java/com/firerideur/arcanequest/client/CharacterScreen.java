@@ -1,0 +1,315 @@
+package com.firerideur.arcanequest.client;
+
+import com.firerideur.arcanequest.character.CharacterMenu;
+import com.firerideur.arcanequest.character.CharacterMenu.View;
+import com.firerideur.arcanequest.client.ui.GoldButton;
+import com.firerideur.arcanequest.client.ui.UiKit;
+import com.firerideur.arcanequest.magic.Mana;
+import com.firerideur.arcanequest.network.ChooseClassPacket;
+import com.firerideur.arcanequest.network.ModNetwork;
+import com.firerideur.arcanequest.network.SpendPointPacket;
+import com.firerideur.arcanequest.stats.PlayerClass;
+import com.firerideur.arcanequest.stats.PlayerStats;
+import com.firerideur.arcanequest.stats.Stat;
+import com.firerideur.arcanequest.stats.StatEffects;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.client.gui.screens.options.OptionsScreen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * The character menu (K) in the dark fantasy style: side tabs, inventory, equipment, crafting and skills.
+ */
+public class CharacterScreen extends AbstractContainerScreen<CharacterMenu> {
+    private static final int WIDTH = 404;
+    private static final int HEIGHT = 170;
+    /** Leave room for the HUD medallion and bars above the menu. */
+    private static final int MIN_TOP = 50;
+    private static final int TAB_Y = 4, TAB_SPACING = 27;
+    private static final int SKILL_ROW_Y = 50, SKILL_ROW_H = 14, SKILLS_H = 154;
+    private static final int CLASS_Y = 116;
+
+    private enum Tab {
+        INVENTORY("inventory", new ItemStack(Items.BUNDLE)),
+        CRAFTING("crafting", new ItemStack(Items.CRAFTING_TABLE)),
+        SKILLS("skills", new ItemStack(Items.EXPERIENCE_BOTTLE)),
+        SETTINGS("settings", new ItemStack(Items.COMPARATOR));
+
+        final String key;
+        final ItemStack icon;
+
+        Tab(String key, ItemStack icon) {
+            this.key = key;
+            this.icon = icon;
+        }
+
+        Component label() {
+            return Component.translatable("screen.arcanequest.tab." + key);
+        }
+    }
+
+    /** Remembered between openings. */
+    private static Tab lastTab = Tab.INVENTORY;
+
+    private Tab tab = lastTab;
+    private final Map<Stat, GoldButton> plusButtons = new EnumMap<>(Stat.class);
+    private final List<GoldButton> classButtons = new ArrayList<>();
+
+    public CharacterScreen(CharacterMenu menu, Inventory inventory, Component title) {
+        super(menu, inventory, title);
+        imageWidth = WIDTH;
+        imageHeight = HEIGHT;
+    }
+
+    @Override
+    protected void init() {
+        super.init();
+        topPos = Math.max(topPos, Math.min(MIN_TOP, height - imageHeight));
+        plusButtons.clear();
+        classButtons.clear();
+        int panelRight = leftPos + CharacterMenu.EQUIPMENT_X + CharacterMenu.EQUIPMENT_W;
+        for (Stat stat : Stat.values()) {
+            GoldButton plus = new GoldButton(panelRight - 24, topPos + SKILL_ROW_Y + stat.ordinal() * SKILL_ROW_H + 6, 12, 12,
+                    Component.literal("+"), () -> ModNetwork.sendToServer(new SpendPointPacket(stat.ordinal())), stat.description());
+            plusButtons.put(stat, addRenderableWidget(plus));
+        }
+        PlayerClass[] choices = {PlayerClass.WARRIOR, PlayerClass.MAGE, PlayerClass.ARCHER, PlayerClass.ASSASSIN};
+        int x = leftPos + CharacterMenu.INVENTORY_X + 10;
+        int buttonWidth = (CharacterMenu.EQUIPMENT_X + CharacterMenu.EQUIPMENT_W - CharacterMenu.INVENTORY_X - 20 - 3 * 4) / 4;
+        for (PlayerClass playerClass : choices) {
+            GoldButton button = new GoldButton(x, topPos + CLASS_Y + 11, buttonWidth, 14, playerClass.displayName(),
+                    () -> ModNetwork.sendToServer(new ChooseClassPacket(playerClass.ordinal())), playerClass.description());
+            classButtons.add(addRenderableWidget(button));
+            x += buttonWidth + 4;
+        }
+        selectTab(tab);
+    }
+
+    private void selectTab(Tab newTab) {
+        if (newTab == Tab.SETTINGS) {
+            minecraft.setScreen(new OptionsScreen(this, minecraft.options));
+            return;
+        }
+        tab = newTab;
+        lastTab = newTab;
+        menu.setView(switch (newTab) {
+            case CRAFTING -> View.CRAFTING;
+            case SKILLS -> View.SKILLS;
+            default -> View.INVENTORY;
+        });
+        updateWidgets();
+    }
+
+    private void updateWidgets() {
+        PlayerStats stats = ClientStats.get();
+        boolean skills = tab == Tab.SKILLS;
+        plusButtons.values().forEach(b -> {
+            b.visible = skills;
+            b.active = stats.getPoints() > 0;
+        });
+        boolean chooseClass = skills && stats.getPlayerClass() == PlayerClass.NONE;
+        classButtons.forEach(b -> b.visible = chooseClass);
+    }
+
+    @Override
+    protected void containerTick() {
+        super.containerTick();
+        updateWidgets();
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        for (Tab t : Tab.values()) {
+            int ty = topPos + TAB_Y + t.ordinal() * TAB_SPACING;
+            if (mouseX >= leftPos && mouseX < leftPos + UiKit.TAB_WIDTH && mouseY >= ty && mouseY < ty + UiKit.TAB_HEIGHT) {
+                selectTab(t);
+                return true;
+            }
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (ClientSetup.OPEN_STATS.matches(keyCode, scanCode)) {
+            onClose();
+            return true;
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    // ------------------------------------------------------------------
+    // Rendering
+    // ------------------------------------------------------------------
+
+    @Override
+    public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        // Keep the world visible behind the menu, just darker, like the mockup
+        g.fillGradient(0, 0, width, height, 0x90000000, 0xD0000000);
+        // AbstractContainerScreen draws its background from here
+        renderBg(g, partialTick, mouseX, mouseY);
+    }
+
+    @Override
+    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        super.render(g, mouseX, mouseY, partialTick);
+        renderTooltip(g, mouseX, mouseY);
+    }
+
+    @Override
+    protected void renderBg(GuiGraphics g, float partialTick, int mouseX, int mouseY) {
+        renderTabs(g, mouseX, mouseY);
+        if (tab == Tab.SKILLS) {
+            renderSkills(g);
+        } else {
+            renderInventoryPanel(g);
+            if (tab == Tab.CRAFTING) {
+                renderCraftingPanel(g);
+            } else {
+                renderEquipmentPanel(g, mouseX, mouseY);
+            }
+            for (Slot slot : menu.slots) {
+                if (slot.isActive()) {
+                    UiKit.slot(g, leftPos + slot.x - 1, topPos + slot.y - 1, slot == hoveredSlot);
+                }
+            }
+        }
+        renderFooter(g);
+    }
+
+    @Override
+    protected void renderLabels(GuiGraphics g, int mouseX, int mouseY) {
+        // Titles are drawn by the panels
+    }
+
+    private void renderTabs(GuiGraphics g, int mouseX, int mouseY) {
+        for (Tab t : Tab.values()) {
+            int x = leftPos;
+            int y = topPos + TAB_Y + t.ordinal() * TAB_SPACING;
+            boolean hovered = mouseX >= x && mouseX < x + UiKit.TAB_WIDTH && mouseY >= y && mouseY < y + UiKit.TAB_HEIGHT;
+            if (t == tab) {
+                UiKit.selectedTab(g, x, y);
+            } else if (hovered) {
+                g.fill(x, y, x + UiKit.TAB_WIDTH - 8, y + UiKit.TAB_HEIGHT, 0x40C9A25A);
+            }
+            g.renderItem(t.icon, x + 4, y + 4);
+            g.drawString(font, t.label(), x + 24, y + 8, t == tab || hovered ? UiKit.GOLD_LIGHT : UiKit.TEXT, false);
+            if (t.ordinal() < Tab.values().length - 1) {
+                UiKit.rule(g, x + 4, y + UiKit.TAB_HEIGHT + 1, UiKit.TAB_WIDTH - 12);
+            }
+        }
+    }
+
+    private void renderInventoryPanel(GuiGraphics g) {
+        int x = leftPos + CharacterMenu.INVENTORY_X;
+        int y = topPos;
+        UiKit.panel(g, x, y, CharacterMenu.INVENTORY_W, CharacterMenu.PANEL_H);
+        UiKit.title(g, font, Component.translatable("screen.arcanequest.tab.inventory"), x + 8, y + 9, CharacterMenu.INVENTORY_W - 16);
+        UiKit.title(g, font, Component.translatable("screen.arcanequest.hotbar"), x + 8, y + CharacterMenu.HOTBAR_Y - 17,
+                CharacterMenu.INVENTORY_W - 16);
+    }
+
+    private void renderEquipmentPanel(GuiGraphics g, int mouseX, int mouseY) {
+        int x = leftPos + CharacterMenu.EQUIPMENT_X;
+        int y = topPos;
+        UiKit.panel(g, x, y, CharacterMenu.EQUIPMENT_W, CharacterMenu.PANEL_H);
+        UiKit.title(g, font, Component.translatable("screen.arcanequest.equipment"), x + 8, y + 9, CharacterMenu.EQUIPMENT_W - 16);
+        int modelLeft = x + 30, modelTop = y + 26, modelRight = x + 94, modelBottom = y + 98;
+        g.fill(modelLeft, modelTop, modelRight, modelBottom, 0xC0080706);
+        UiKit.frame(g, modelLeft, modelTop, modelRight - modelLeft, modelBottom - modelTop, UiKit.GOLD_DARK);
+        if (minecraft.player != null) {
+            InventoryScreen.renderEntityInInventoryFollowsMouse(g, modelLeft, modelTop, modelRight, modelBottom,
+                    30, 0.0625F, mouseX, mouseY, minecraft.player);
+        }
+        PlayerStats stats = ClientStats.get();
+        g.drawCenteredString(font, Component.translatable("hud.arcanequest.level", stats.getLevel()),
+                (modelLeft + modelRight) / 2, y + 104, UiKit.GOLD_LIGHT);
+        g.drawCenteredString(font, stats.getPlayerClass().displayName(), (modelLeft + modelRight) / 2, y + 115,
+                stats.getPlayerClass().color());
+    }
+
+    private void renderCraftingPanel(GuiGraphics g) {
+        int x = leftPos + CharacterMenu.EQUIPMENT_X;
+        int y = topPos;
+        UiKit.panel(g, x, y, CharacterMenu.EQUIPMENT_W, CharacterMenu.PANEL_H);
+        UiKit.title(g, font, Component.translatable("screen.arcanequest.tab.crafting"), x + 8, y + 9, CharacterMenu.EQUIPMENT_W - 16);
+        UiKit.arrow(g, leftPos + CharacterMenu.CRAFT_X + 40, topPos + CharacterMenu.RESULT_Y + 1);
+        g.drawWordWrap(font, Component.translatable("screen.arcanequest.crafting_hint"), x + 10, y + 86,
+                CharacterMenu.EQUIPMENT_W - 20, UiKit.TEXT_DIM);
+    }
+
+    private void renderSkills(GuiGraphics g) {
+        int x = leftPos + CharacterMenu.INVENTORY_X;
+        int y = topPos;
+        int w = CharacterMenu.EQUIPMENT_X + CharacterMenu.EQUIPMENT_W - CharacterMenu.INVENTORY_X;
+        UiKit.panel(g, x, y, w, SKILLS_H);
+        PlayerStats stats = ClientStats.get();
+        UiKit.title(g, font, Component.translatable("screen.arcanequest.tab.skills"), x + 8, y + 9, w - 16);
+
+        Component level = Component.translatable("screen.arcanequest.level", stats.getLevel());
+        g.drawString(font, level, x + 10, y + 25, UiKit.GOLD_LIGHT, false);
+        Component xp = stats.isMaxLevel() ? Component.translatable("screen.arcanequest.max_level")
+                : Component.translatable("screen.arcanequest.xp", stats.getXp(), PlayerStats.xpForNextLevel(stats.getLevel()));
+        g.drawString(font, xp, x + w - 10 - font.width(xp), y + 25, UiKit.TEXT_DIM, false);
+        float progress = stats.isMaxLevel() ? 1 : (float) stats.getXp() / PlayerStats.xpForNextLevel(stats.getLevel());
+        UiKit.bar(g, x + 12, y + 37, w - 30, 3, progress, 0xFF4CAF50);
+
+        Component points = Component.translatable("screen.arcanequest.points", stats.getPoints());
+        g.drawString(font, points, x + w / 2 - font.width(points) / 2, y + 43, stats.getPoints() > 0 ? 0xFF7CFC00 : UiKit.TEXT_DIM, false);
+
+        for (Stat stat : Stat.values()) {
+            int rowY = y + SKILL_ROW_Y + stat.ordinal() * SKILL_ROW_H + 8;
+            g.drawString(font, stat.displayName(), x + 12, rowY, stat.color(), false);
+            g.drawString(font, String.valueOf(stats.get(stat)), x + 90, rowY, UiKit.TEXT, false);
+            g.drawString(font, bonus(stat, stats.get(stat)), x + 110, rowY, UiKit.TEXT_DIM, false);
+        }
+
+        int classY = y + CLASS_Y;
+        PlayerClass playerClass = stats.getPlayerClass();
+        if (playerClass == PlayerClass.NONE) {
+            g.drawString(font, Component.translatable("screen.arcanequest.choose_class"), x + 10, classY, 0xFF55FFFF, false);
+        } else {
+            g.drawString(font, Component.translatable("screen.arcanequest.class", playerClass.displayName()),
+                    x + 10, classY, playerClass.color(), false);
+            g.drawWordWrap(font, playerClass.description(), x + 10, classY + 11, w - 20, UiKit.TEXT_DIM);
+        }
+        if (minecraft.player != null) {
+            Component mana = Component.translatable("hud.arcanequest.mana", (int) stats.getMana(),
+                    (int) Mana.max(minecraft.player, stats));
+            g.drawString(font, mana, x + 10, y + 43, 0xFF6FA8FF, false);
+        }
+    }
+
+    private static Component bonus(Stat stat, int value) {
+        return switch (stat) {
+            case STRENGTH -> Component.translatable("screen.arcanequest.bonus.strength", format(value * StatEffects.DAMAGE_PER_STRENGTH));
+            case VITALITY -> Component.translatable("screen.arcanequest.bonus.vitality", format(value * StatEffects.HEALTH_PER_VITALITY / 2.0));
+            case AGILITY -> Component.translatable("screen.arcanequest.bonus.agility", format(value * StatEffects.SPEED_PER_AGILITY * 100));
+            case INTELLIGENCE -> Component.translatable("screen.arcanequest.bonus.intelligence",
+                    format(value * Mana.MANA_PER_INTELLIGENCE), value * 5);
+        };
+    }
+
+    private static String format(double value) {
+        return value == Math.floor(value) ? String.valueOf((long) value) : String.format("%.1f", value);
+    }
+
+    private void renderFooter(GuiGraphics g) {
+        int y = topPos + HEIGHT - 8;
+        UiKit.rule(g, leftPos, y - 6, imageWidth);
+        int x = leftPos + 4;
+        x = UiKit.keyHint(g, font, "Clic", Component.translatable("screen.arcanequest.hint.select"), x, y);
+        x = UiKit.keyHint(g, font, "Maj+Clic", Component.translatable("screen.arcanequest.hint.move"), x, y);
+        UiKit.keyHint(g, font, "K / Échap", Component.translatable("screen.arcanequest.hint.close"), x, y);
+    }
+}

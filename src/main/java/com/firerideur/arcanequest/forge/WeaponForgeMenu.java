@@ -1,6 +1,7 @@
 package com.firerideur.arcanequest.forge;
 
 import com.firerideur.arcanequest.registry.ModBlocks;
+import com.firerideur.arcanequest.registry.ModItems;
 import com.firerideur.arcanequest.registry.ModMenus;
 import com.firerideur.arcanequest.registry.ModRecipes;
 import net.minecraft.world.entity.player.Inventory;
@@ -84,6 +85,18 @@ public class WeaponForgeMenu extends ItemCombinerMenu {
     public boolean hasInvalidRecipe() {
         return !inputSlots.getItem(0).isEmpty() && !inputSlots.getItem(1).isEmpty() && !inputSlots.getItem(2).isEmpty()
                 && resultSlots.getItem(0).isEmpty();
+    }
+
+    /** Shift-click sends blueprints, grips/shafts and ingots each to their own slot. */
+    @Override
+    public int getSlotToQuickMoveTo(ItemStack stack) {
+        if (ModItems.TEMPLATES.values().stream().anyMatch(template -> stack.is(template.get()))) {
+            return 0;
+        }
+        if (stack.is(ModItems.WEAPON_GRIP.get()) || stack.is(ModItems.WEAPON_SHAFT.get())) {
+            return 2;
+        }
+        return 1;
     }
 
     @Override
