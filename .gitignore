@@ -54,3 +54,6 @@ forge*changelog.txt
 
 # Forge
 run-data
+
+# Python
+__pycache__/

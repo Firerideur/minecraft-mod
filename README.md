@@ -82,6 +82,6 @@ Prérequis : Java 21.
 python3 tools/generate_resources.py  # régénère textures, modèles, recettes, loots, tags, worldgen
 ```
 
-Les textures sont du pixel art original généré par `tools/generate_resources.py`. Les traductions sont dans `src/main/resources/assets/arcanequest/lang/` (fr_fr, en_us).
+Les textures sont du pixel art original au style « PvP » (outils 32×32 sombres à reflets colorés), dessiné par `tools/textures.py`. Les traductions sont dans `src/main/resources/assets/arcanequest/lang/` (fr_fr, en_us).
 
 Pour jouer : copier `build/libs/arcanequest-<version>.jar` dans le dossier `mods` d'une installation Forge 1.21.1.
