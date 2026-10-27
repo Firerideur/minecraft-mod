@@ -8,6 +8,8 @@ import com.firerideur.arcanequest.magic.Mana;
 import com.firerideur.arcanequest.network.ChooseClassPacket;
 import com.firerideur.arcanequest.network.ModNetwork;
 import com.firerideur.arcanequest.network.SpendPointPacket;
+import com.firerideur.arcanequest.skill.ClassSkills;
+import com.firerideur.arcanequest.skill.Skill;
 import com.firerideur.arcanequest.stats.PlayerClass;
 import com.firerideur.arcanequest.stats.PlayerStats;
 import com.firerideur.arcanequest.stats.Stat;
@@ -20,6 +22,7 @@ import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.gui.screens.options.OptionsScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -38,7 +41,7 @@ public class CharacterScreen extends AbstractContainerScreen<CharacterMenu> {
     private static final int HEIGHT = 170;
     /** Leave room for the HUD medallion and bars above the menu. */
     private static final int MIN_TOP = 50;
-    private static final int TAB_Y = 4, TAB_SPACING = 27;
+    private static final int TAB_Y = 2, TAB_SPACING = 26;
     private static final int SKILL_ROW_Y = 50, SKILL_ROW_H = 14, SKILLS_H = 154;
     private static final int CLASS_Y = 116;
 
@@ -46,6 +49,7 @@ public class CharacterScreen extends AbstractContainerScreen<CharacterMenu> {
         INVENTORY("inventory", new ItemStack(Items.BUNDLE)),
         CRAFTING("crafting", new ItemStack(Items.CRAFTING_TABLE)),
         SKILLS("skills", new ItemStack(Items.EXPERIENCE_BOTTLE)),
+        ABILITIES("abilities", new ItemStack(Items.ENCHANTED_BOOK)),
         MAP("map", new ItemStack(Items.FILLED_MAP)),
         SETTINGS("settings", new ItemStack(Items.COMPARATOR));
 
@@ -114,7 +118,7 @@ public class CharacterScreen extends AbstractContainerScreen<CharacterMenu> {
         lastTab = newTab;
         menu.setView(switch (newTab) {
             case CRAFTING -> View.CRAFTING;
-            case SKILLS -> View.SKILLS;
+            case SKILLS, ABILITIES -> View.SKILLS;
             case MAP -> View.MAP;
             default -> View.INVENTORY;
         });
@@ -199,6 +203,9 @@ public class CharacterScreen extends AbstractContainerScreen<CharacterMenu> {
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         super.render(g, mouseX, mouseY, partialTick);
         renderTooltip(g, mouseX, mouseY);
+        if (tab == Tab.ABILITIES) {
+            renderAbilityTooltip(g, mouseX, mouseY);
+        }
     }
 
     @Override
@@ -206,6 +213,8 @@ public class CharacterScreen extends AbstractContainerScreen<CharacterMenu> {
         renderTabs(g, mouseX, mouseY);
         if (tab == Tab.SKILLS) {
             renderSkills(g);
+        } else if (tab == Tab.ABILITIES) {
+            renderAbilities(g);
         } else if (tab == Tab.MAP) {
             renderMap(g, partialTick);
         } else {
@@ -349,6 +358,72 @@ public class CharacterScreen extends AbstractContainerScreen<CharacterMenu> {
                     (int) Mana.max(minecraft.player, stats));
             g.drawString(font, mana, x + 10, y + 43, 0xFF6FA8FF, false);
         }
+    }
+
+    private static final int ABILITY_ROW_Y = 24, ABILITY_ROW_H = 25;
+
+    private void renderAbilities(GuiGraphics g) {
+        int x = leftPos + CharacterMenu.INVENTORY_X;
+        int y = topPos;
+        int w = CharacterMenu.EQUIPMENT_X + CharacterMenu.EQUIPMENT_W - CharacterMenu.INVENTORY_X;
+        UiKit.panel(g, x, y, w, SKILLS_H);
+        UiKit.title(g, font, Component.translatable("screen.arcanequest.tab.abilities"), x + 8, y + 9, w - 16);
+        PlayerStats stats = ClientStats.get();
+        List<Skill> skills = ClassSkills.skillsOf(stats.getPlayerClass());
+        if (skills.isEmpty()) {
+            g.drawWordWrap(font, Component.translatable("screen.arcanequest.abilities_no_class", PlayerClass.UNLOCK_LEVEL),
+                    x + 10, y + 30, w - 20, UiKit.TEXT_DIM);
+            return;
+        }
+        for (int slot = 0; slot < ClassSkills.SLOTS; slot++) {
+            int rowY = y + ABILITY_ROW_Y + slot * ABILITY_ROW_H;
+            Skill skill = slot < skills.size() ? skills.get(slot) : null;
+            boolean unlocked = skill != null && stats.getLevel() >= ClassSkills.UNLOCK_LEVELS[slot];
+            UiKit.slot(g, x + 10, rowY, false);
+            if (skill != null) {
+                g.renderItem(new ItemStack(skill.icon()), x + 11, rowY + 1);
+                if (!unlocked) {
+                    g.pose().pushPose();
+                    g.pose().translate(0, 0, 200);
+                    g.fill(x + 11, rowY + 1, x + 27, rowY + 17, 0xA0000000);
+                    g.pose().popPose();
+                }
+            }
+            Component name = skill != null ? skill.displayName() : Component.translatable("screen.arcanequest.ability_awakening");
+            g.drawString(font, name, x + 34, rowY, unlocked ? UiKit.GOLD_LIGHT : UiKit.TEXT_DIM, false);
+            Component state = unlocked
+                    ? Component.literal("[" + ClientSetup.SKILL_KEYS[slot].getTranslatedKeyMessage().getString() + "]")
+                    : Component.translatable("screen.arcanequest.ability_level", ClassSkills.UNLOCK_LEVELS[slot]);
+            g.drawString(font, state, x + w - 10 - font.width(state), rowY, unlocked ? 0xFF7CFC00 : UiKit.TEXT_DIM, false);
+            Component description = skill != null ? skill.description() : Component.translatable("screen.arcanequest.ability_awakening.desc");
+            // Description on one small line; the tooltip shows all of it
+            var lines = font.split(description, (int) ((w - 46) / 0.75F));
+            if (!lines.isEmpty()) {
+                g.pose().pushPose();
+                g.pose().scale(0.75F, 0.75F, 1.0F);
+                g.drawString(font, lines.get(0), (int) ((x + 34) / 0.75F), (int) ((rowY + 11) / 0.75F), UiKit.TEXT_DIM, false);
+                g.pose().popPose();
+            }
+        }
+    }
+
+    private void renderAbilityTooltip(GuiGraphics g, int mouseX, int mouseY) {
+        int x = leftPos + CharacterMenu.INVENTORY_X;
+        int w = CharacterMenu.EQUIPMENT_X + CharacterMenu.EQUIPMENT_W - CharacterMenu.INVENTORY_X;
+        List<Skill> skills = ClassSkills.skillsOf(ClientStats.get().getPlayerClass());
+        int slot = (mouseY - topPos - ABILITY_ROW_Y) / ABILITY_ROW_H;
+        if (mouseX < x || mouseX >= x + w || mouseY < topPos + ABILITY_ROW_Y || slot < 0 || slot >= skills.size()) {
+            return;
+        }
+        Skill skill = skills.get(slot);
+        List<Component> lines = new ArrayList<>();
+        lines.add(skill.displayName().copy().withColor(UiKit.GOLD_LIGHT));
+        font.getSplitter().splitLines(skill.description(), 220, Style.EMPTY)
+                .forEach(line -> lines.add(Component.literal(line.getString()).withColor(UiKit.TEXT)));
+        lines.add(Component.translatable("screen.arcanequest.ability_cost", (int) skill.manaCost(), skill.cooldownTicks() / 20)
+                .withColor(0xFF6FA8FF));
+        lines.add(Component.translatable("screen.arcanequest.ability_unlock", ClassSkills.UNLOCK_LEVELS[slot]).withColor(UiKit.TEXT_DIM));
+        g.renderComponentTooltip(font, lines, mouseX, mouseY);
     }
 
     private void renderMap(GuiGraphics g, float partialTick) {

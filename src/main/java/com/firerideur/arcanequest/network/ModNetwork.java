@@ -9,7 +9,7 @@ import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.SimpleChannel;
 
 public final class ModNetwork {
-    private static final int PROTOCOL_VERSION = 3;
+    private static final int PROTOCOL_VERSION = 4;
 
     public static final SimpleChannel CHANNEL = ChannelBuilder.named(ArcaneQuest.id("main"))
             .networkProtocolVersion(PROTOCOL_VERSION)
@@ -37,6 +37,16 @@ public final class ModNetwork {
                 .encoder(OpenCharacterMenuPacket::encode)
                 .decoder(OpenCharacterMenuPacket::decode)
                 .consumerMainThread(OpenCharacterMenuPacket::handle)
+                .add();
+        CHANNEL.messageBuilder(UseSkillPacket.class, NetworkDirection.PLAY_TO_SERVER)
+                .encoder(UseSkillPacket::encode)
+                .decoder(UseSkillPacket::decode)
+                .consumerMainThread(UseSkillPacket::handle)
+                .add();
+        CHANNEL.messageBuilder(SkillCooldownPacket.class, NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(SkillCooldownPacket::encode)
+                .decoder(SkillCooldownPacket::decode)
+                .consumerMainThread(SkillCooldownPacket::handle)
                 .add();
         CHANNEL.messageBuilder(MobLevelPacket.class, NetworkDirection.PLAY_TO_CLIENT)
                 .encoder(MobLevelPacket::encode)

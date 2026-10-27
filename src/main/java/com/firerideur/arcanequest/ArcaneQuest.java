@@ -12,6 +12,7 @@ import com.firerideur.arcanequest.registry.ModEntities;
 import com.firerideur.arcanequest.registry.ModItems;
 import com.firerideur.arcanequest.registry.ModMenus;
 import com.firerideur.arcanequest.registry.ModRecipes;
+import com.firerideur.arcanequest.skill.SkillRuntime;
 import com.firerideur.arcanequest.stats.ClassEvents;
 import com.firerideur.arcanequest.stats.StatsEvents;
 import com.firerideur.arcanequest.weapon.WeaponEvents;
@@ -51,6 +52,7 @@ public class ArcaneQuest {
         // Game events (kills, login, respawn, commands, mobs...)
         MinecraftForge.EVENT_BUS.register(StatsEvents.class);
         MinecraftForge.EVENT_BUS.register(ClassEvents.class);
+        MinecraftForge.EVENT_BUS.register(SkillRuntime.class);
         MinecraftForge.EVENT_BUS.register(MobEvents.class);
         MinecraftForge.EVENT_BUS.register(WeaponEvents.class);
         MinecraftForge.EVENT_BUS.register(HammerItem.class);

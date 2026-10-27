@@ -24,6 +24,7 @@ import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -71,8 +72,29 @@ public class ShadowSoldier extends PathfinderMob {
     public static ShadowSoldier tryRaise(ServerPlayer owner, PlayerStats stats, LivingEntity victim) {
         PlayerClass.Bonuses bonuses = stats.getPlayerClass().bonuses();
         if (bonuses.shadowChance() <= 0 || !(victim instanceof Enemy) || victim instanceof ArcaneBoss
-                || victim instanceof ShadowSoldier || owner.getRandom().nextFloat() >= bonuses.shadowChance()
-                || !(owner.level() instanceof ServerLevel level)) {
+                || victim instanceof ShadowSoldier || owner.getRandom().nextFloat() >= bonuses.shadowChance()) {
+            return null;
+        }
+        double health = Math.max(10.0, Math.min(80.0, victim.getMaxHealth() * 0.6 * bonuses.shadowPower()));
+        return spawn(owner, stats, victim.position(), health, bonuses.shadowPower(), bonuses.shadowLifetime());
+    }
+
+    /**
+     * Calls a shadow next to {@code owner} without a body to raise (skills).
+     *
+     * @param lifetime ticks before it fades, 0 = permanent
+     */
+    @Nullable
+    public static ShadowSoldier summon(ServerPlayer owner, PlayerStats stats, float power, int lifetime) {
+        double angle = owner.getRandom().nextDouble() * Math.PI * 2;
+        Vec3 pos = owner.position().add(Math.cos(angle) * 2.0, 0, Math.sin(angle) * 2.0);
+        double health = Math.min(100.0, 20.0 * power * (1.0 + stats.getLevel() * 0.02));
+        return spawn(owner, stats, pos, health, power * stats.getPlayerClass().bonuses().shadowPower(), lifetime);
+    }
+
+    @Nullable
+    private static ShadowSoldier spawn(ServerPlayer owner, PlayerStats stats, Vec3 pos, double health, float power, int lifetime) {
+        if (!(owner.level() instanceof ServerLevel level)) {
             return null;
         }
         ShadowSoldier shadow = ModEntities.SHADOW_SOLDIER.get().create(level);
@@ -80,18 +102,17 @@ public class ShadowSoldier extends PathfinderMob {
             return null;
         }
         // Too many shadows: the oldest one fades
+        int max = Math.max(1, stats.getPlayerClass().bonuses().shadowMax());
         List<ShadowSoldier> army = armyOf(owner);
-        while (army.size() >= bonuses.shadowMax() && !army.isEmpty()) {
+        while (army.size() >= max && !army.isEmpty()) {
             army.remove(0).fade();
         }
-        float power = bonuses.shadowPower();
         shadow.ownerId = owner.getUUID();
-        shadow.lifetime = bonuses.shadowLifetime();
-        double health = Math.max(10.0, Math.min(80.0, victim.getMaxHealth() * 0.6 * power));
+        shadow.lifetime = lifetime;
         shadow.getAttribute(Attributes.MAX_HEALTH).setBaseValue(health);
         shadow.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue((3.0 + stats.getLevel() * 0.1) * power);
         shadow.setHealth((float) health);
-        shadow.moveTo(victim.getX(), victim.getY(), victim.getZ(), victim.getYRot(), 0);
+        shadow.moveTo(pos.x, pos.y, pos.z, owner.getYRot(), 0);
         shadow.finalizeSpawn(level, level.getCurrentDifficultyAt(shadow.blockPosition()), MobSpawnType.MOB_SUMMONED, null);
         level.addFreshEntity(shadow);
         level.sendParticles(ParticleTypes.SOUL, shadow.getX(), shadow.getY() + 0.5, shadow.getZ(), 20, 0.3, 0.6, 0.3, 0.05);

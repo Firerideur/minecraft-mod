@@ -4,6 +4,7 @@ import com.firerideur.arcanequest.ArcaneQuest;
 import com.firerideur.arcanequest.client.boss.BossRenderers;
 import com.firerideur.arcanequest.network.ModNetwork;
 import com.firerideur.arcanequest.network.OpenCharacterMenuPacket;
+import com.firerideur.arcanequest.network.UseSkillPacket;
 import com.firerideur.arcanequest.registry.ModEntities;
 import com.firerideur.arcanequest.registry.ModMenus;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -34,7 +35,16 @@ public final class ClientSetup {
     public static final KeyMapping TOGGLE_MINIMAP = new KeyMapping("key.arcanequest.toggle_minimap",
             KeyConflictContext.IN_GAME, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_M, KEY_CATEGORY);
 
+    /** Keys of the skill slots: R, C, V, B, N by default. */
+    public static final KeyMapping[] SKILL_KEYS = {
+            skillKey(1, GLFW.GLFW_KEY_R), skillKey(2, GLFW.GLFW_KEY_C), skillKey(3, GLFW.GLFW_KEY_V),
+            skillKey(4, GLFW.GLFW_KEY_B), skillKey(5, GLFW.GLFW_KEY_N)};
+
     private ClientSetup() {}
+
+    private static KeyMapping skillKey(int number, int key) {
+        return new KeyMapping("key.arcanequest.skill_" + number, KeyConflictContext.IN_GAME, InputConstants.Type.KEYSYM, key, KEY_CATEGORY);
+    }
 
     public static void init(IEventBus modEventBus) {
         modEventBus.addListener(ClientSetup::registerKeys);
@@ -51,6 +61,9 @@ public final class ClientSetup {
     private static void registerKeys(RegisterKeyMappingsEvent event) {
         event.register(OPEN_STATS);
         event.register(TOGGLE_MINIMAP);
+        for (KeyMapping key : SKILL_KEYS) {
+            event.register(key);
+        }
     }
 
     private static void registerOverlays(AddGuiOverlayLayersEvent event) {
@@ -58,6 +71,7 @@ public final class ClientSetup {
         event.getLayeredDraw().add(ArcaneQuest.id("compass"), ArcaneHud::renderCompass);
         event.getLayeredDraw().add(ArcaneQuest.id("minimap"), ArcaneHud::renderMinimap);
         event.getLayeredDraw().add(ArcaneQuest.id("target_hud"), TargetHud::render);
+        event.getLayeredDraw().add(ArcaneQuest.id("skill_bar"), SkillBar::render);
     }
 
     private static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
@@ -79,6 +93,13 @@ public final class ClientSetup {
         while (TOGGLE_MINIMAP.consumeClick()) {
             ArcaneHud.minimapVisible = !ArcaneHud.minimapVisible;
         }
+        for (int slot = 0; slot < SKILL_KEYS.length; slot++) {
+            while (SKILL_KEYS[slot].consumeClick()) {
+                if (mc.player != null && mc.screen == null) {
+                    ModNetwork.sendToServer(new UseSkillPacket(slot));
+                }
+            }
+        }
         while (OPEN_STATS.consumeClick()) {
             if (mc.player != null && mc.screen == null) {
                 ModNetwork.sendToServer(new OpenCharacterMenuPacket());
@@ -90,6 +111,7 @@ public final class ClientSetup {
         ClientStats.get().load(new CompoundTag());
         ClientMobLevels.clear();
         BossBars.clear();
+        ClientSkills.clear();
     }
 
     static void drawBar(GuiGraphics graphics, int x, int y, int width, int height, float progress, int color) {

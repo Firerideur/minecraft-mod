@@ -6,6 +6,7 @@ import com.firerideur.arcanequest.mobs.MobLevels;
 import com.firerideur.arcanequest.magic.Mana;
 import com.firerideur.arcanequest.network.ModNetwork;
 import com.firerideur.arcanequest.shadow.ShadowSoldier;
+import com.firerideur.arcanequest.skill.ClassSkills;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -96,6 +97,15 @@ public final class StatsEvents {
                 player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
                         SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.0F);
                 int previous = stats.getLevel() - gained;
+                var skills = ClassSkills.skillsOf(stats.getPlayerClass());
+                for (int slot = 0; slot < skills.size(); slot++) {
+                    int unlock = ClassSkills.UNLOCK_LEVELS[slot];
+                    if (previous < unlock && stats.getLevel() >= unlock) {
+                        player.sendSystemMessage(Component.translatable("message.arcanequest.skill_unlocked",
+                                skills.get(slot).displayName(), Component.keybind("key.arcanequest.skill_" + (slot + 1)))
+                                .withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD));
+                    }
+                }
                 if (PlayerClass.canChoose(stats)) {
                     if (stats.getPlayerClass() == PlayerClass.NONE && previous < PlayerClass.UNLOCK_LEVEL) {
                         player.sendSystemMessage(Component.translatable("message.arcanequest.class_unlocked")

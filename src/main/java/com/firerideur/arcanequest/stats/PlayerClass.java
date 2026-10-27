@@ -164,6 +164,11 @@ public enum PlayerClass {
         return !parents.isEmpty();
     }
 
+    /** The first class an awakened class comes from (itself for first classes). */
+    public PlayerClass firstClass() {
+        return parents.isEmpty() ? this : byKey(parents.get(0));
+    }
+
     public Component displayName() {
         return Component.translatable("class.arcanequest." + key);
     }
