@@ -129,13 +129,27 @@ public class CharacterScreen extends AbstractContainerScreen<CharacterMenu> {
             b.active = stats.getPoints() > 0;
         });
         List<PlayerClass> offers = PlayerClass.canChoose(stats) ? PlayerClass.offers(stats) : List.of();
+        // Hidden classes whose condition isn't met yet show as a locked "???" after the offers
+        List<PlayerClass> locked = PlayerClass.canChoose(stats) && stats.getPlayerClass().isFirstClass()
+                ? PlayerClass.awakeningsOf(stats.getPlayerClass()).stream().filter(c -> !offers.contains(c)).toList()
+                : List.of();
         for (int i = 0; i < classButtons.size(); i++) {
             GoldButton button = classButtons.get(i);
-            button.visible = skills && i < offers.size();
-            if (button.visible) {
+            int lockedIndex = i - offers.size();
+            button.visible = skills && i < offers.size() + locked.size();
+            button.active = i < offers.size();
+            if (button.visible && !button.active) {
+                PlayerClass hidden = locked.get(lockedIndex);
+                Component label = Component.literal("??? [" + hidden.rank().name() + "]");
+                if (!button.getMessage().getString().equals(label.getString())) {
+                    button.setMessage(label);
+                    button.setTooltip(Tooltip.create(Component.translatable("screen.arcanequest.hidden_class")));
+                }
+            } else if (button.visible) {
                 PlayerClass offer = offers.get(i);
-                if (!button.getMessage().getString().equals(offer.displayName().getString())) {
-                    button.setMessage(offer.displayName().copy().withColor(offer.color()));
+                Component label = offer.displayNameWithRank();
+                if (!button.getMessage().getString().equals(label.getString())) {
+                    button.setMessage(label);
                     button.setTooltip(Tooltip.create(offer.description()));
                 }
             }
@@ -313,13 +327,21 @@ public class CharacterScreen extends AbstractContainerScreen<CharacterMenu> {
                 // Preview of what the current stats would offer
                 MutableComponent preview = Component.translatable("screen.arcanequest.class_preview");
                 for (int i = 0; i < offers.size(); i++) {
-                    preview.append(i == 0 ? " " : ", ").append(offers.get(i).displayName().copy().withColor(offers.get(i).color()));
+                    preview.append(i == 0 ? " " : ", ").append(offers.get(i).displayNameWithRank());
                 }
                 g.drawWordWrap(font, preview, x + 10, classY + 13, w - 20, UiKit.TEXT_DIM);
             }
+        } else if (PlayerClass.canChoose(stats)) {
+            // Awakening: the buttons show the evolutions of the class
+            g.drawString(font, Component.translatable("screen.arcanequest.awakening_choose", playerClass.displayNameWithRank()),
+                    x + 10, classY, 0xFFE070FF, false);
         } else {
-            g.drawString(font, Component.translatable("screen.arcanequest.class", playerClass.displayName()),
-                    x + 10, classY, playerClass.color(), false);
+            g.drawString(font, Component.translatable("screen.arcanequest.class", playerClass.displayNameWithRank()),
+                    x + 10, classY, UiKit.TEXT, false);
+            if (playerClass.isFirstClass()) {
+                Component awakening = Component.translatable("screen.arcanequest.awakening_at", PlayerClass.AWAKENING_LEVEL);
+                g.drawString(font, awakening, x + w - 10 - font.width(awakening), classY, UiKit.TEXT_DIM, false);
+            }
             g.drawWordWrap(font, playerClass.description(), x + 10, classY + 11, w - 20, UiKit.TEXT_DIM);
         }
         if (minecraft.player != null) {

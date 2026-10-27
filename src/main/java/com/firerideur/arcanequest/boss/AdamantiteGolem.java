@@ -1,5 +1,6 @@
 package com.firerideur.arcanequest.boss;
 
+import com.firerideur.arcanequest.stats.PlayerClass;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
@@ -265,6 +266,11 @@ public class AdamantiteGolem extends IronGolem implements Enemy, ArcaneBoss {
     @Override
     public long getXpReward() {
         return 9000;
+    }
+
+    @Override
+    public int getBossId() {
+        return PlayerClass.BossKills.ADAMANTITE_GOLEM;
     }
 
     @Override

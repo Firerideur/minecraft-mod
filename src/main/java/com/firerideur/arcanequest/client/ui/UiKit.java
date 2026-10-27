@@ -142,7 +142,18 @@ public final class UiKit {
         g.fill(x, y, x + w, y + h, hovered && active ? 0xFF3A2E1C : 0xFF1A1714);
         frame(g, x, y, w, h, !active ? 0xFF4A4036 : hovered ? GOLD_LIGHT : GOLD);
         int color = !active ? TEXT_DIM : hovered ? GOLD_LIGHT : TEXT;
-        g.drawCenteredString(font, text, x + w / 2, y + (h - 8) / 2, color);
+        int textWidth = font.width(text);
+        if (textWidth <= w - 4) {
+            g.drawCenteredString(font, text, x + w / 2, y + (h - 8) / 2, color);
+            return;
+        }
+        // Long labels are shrunk to fit
+        float scale = (w - 4) / (float) textWidth;
+        g.pose().pushPose();
+        g.pose().translate(x + w / 2.0F, y + h / 2.0F, 0);
+        g.pose().scale(scale, scale, 1);
+        g.drawCenteredString(font, text, 0, -4, color);
+        g.pose().popPose();
     }
 
     /** Key hint like "[Échap] Fermer" for the footer. */

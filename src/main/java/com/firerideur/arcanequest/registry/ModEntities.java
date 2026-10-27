@@ -5,6 +5,7 @@ import com.firerideur.arcanequest.boss.AdamantiteGolem;
 import com.firerideur.arcanequest.boss.CorruptedArchmage;
 import com.firerideur.arcanequest.boss.SkeletonKing;
 import com.firerideur.arcanequest.magic.SpellProjectile;
+import com.firerideur.arcanequest.shadow.ShadowSoldier;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
@@ -32,11 +33,16 @@ public final class ModEntities {
             () -> EntityType.Builder.of(AdamantiteGolem::new, MobCategory.MONSTER)
                     .sized(1.4F, 2.7F).fireImmune().clientTrackingRange(10).build("adamantite_golem"));
 
+    public static final RegistryObject<EntityType<ShadowSoldier>> SHADOW_SOLDIER = ENTITIES.register("shadow_soldier",
+            () -> EntityType.Builder.of(ShadowSoldier::new, MobCategory.MISC)
+                    .sized(0.6F, 1.95F).clientTrackingRange(8).build("shadow_soldier"));
+
     private ModEntities() {}
 
     public static void registerAttributes(EntityAttributeCreationEvent event) {
         event.put(SKELETON_KING.get(), SkeletonKing.createAttributes().build());
         event.put(CORRUPTED_ARCHMAGE.get(), CorruptedArchmage.createAttributes().build());
         event.put(ADAMANTITE_GOLEM.get(), AdamantiteGolem.createAttributes().build());
+        event.put(SHADOW_SOLDIER.get(), ShadowSoldier.createAttributes().build());
     }
 }

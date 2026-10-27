@@ -62,6 +62,7 @@ public final class ClientSetup {
 
     private static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(ModEntities.SPELL_PROJECTILE.get(), ThrownItemRenderer::new);
+        event.registerEntityRenderer(ModEntities.SHADOW_SOLDIER.get(), ShadowSoldierRenderer::new);
     }
 
     private static void clientSetup(FMLClientSetupEvent event) {

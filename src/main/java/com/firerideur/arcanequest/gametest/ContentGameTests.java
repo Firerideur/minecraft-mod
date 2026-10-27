@@ -10,6 +10,7 @@ import com.firerideur.arcanequest.magic.SpellCaster;
 import com.firerideur.arcanequest.magic.SpellProjectile;
 import com.firerideur.arcanequest.mobs.MobLevels;
 import com.firerideur.arcanequest.registry.ModEntities;
+import com.firerideur.arcanequest.shadow.ShadowSoldier;
 import com.firerideur.arcanequest.registry.ModItems;
 import com.firerideur.arcanequest.stats.PlayerClass;
 import com.firerideur.arcanequest.stats.PlayerStats;
@@ -197,6 +198,64 @@ public class ContentGameTests {
         helper.assertTrue(PlayerClass.choose(stats, PlayerClass.ASSASSIN), "an offered class must be accepted");
         helper.assertTrue(!PlayerClass.choose(stats, PlayerClass.DUELIST), "the choice is permanent");
         helper.assertTrue(stats.getPlayerClass() == PlayerClass.ASSASSIN, "class should be assassin");
+        helper.succeed();
+    }
+
+    @GameTest(template = EMPTY)
+    public static void awakeningAtLevel50(GameTestHelper helper) {
+        PlayerStats stats = new PlayerStats();
+        stats.setLevel(PlayerClass.AWAKENING_LEVEL - 1);
+        spend(stats, Stat.INTELLIGENCE, 30);
+        stats.setPlayerClass(PlayerClass.NECROMANCER);
+        helper.assertTrue(!PlayerClass.choose(stats, PlayerClass.LICH_LORD), "awakening must wait for level 50");
+
+        stats.setLevel(PlayerClass.AWAKENING_LEVEL);
+        stats.setPlayerClass(PlayerClass.NECROMANCER);
+        helper.assertTrue(PlayerClass.offers(stats).equals(java.util.List.of(PlayerClass.LICH_LORD)),
+                "without beating the Skeleton King, only the Lich Lord is offered: " + PlayerClass.offers(stats));
+        stats.markBossKill(PlayerClass.BossKills.SKELETON_KING);
+        helper.assertTrue(PlayerClass.offers(stats).contains(PlayerClass.SHADOW_MONARCH), "the hidden class should appear");
+        helper.assertTrue(!PlayerClass.choose(stats, PlayerClass.ARCHMAGE), "awakening of another class must be refused");
+        helper.assertTrue(PlayerClass.choose(stats, PlayerClass.SHADOW_MONARCH), "shadow monarch should be accepted");
+        helper.assertTrue(!PlayerClass.canChoose(stats), "no class choice after the awakening");
+        helper.assertTrue(PlayerClass.SHADOW_MONARCH.rank() == PlayerClass.Rank.S, "shadow monarch is rank S");
+        helper.succeed();
+    }
+
+    @GameTest(template = EMPTY)
+    public static void everyFirstClassCanAwaken(GameTestHelper helper) {
+        for (PlayerClass playerClass : PlayerClass.values()) {
+            if (playerClass.isFirstClass()) {
+                // Two awakenings each (the Necromancer's second one is the hidden Shadow Monarch)
+                int count = PlayerClass.awakeningsOf(playerClass).size();
+                helper.assertTrue(count >= 2, playerClass + " should have 2 awakenings, has " + count);
+            }
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = EMPTY)
+    public static void shadowMonarchRaisesShadows(GameTestHelper helper) {
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        PlayerStats stats = StatsCapability.get(player).orElseThrow();
+        stats.setPlayerClass(PlayerClass.SHADOW_MONARCH);
+        ShadowSoldier shadow = null;
+        for (int i = 0; i < 40 && shadow == null; i++) {
+            Zombie zombie = helper.spawn(EntityType.ZOMBIE, new BlockPos(1, 1, 1));
+            shadow = ShadowSoldier.tryRaise(player, stats, zombie);
+            zombie.discard();
+        }
+        helper.assertTrue(shadow != null, "a shadow should rise (50% chance, 40 tries)");
+        helper.assertTrue(shadow.getOwner() == player, "the shadow should belong to the player");
+        helper.assertTrue(shadow.isAlliedTo(player) && !shadow.canAttack(player), "the shadow must not fight its master");
+        for (int i = 0; i < 20; i++) {
+            Zombie zombie = helper.spawn(EntityType.ZOMBIE, new BlockPos(1, 1, 1));
+            ShadowSoldier.tryRaise(player, stats, zombie);
+            zombie.discard();
+        }
+        int max = PlayerClass.SHADOW_MONARCH.bonuses().shadowMax();
+        helper.assertTrue(ShadowSoldier.armyOf(player).size() <= max, "army limited to " + max);
+        ShadowSoldier.armyOf(player).forEach(ShadowSoldier::discard);
         helper.succeed();
     }
 

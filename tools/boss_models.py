@@ -707,6 +707,66 @@ def paint_golem(tex, face):
                 f.glow[y][x] = rgba(ADAMANT, int(200 * (1 - y / max(1, f.h))))
 
 
+# ---------------------------------------------------------------------------
+# Shadow soldier (vanilla humanoid layout, 64x64): smoky black armor and glowing blue eyes
+# ---------------------------------------------------------------------------
+SHADOW = (24, 20, 38)
+SHADOW_EDGE = (62, 48, 110)
+SHADOW_EYE = (90, 170, 255)
+
+HUMANOID = {"head": (0, 0, 8, 8, 8), "body": (16, 16, 8, 12, 4), "arm": (40, 16, 4, 12, 4), "leg": (0, 16, 4, 12, 4)}
+
+
+def paint_shadow(part, f):
+    def smoke(x, y):
+        n = f.n(x, y)
+        c = mul(SHADOW, 0.8 + 0.5 * n)
+        if f.border(x, y) and f.w > 2:
+            c = mix(c, SHADOW_EDGE, 0.55)
+        return c
+
+    f.fill(smoke)
+    if part == "head" and f.name == "north":
+        for x in (1, 2, 5, 6):
+            f.put(x, 4, mix(SHADOW_EYE, (255, 255, 255), 0.4), SHADOW_EYE)
+        f.put(1, 5, mul(SHADOW_EYE, 0.4), rgba(SHADOW_EYE, 90))
+        f.put(6, 5, mul(SHADOW_EYE, 0.4), rgba(SHADOW_EYE, 90))
+    if part == "head" and f.name == "up":
+        # A crest of dark flame
+        for x in range(2, 6):
+            f.put(x, 3, SHADOW_EDGE)
+    if part == "body" and f.side:
+        for y in range(f.h):
+            if y % 4 == 3:
+                for x in range(f.w):
+                    f.put(x, y, mul(SHADOW, 0.6))
+        if f.name == "north":
+            # Glowing sigil on the chest
+            for x, y in ((3, 3), (4, 3), (2, 4), (5, 4), (3, 5), (4, 5)):
+                f.put(x, y, mul(SHADOW_EYE, 0.5), rgba(SHADOW_EYE, 140))
+    if part in ("arm", "leg") and f.side:
+        # Wisps fading at the end of the limbs
+        for x in range(f.w):
+            if f.n(x, 2, 3) > 0.5:
+                f.put(x, f.h - 1, CLEAR)
+
+
+def shadow_soldier(assets: Path):
+    color = Image.new("RGBA", (64, 64), CLEAR)
+    glow = Image.new("RGBA", (64, 64), CLEAR)
+    for i, (part, (u, v, w, h, d)) in enumerate(HUMANOID.items()):
+        for name, (fx, fy, fw, fh) in face_rects(u, v, w, h, d).items():
+            face = Face(name, fw, fh, seed=200 + i * 7 + len(name))
+            paint_shadow(part, face)
+            for y in range(fh):
+                for x in range(fw):
+                    color.putpixel((fx + x, fy + y), face.color[y][x])
+                    glow.putpixel((fx + x, fy + y), face.glow[y][x])
+    out = assets / "textures" / "entity"
+    color.save(out / "shadow_soldier.png")
+    glow.save(out / "shadow_soldier_glow.png")
+
+
 BOSSES = {
     "skeleton_king": ("skeletonKing", king_parts, paint_king),
     "corrupted_archmage": ("corruptedArchmage", mage_parts, paint_mage),
@@ -823,6 +883,7 @@ def generate(assets: Path = ASSETS, java: Path = JAVA):
 {body}
         return LayerDefinition.create(mesh, {width}, {height});
     }}""")
+    shadow_soldier(assets)
     java.parent.mkdir(parents=True, exist_ok=True)
     java.write_text("""package com.firerideur.arcanequest.client.boss;
 

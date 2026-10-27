@@ -6,6 +6,9 @@ public interface ArcaneBoss {
 
     long getXpReward();
 
+    /** Bit of this boss in the player's defeated bosses, see {@link com.firerideur.arcanequest.stats.PlayerClass.BossKills}. */
+    int getBossId();
+
     /** Shared boss state; the client reads the running attack from it to animate the model. */
     BossCore getCore();
 }

@@ -5,6 +5,7 @@ import com.firerideur.arcanequest.command.ArcaneQuestCommand;
 import com.firerideur.arcanequest.mobs.MobLevels;
 import com.firerideur.arcanequest.magic.Mana;
 import com.firerideur.arcanequest.network.ModNetwork;
+import com.firerideur.arcanequest.shadow.ShadowSoldier;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -73,6 +74,9 @@ public final class StatsEvents {
         }
         if (event.getSource().getEntity() instanceof ServerPlayer player) {
             addXp(player, MobLevels.xpForKill(victim));
+        } else if (event.getSource().getEntity() instanceof ShadowSoldier shadow && shadow.getOwner() instanceof ServerPlayer owner) {
+            // Shadows fight for their master: the experience is theirs
+            addXp(owner, MobLevels.xpForKill(victim));
         }
     }
 
@@ -91,9 +95,15 @@ public final class StatsEvents {
                         stats.getLevel(), gained * PlayerStats.POINTS_PER_LEVEL).withStyle(ChatFormatting.GOLD));
                 player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
                         SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.0F);
-                if (PlayerClass.canChoose(stats) && stats.getLevel() - gained < PlayerClass.UNLOCK_LEVEL) {
-                    player.sendSystemMessage(Component.translatable("message.arcanequest.class_unlocked")
-                            .withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD));
+                int previous = stats.getLevel() - gained;
+                if (PlayerClass.canChoose(stats)) {
+                    if (stats.getPlayerClass() == PlayerClass.NONE && previous < PlayerClass.UNLOCK_LEVEL) {
+                        player.sendSystemMessage(Component.translatable("message.arcanequest.class_unlocked")
+                                .withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD));
+                    } else if (stats.getPlayerClass().isFirstClass() && previous < PlayerClass.AWAKENING_LEVEL) {
+                        player.sendSystemMessage(Component.translatable("message.arcanequest.awakening")
+                                .withStyle(ChatFormatting.LIGHT_PURPLE, ChatFormatting.BOLD));
+                    }
                 }
             }
             ModNetwork.sync(player);

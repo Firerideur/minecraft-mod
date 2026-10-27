@@ -20,6 +20,8 @@ public class PlayerStats {
     private final int[] stats = new int[Stat.values().length];
     private PlayerClass playerClass = PlayerClass.NONE;
     private float mana;
+    /** One bit per boss defeated (see {@link PlayerClass.BossKills}), for hidden classes. */
+    private int bossKills;
 
     /** Experience needed to go from {@code level} to {@code level + 1}. */
     public static long xpForNextLevel(int level) {
@@ -48,6 +50,14 @@ public class PlayerStats {
 
     public void setPlayerClass(PlayerClass playerClass) {
         this.playerClass = playerClass;
+    }
+
+    public boolean hasKilledBoss(int boss) {
+        return (bossKills & (1 << boss)) != 0;
+    }
+
+    public void markBossKill(int boss) {
+        bossKills |= 1 << boss;
     }
 
     public float getMana() {
@@ -120,6 +130,7 @@ public class PlayerStats {
         System.arraycopy(other.stats, 0, stats, 0, stats.length);
         playerClass = other.playerClass;
         mana = other.mana;
+        bossKills = other.bossKills;
     }
 
     public CompoundTag save() {
@@ -132,6 +143,7 @@ public class PlayerStats {
         }
         tag.putString("class", playerClass.key());
         tag.putFloat("mana", mana);
+        tag.putInt("boss_kills", bossKills);
         return tag;
     }
 
@@ -144,5 +156,6 @@ public class PlayerStats {
         }
         playerClass = PlayerClass.byKey(tag.getString("class"));
         mana = tag.getFloat("mana");
+        bossKills = tag.getInt("boss_kills");
     }
 }

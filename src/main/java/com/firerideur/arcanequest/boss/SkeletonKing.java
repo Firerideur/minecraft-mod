@@ -1,5 +1,6 @@
 package com.firerideur.arcanequest.boss;
 
+import com.firerideur.arcanequest.stats.PlayerClass;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -290,6 +291,11 @@ public class SkeletonKing extends WitherSkeleton implements ArcaneBoss {
     @Override
     public long getXpReward() {
         return 2500;
+    }
+
+    @Override
+    public int getBossId() {
+        return PlayerClass.BossKills.SKELETON_KING;
     }
 
     @Override

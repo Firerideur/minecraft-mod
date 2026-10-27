@@ -18,21 +18,31 @@ Mod RPG pour **Minecraft 1.21.1** (Forge 52.1.20).
 | Agilité | +0,5 % vitesse de déplacement, +1 % vitesse d'attaque |
 | Intelligence | +5 mana max, +5 % puissance des sorts, régénération du mana plus rapide |
 
-### Classes (niveau 20, choix définitif, touche K)
-La classe se débloque au **niveau 20**. Le jeu propose alors **3 classes** selon la façon dont vous avez réparti vos points de stats (avant le niveau 20, l'onglet Compétences montre déjà un aperçu). Chaque classe correspond à une ou deux stats :
+### Classes (style Solo Leveling, touche K → Compétences)
+37 classes avec des **rangs** (C, B, A, S), en deux étapes :
 
-| Classe | Stats | Bonus |
-|--------|-------|-------|
-| Berserker | Force | +15 % dégâts de mêlée, +10 % vitesse d'attaque ; sous la moitié de sa vie : +30 % dégâts |
-| Paladin | Force + Vitalité | +2 cœurs, +2 armure, +10 % dégâts de mêlée ; chaque coup de mêlée soigne ½ cœur |
-| Gardien | Vitalité | +4 cœurs, +4 armure, +2 robustesse, +30 % résistance au recul |
-| Duelliste | Force + Agilité | +10 % dégâts de mêlée, +15 % vitesse d'attaque, critiques ×1,75 |
-| Assassin | Agilité | Critiques ×2, +10 % vitesse d'attaque, +10 % vitesse |
-| Rôdeur | Agilité + Vitalité | +35 % dégâts des flèches, +10 % vitesse, +1 cœur |
-| Mage | Intelligence | +50 % mana max et régénération, +30 % puissance des sorts |
-| Lame-sort | Force + Intelligence | +10 % dégâts de mêlée, +15 % puissance des sorts ; chaque coup de mêlée rend 2 mana |
-| Clerc | Vitalité + Intelligence | +2 cœurs, +10 % puissance des sorts, soins ×1,5, régénère ½ cœur toutes les 4 s |
-| Arcaniste | Agilité + Intelligence | Sorts 30 % moins chers, +10 % puissance des sorts, +10 % vitesse |
+1. **Niveau 20 : première classe.** Le jeu propose les **3 classes** qui correspondent le mieux à la façon dont vous avez réparti vos points (aperçu visible avant le niveau 20).
+2. **Niveau 50 : Éveil.** Votre classe évolue : choisissez parmi ses 2 éveils (rang A).
+3. **Classe cachée (rang S) : Monarque des Ombres.** Proposée à l'éveil du Nécromancien ou de l'Assassin, seulement si vous avez vaincu le **Roi Squelette** (avant ça, elle apparaît comme « ??? [S] »).
+
+| Première classe (rang) | Stats | Bonus | Éveils (rang A) |
+|---|---|---|---|
+| Berserker (C) | Force | +15 % mêlée, +10 % vitesse d'attaque, +30 % dégâts sous la moitié de la vie | Seigneur de guerre, Bourreau |
+| Gardien (C) | Vitalité | +4 cœurs, +4 armure, +2 robustesse, +30 % anti-recul | Forteresse, Gardien runique |
+| Assassin (C) | Agilité | Critiques ×2, +10 % vitesse et vitesse d'attaque | Ninja, Assassin des ombres, (Monarque des Ombres) |
+| Mage (C) | Intelligence | +50 % mana, +30 % sorts | Archimage, Élémentaliste |
+| Paladin (B) | Force + Vitalité | +2 cœurs, +2 armure, +10 % mêlée, chaque coup soigne | Croisé, Chevalier sacré |
+| Duelliste (B) | Force + Agilité | +10 % mêlée, +15 % vitesse d'attaque, critiques ×1,75 | Maître d'armes, Lame-vent |
+| Rôdeur (B) | Agilité + Vitalité | +35 % flèches, +10 % vitesse | Tireur d'élite, Chasseur |
+| Lame-sort (B) | Force + Intelligence | +10 % mêlée, +15 % sorts, chaque coup rend du mana | Chevalier runique, Démoniste |
+| Clerc (B) | Vitalité + Intelligence | +2 cœurs, soins ×1,5, régénération | Saint, Druide |
+| Arcaniste (B) | Agilité + Intelligence | Sorts -30 % de mana, +10 % sorts et vitesse | Chronomancien, Mage de bataille |
+| Moine (B) | Force + Agilité + Vitalité | +5 dégâts à mains nues, vitesse | Grand maître, Moine de fer |
+| Nécromancien (B) | Intelligence + un peu de tout | Les monstres tués peuvent se relever en **soldats de l'ombre** | Seigneur liche, (Monarque des Ombres) |
+
+Les détails de chaque éveil s'affichent en survolant les boutons. Effets possibles : esquive (Ninja), renvoi de dégâts (Gardien runique), exécution des ennemis affaiblis (Bourreau), bonus contre les morts-vivants (Chevalier sacré), invisibilité accroupi (Assassin des ombres), brûlure/ralentissement/poison à chaque coup, vol de vie des sorts (Démoniste)…
+
+**Soldats de l'ombre** : les monstres tués par vous ou par vos ombres peuvent se relever pour vous servir. Ils vous suivent, attaquent ce que vous combattez (ou ce qui vous attaque) et l'XP de leurs victimes vous revient. Nécromancien : 15 %, 3 max, 1 min ; Seigneur liche : 30 %, 5 max, 2 min ; **Monarque des Ombres** : 50 %, 8 max, permanents et bien plus forts.
 
 ### Magie
 Mana de base : 20 (+5 par Intelligence, +15 par pièce d'armure d'arcanite). Clic droit avec un bâton pour lancer son sort.

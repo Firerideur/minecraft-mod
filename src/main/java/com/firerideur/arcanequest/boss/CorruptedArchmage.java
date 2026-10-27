@@ -2,6 +2,7 @@ package com.firerideur.arcanequest.boss;
 
 import com.firerideur.arcanequest.magic.SpellCaster;
 import com.firerideur.arcanequest.magic.SpellProjectile;
+import com.firerideur.arcanequest.stats.PlayerClass;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -265,6 +266,11 @@ public class CorruptedArchmage extends Evoker implements ArcaneBoss {
     @Override
     public long getXpReward() {
         return 5000;
+    }
+
+    @Override
+    public int getBossId() {
+        return PlayerClass.BossKills.CORRUPTED_ARCHMAGE;
     }
 
     @Override
