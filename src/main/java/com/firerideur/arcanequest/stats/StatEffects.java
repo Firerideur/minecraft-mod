@@ -10,6 +10,8 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 
+import java.util.List;
+
 /**
  * Turns allocated stats and class passives into vanilla attribute modifiers.
  */
@@ -23,13 +25,16 @@ public final class StatEffects {
     private static final ResourceLocation VITALITY_HEALTH = ArcaneQuest.id("vitality_health");
     private static final ResourceLocation AGILITY_SPEED = ArcaneQuest.id("agility_speed");
     private static final ResourceLocation AGILITY_ATTACK_SPEED = ArcaneQuest.id("agility_attack_speed");
-    private static final ResourceLocation WARRIOR_HEALTH = ArcaneQuest.id("warrior_health");
-    private static final ResourceLocation WARRIOR_ARMOR = ArcaneQuest.id("warrior_armor");
-    private static final ResourceLocation WARRIOR_DAMAGE = ArcaneQuest.id("warrior_damage");
-    private static final ResourceLocation WARRIOR_KNOCKBACK = ArcaneQuest.id("warrior_knockback");
-    private static final ResourceLocation ARCHER_SPEED = ArcaneQuest.id("archer_speed");
-    private static final ResourceLocation ASSASSIN_SPEED = ArcaneQuest.id("assassin_speed");
-    private static final ResourceLocation ASSASSIN_ATTACK_SPEED = ArcaneQuest.id("assassin_attack_speed");
+    private static final ResourceLocation CLASS_HEALTH = ArcaneQuest.id("class_health");
+    private static final ResourceLocation CLASS_ARMOR = ArcaneQuest.id("class_armor");
+    private static final ResourceLocation CLASS_TOUGHNESS = ArcaneQuest.id("class_toughness");
+    private static final ResourceLocation CLASS_KNOCKBACK = ArcaneQuest.id("class_knockback");
+    private static final ResourceLocation CLASS_DAMAGE = ArcaneQuest.id("class_damage");
+    private static final ResourceLocation CLASS_ATTACK_SPEED = ArcaneQuest.id("class_attack_speed");
+    private static final ResourceLocation CLASS_SPEED = ArcaneQuest.id("class_speed");
+    /** Modifiers of the classes of older versions, removed from saved players. */
+    private static final String[] LEGACY = {"warrior_health", "warrior_armor", "warrior_damage", "warrior_knockback",
+            "archer_speed", "assassin_speed", "assassin_attack_speed"};
 
     private StatEffects() {}
 
@@ -43,17 +48,20 @@ public final class StatEffects {
         set(player, Attributes.ATTACK_SPEED, AGILITY_ATTACK_SPEED,
                 stats.get(Stat.AGILITY) * ATTACK_SPEED_PER_AGILITY, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
 
-        PlayerClass playerClass = stats.getPlayerClass();
-        boolean warrior = playerClass == PlayerClass.WARRIOR;
-        boolean archer = playerClass == PlayerClass.ARCHER;
-        boolean assassin = playerClass == PlayerClass.ASSASSIN;
-        set(player, Attributes.MAX_HEALTH, WARRIOR_HEALTH, warrior ? 4.0 : 0, AttributeModifier.Operation.ADD_VALUE);
-        set(player, Attributes.ARMOR, WARRIOR_ARMOR, warrior ? 2.0 : 0, AttributeModifier.Operation.ADD_VALUE);
-        set(player, Attributes.ATTACK_DAMAGE, WARRIOR_DAMAGE, warrior ? 0.1 : 0, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
-        set(player, Attributes.KNOCKBACK_RESISTANCE, WARRIOR_KNOCKBACK, warrior ? 0.1 : 0, AttributeModifier.Operation.ADD_VALUE);
-        set(player, Attributes.MOVEMENT_SPEED, ARCHER_SPEED, archer ? 0.05 : 0, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
-        set(player, Attributes.MOVEMENT_SPEED, ASSASSIN_SPEED, assassin ? 0.05 : 0, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
-        set(player, Attributes.ATTACK_SPEED, ASSASSIN_ATTACK_SPEED, assassin ? 0.1 : 0, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
+        PlayerClass.Bonuses bonus = stats.getPlayerClass().bonuses();
+        set(player, Attributes.MAX_HEALTH, CLASS_HEALTH, bonus.health(), AttributeModifier.Operation.ADD_VALUE);
+        set(player, Attributes.ARMOR, CLASS_ARMOR, bonus.armor(), AttributeModifier.Operation.ADD_VALUE);
+        set(player, Attributes.ARMOR_TOUGHNESS, CLASS_TOUGHNESS, bonus.toughness(), AttributeModifier.Operation.ADD_VALUE);
+        set(player, Attributes.KNOCKBACK_RESISTANCE, CLASS_KNOCKBACK, bonus.knockback(), AttributeModifier.Operation.ADD_VALUE);
+        set(player, Attributes.ATTACK_DAMAGE, CLASS_DAMAGE, bonus.melee(), AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
+        set(player, Attributes.ATTACK_SPEED, CLASS_ATTACK_SPEED, bonus.attackSpeed(), AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
+        set(player, Attributes.MOVEMENT_SPEED, CLASS_SPEED, bonus.speed(), AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
+        for (String legacy : LEGACY) {
+            for (var attribute : List.of(Attributes.MAX_HEALTH, Attributes.ARMOR, Attributes.ATTACK_DAMAGE,
+                    Attributes.KNOCKBACK_RESISTANCE, Attributes.MOVEMENT_SPEED, Attributes.ATTACK_SPEED)) {
+                set(player, attribute, ArcaneQuest.id(legacy), 0, AttributeModifier.Operation.ADD_VALUE);
+            }
+        }
 
         if (player.getHealth() > player.getMaxHealth()) {
             player.setHealth(player.getMaxHealth());

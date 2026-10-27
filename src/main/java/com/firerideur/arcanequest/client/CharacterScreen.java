@@ -14,10 +14,12 @@ import com.firerideur.arcanequest.stats.Stat;
 import com.firerideur.arcanequest.stats.StatEffects;
 import net.minecraft.Util;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.gui.screens.options.OptionsScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -85,12 +87,18 @@ public class CharacterScreen extends AbstractContainerScreen<CharacterMenu> {
                     Component.literal("+"), () -> ModNetwork.sendToServer(new SpendPointPacket(stat.ordinal())), stat.description());
             plusButtons.put(stat, addRenderableWidget(plus));
         }
-        PlayerClass[] choices = {PlayerClass.WARRIOR, PlayerClass.MAGE, PlayerClass.ARCHER, PlayerClass.ASSASSIN};
+        // One button per offered class; their label follows the offers, which change with the stats
         int x = leftPos + CharacterMenu.INVENTORY_X + 10;
-        int buttonWidth = (CharacterMenu.EQUIPMENT_X + CharacterMenu.EQUIPMENT_W - CharacterMenu.INVENTORY_X - 20 - 3 * 4) / 4;
-        for (PlayerClass playerClass : choices) {
-            GoldButton button = new GoldButton(x, topPos + CLASS_Y + 11, buttonWidth, 14, playerClass.displayName(),
-                    () -> ModNetwork.sendToServer(new ChooseClassPacket(playerClass.ordinal())), playerClass.description());
+        int buttonWidth = (CharacterMenu.EQUIPMENT_X + CharacterMenu.EQUIPMENT_W - CharacterMenu.INVENTORY_X - 20
+                - 4 * (PlayerClass.OFFERED - 1)) / PlayerClass.OFFERED;
+        for (int i = 0; i < PlayerClass.OFFERED; i++) {
+            int index = i;
+            GoldButton button = new GoldButton(x, topPos + CLASS_Y + 11, buttonWidth, 14, Component.empty(), () -> {
+                List<PlayerClass> offers = PlayerClass.offers(ClientStats.get());
+                if (index < offers.size()) {
+                    ModNetwork.sendToServer(new ChooseClassPacket(offers.get(index).ordinal()));
+                }
+            }, null);
             classButtons.add(addRenderableWidget(button));
             x += buttonWidth + 4;
         }
@@ -120,8 +128,18 @@ public class CharacterScreen extends AbstractContainerScreen<CharacterMenu> {
             b.visible = skills;
             b.active = stats.getPoints() > 0;
         });
-        boolean chooseClass = skills && stats.getPlayerClass() == PlayerClass.NONE;
-        classButtons.forEach(b -> b.visible = chooseClass);
+        List<PlayerClass> offers = PlayerClass.canChoose(stats) ? PlayerClass.offers(stats) : List.of();
+        for (int i = 0; i < classButtons.size(); i++) {
+            GoldButton button = classButtons.get(i);
+            button.visible = skills && i < offers.size();
+            if (button.visible) {
+                PlayerClass offer = offers.get(i);
+                if (!button.getMessage().getString().equals(offer.displayName().getString())) {
+                    button.setMessage(offer.displayName().copy().withColor(offer.color()));
+                    button.setTooltip(Tooltip.create(offer.description()));
+                }
+            }
+        }
     }
 
     @Override
@@ -282,7 +300,23 @@ public class CharacterScreen extends AbstractContainerScreen<CharacterMenu> {
         int classY = y + CLASS_Y;
         PlayerClass playerClass = stats.getPlayerClass();
         if (playerClass == PlayerClass.NONE) {
-            g.drawString(font, Component.translatable("screen.arcanequest.choose_class"), x + 10, classY, 0xFF55FFFF, false);
+            List<PlayerClass> offers = PlayerClass.offers(stats);
+            if (stats.getLevel() < PlayerClass.UNLOCK_LEVEL) {
+                g.drawString(font, Component.translatable("screen.arcanequest.class_locked", PlayerClass.UNLOCK_LEVEL),
+                        x + 10, classY, UiKit.TEXT_DIM, false);
+            } else {
+                g.drawString(font, Component.translatable("screen.arcanequest.choose_class"), x + 10, classY, 0xFF55FFFF, false);
+            }
+            if (offers.isEmpty()) {
+                g.drawWordWrap(font, Component.translatable("screen.arcanequest.class_spend_points"), x + 10, classY + 13, w - 20, UiKit.TEXT_DIM);
+            } else if (stats.getLevel() < PlayerClass.UNLOCK_LEVEL) {
+                // Preview of what the current stats would offer
+                MutableComponent preview = Component.translatable("screen.arcanequest.class_preview");
+                for (int i = 0; i < offers.size(); i++) {
+                    preview.append(i == 0 ? " " : ", ").append(offers.get(i).displayName().copy().withColor(offers.get(i).color()));
+                }
+                g.drawWordWrap(font, preview, x + 10, classY + 13, w - 20, UiKit.TEXT_DIM);
+            }
         } else {
             g.drawString(font, Component.translatable("screen.arcanequest.class", playerClass.displayName()),
                     x + 10, classY, playerClass.color(), false);

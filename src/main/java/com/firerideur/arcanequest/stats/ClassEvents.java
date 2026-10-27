@@ -12,8 +12,14 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 /** Class passives that aren't plain attributes, and mana regeneration. */
 public final class ClassEvents {
-    public static final float ARCHER_ARROW_BONUS = 1.3F;
-    public static final float ASSASSIN_CRIT_MULTIPLIER = 2.0F;
+    /** Berserker: extra melee damage below half health. */
+    public static final float BERSERKER_RAGE_BONUS = 1.3F;
+    /** Paladin: health healed by each melee hit. */
+    public static final float PALADIN_HEAL = 1.0F;
+    /** Spellblade: mana restored by each melee hit. */
+    public static final float SPELLBLADE_MANA = 2.0F;
+    /** Cleric: heals 1 health every this many ticks. */
+    public static final int CLERIC_REGEN_INTERVAL = 80;
     /** Sync mana to the client at most this often while it regenerates. */
     private static final int MANA_SYNC_INTERVAL = 10;
 
@@ -21,17 +27,43 @@ public final class ClassEvents {
 
     @SubscribeEvent
     public static void onHurt(LivingHurtEvent event) {
-        if (event.getSource().getDirectEntity() instanceof AbstractArrow
-                && event.getSource().getEntity() instanceof Player player
-                && classOf(player) == PlayerClass.ARCHER) {
-            event.setAmount(event.getAmount() * ARCHER_ARROW_BONUS);
+        if (!(event.getSource().getEntity() instanceof Player player)) {
+            return;
+        }
+        PlayerClass playerClass = classOf(player);
+        if (event.getSource().getDirectEntity() instanceof AbstractArrow) {
+            event.setAmount(event.getAmount() * playerClass.bonuses().arrows());
+            return;
+        }
+        if (event.getSource().getDirectEntity() != player) {
+            return;
+        }
+        // Melee hits
+        switch (playerClass) {
+            case BERSERKER -> {
+                if (player.getHealth() < player.getMaxHealth() / 2) {
+                    event.setAmount(event.getAmount() * BERSERKER_RAGE_BONUS);
+                }
+            }
+            case PALADIN -> player.heal(PALADIN_HEAL);
+            case SPELLBLADE -> {
+                if (player instanceof ServerPlayer serverPlayer) {
+                    StatsCapability.get(serverPlayer).ifPresent(stats -> {
+                        stats.setMana(Math.min(Mana.max(serverPlayer, stats), stats.getMana() + SPELLBLADE_MANA));
+                        ModNetwork.sync(serverPlayer);
+                    });
+                }
+            }
+            default -> {
+            }
         }
     }
 
     @SubscribeEvent
     public static void onCriticalHit(CriticalHitEvent event) {
-        if (event.isVanillaCritical() && classOf(event.getEntity()) == PlayerClass.ASSASSIN) {
-            event.setDamageModifier(ASSASSIN_CRIT_MULTIPLIER);
+        float crit = classOf(event.getEntity()).bonuses().crit();
+        if (event.isVanillaCritical() && crit > 0) {
+            event.setDamageModifier(crit);
         }
     }
 
@@ -41,6 +73,10 @@ public final class ClassEvents {
             return;
         }
         StatsCapability.get(player).ifPresent(stats -> {
+            if (stats.getPlayerClass() == PlayerClass.CLERIC && player.tickCount % CLERIC_REGEN_INTERVAL == 0
+                    && player.getHealth() < player.getMaxHealth()) {
+                player.heal(1.0F);
+            }
             float max = Mana.max(player, stats);
             float mana = stats.getMana();
             if (mana < max) {

@@ -61,7 +61,7 @@ public class PlayerStats {
     /** Multiplier applied to spell damage and healing. */
     public float spellPower() {
         float power = 1.0F + 0.05F * get(Stat.INTELLIGENCE);
-        return playerClass == PlayerClass.MAGE ? power * 1.25F : power;
+        return power * playerClass.bonuses().spellPower();
     }
 
     public boolean isMaxLevel() {

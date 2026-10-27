@@ -7,7 +7,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.event.network.CustomPayloadEvent;
 
-/** Client -> server: the player picks a class. Only allowed while they have none. */
+/** Client -> server: the player picks a class. Only one of their offers, at level 20, while they have none. */
 public record ChooseClassPacket(int classId) {
     public static void encode(ChooseClassPacket packet, FriendlyByteBuf buf) {
         buf.writeVarInt(packet.classId);
@@ -21,11 +21,7 @@ public record ChooseClassPacket(int classId) {
         ServerPlayer player = context.getSender();
         PlayerClass chosen = PlayerClass.byId(packet.classId);
         if (player != null && chosen != PlayerClass.NONE) {
-            StatsCapability.get(player).ifPresent(stats -> {
-                if (stats.getPlayerClass() == PlayerClass.NONE) {
-                    stats.setPlayerClass(chosen);
-                }
-            });
+            StatsCapability.get(player).ifPresent(stats -> PlayerClass.choose(stats, chosen));
             StatsEvents.refresh(player);
         }
         context.setPacketHandled(true);

@@ -22,7 +22,7 @@ import java.util.function.Consumer;
  *     <li>/aq xp add &lt;amount&gt; [player]</li>
  *     <li>/aq level set &lt;level&gt; [player]</li>
  *     <li>/aq reset [player] — refunds every stat point</li>
- *     <li>/aq class &lt;warrior|mage|archer|assassin|none&gt; [player] — none lets the player pick again</li>
+ *     <li>/aq class &lt;class|none&gt; [player] — sets any class, ignoring level and offers; none lets the player pick again</li>
  *     <li>/aq info [player]</li>
  * </ul>
  */

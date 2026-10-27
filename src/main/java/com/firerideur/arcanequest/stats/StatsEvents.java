@@ -45,7 +45,7 @@ public final class StatsEvents {
     public static void onLogin(PlayerEvent.PlayerLoggedInEvent event) {
         refresh(event.getEntity());
         StatsCapability.get(event.getEntity()).ifPresent(stats -> {
-            if (stats.getPlayerClass() == PlayerClass.NONE) {
+            if (PlayerClass.canChoose(stats)) {
                 event.getEntity().sendSystemMessage(Component.translatable("message.arcanequest.choose_class")
                         .withStyle(ChatFormatting.AQUA));
             }
@@ -91,6 +91,10 @@ public final class StatsEvents {
                         stats.getLevel(), gained * PlayerStats.POINTS_PER_LEVEL).withStyle(ChatFormatting.GOLD));
                 player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
                         SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0F, 1.0F);
+                if (PlayerClass.canChoose(stats) && stats.getLevel() - gained < PlayerClass.UNLOCK_LEVEL) {
+                    player.sendSystemMessage(Component.translatable("message.arcanequest.class_unlocked")
+                            .withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD));
+                }
             }
             ModNetwork.sync(player);
         });

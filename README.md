@@ -18,13 +18,21 @@ Mod RPG pour **Minecraft 1.21.1** (Forge 52.1.20).
 | Agilité | +0,5 % vitesse de déplacement, +1 % vitesse d'attaque |
 | Intelligence | +5 mana max, +5 % puissance des sorts, régénération du mana plus rapide |
 
-### Classes (choix définitif, touche K)
-| Classe | Bonus |
-|--------|-------|
-| Guerrier | +2 cœurs, +2 armure, +10 % dégâts de mêlée, +10 % résistance au recul |
-| Mage | +50 % mana max et régénération, +25 % puissance des sorts |
-| Archer | +30 % dégâts des flèches, +5 % vitesse |
-| Assassin | Coups critiques ×2 (au lieu de ×1,5), +10 % vitesse d'attaque, +5 % vitesse |
+### Classes (niveau 20, choix définitif, touche K)
+La classe se débloque au **niveau 20**. Le jeu propose alors **3 classes** selon la façon dont vous avez réparti vos points de stats (avant le niveau 20, l'onglet Compétences montre déjà un aperçu). Chaque classe correspond à une ou deux stats :
+
+| Classe | Stats | Bonus |
+|--------|-------|-------|
+| Berserker | Force | +15 % dégâts de mêlée, +10 % vitesse d'attaque ; sous la moitié de sa vie : +30 % dégâts |
+| Paladin | Force + Vitalité | +2 cœurs, +2 armure, +10 % dégâts de mêlée ; chaque coup de mêlée soigne ½ cœur |
+| Gardien | Vitalité | +4 cœurs, +4 armure, +2 robustesse, +30 % résistance au recul |
+| Duelliste | Force + Agilité | +10 % dégâts de mêlée, +15 % vitesse d'attaque, critiques ×1,75 |
+| Assassin | Agilité | Critiques ×2, +10 % vitesse d'attaque, +10 % vitesse |
+| Rôdeur | Agilité + Vitalité | +35 % dégâts des flèches, +10 % vitesse, +1 cœur |
+| Mage | Intelligence | +50 % mana max et régénération, +30 % puissance des sorts |
+| Lame-sort | Force + Intelligence | +10 % dégâts de mêlée, +15 % puissance des sorts ; chaque coup de mêlée rend 2 mana |
+| Clerc | Vitalité + Intelligence | +2 cœurs, +10 % puissance des sorts, soins ×1,5, régénère ½ cœur toutes les 4 s |
+| Arcaniste | Agilité + Intelligence | Sorts 30 % moins chers, +10 % puissance des sorts, +10 % vitesse |
 
 ### Magie
 Mana de base : 20 (+5 par Intelligence, +15 par pièce d'armure d'arcanite). Clic droit avec un bâton pour lancer son sort.
@@ -116,7 +124,7 @@ Fabrication : forge de fusion (3 mithril, 2 arcanite, haut fourneau, 3 briques d
 ### Commandes (op)
 - `/aq xp add <montant> [joueur]`
 - `/aq level set <niveau> [joueur]`
-- `/aq class <warrior|mage|archer|assassin|none> [joueur]` (`none` permet de rechoisir)
+- `/aq class <classe|none> [joueur]` : donne n'importe quelle classe (`none` permet de rechoisir)
 - `/aq reset [joueur]` : rembourse les points de stats
 - `/aq info [joueur]`
 

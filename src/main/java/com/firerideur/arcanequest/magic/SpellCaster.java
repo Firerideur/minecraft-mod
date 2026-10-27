@@ -38,15 +38,17 @@ public final class SpellCaster {
             return false;
         }
         boolean free = player.getAbilities().instabuild;
-        if (!free && stats.getMana() < spell.manaCost()) {
+        float cost = spell.manaCost() * stats.getPlayerClass().bonuses().manaCost();
+        if (!free && stats.getMana() < cost) {
             player.displayClientMessage(Component.translatable("message.arcanequest.no_mana").withStyle(ChatFormatting.BLUE), true);
             return false;
         }
         if (!free) {
-            stats.setMana(stats.getMana() - spell.manaCost());
+            stats.setMana(stats.getMana() - cost);
             ModNetwork.sync(player);
         }
-        cast(player, spell, spell.basePower() * stats.spellPower());
+        float power = spell.basePower() * stats.spellPower();
+        cast(player, spell, spell == Spell.HEAL ? power * stats.getPlayerClass().bonuses().heals() : power);
         return true;
     }
 

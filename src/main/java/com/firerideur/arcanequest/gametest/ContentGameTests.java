@@ -13,6 +13,7 @@ import com.firerideur.arcanequest.registry.ModEntities;
 import com.firerideur.arcanequest.registry.ModItems;
 import com.firerideur.arcanequest.stats.PlayerClass;
 import com.firerideur.arcanequest.stats.PlayerStats;
+import com.firerideur.arcanequest.stats.Stat;
 import com.firerideur.arcanequest.stats.StatEffects;
 import com.firerideur.arcanequest.stats.StatsCapability;
 import net.minecraft.core.BlockPos;
@@ -40,18 +41,18 @@ public class ContentGameTests {
     private static final String EMPTY = "forge:empty3x3x3";
 
     @GameTest(template = EMPTY)
-    public static void warriorGetsBonusHealth(GameTestHelper helper) {
+    public static void classBonusesAreApplied(GameTestHelper helper) {
         ServerPlayer player = helper.makeMockServerPlayerInLevel();
         PlayerStats stats = StatsCapability.get(player).orElseThrow();
         double base = player.getAttributeValue(Attributes.MAX_HEALTH);
 
-        stats.setPlayerClass(PlayerClass.WARRIOR);
+        stats.setPlayerClass(PlayerClass.PALADIN);
         StatEffects.apply(player, stats);
-        helper.assertTrue(player.getAttributeValue(Attributes.MAX_HEALTH) == base + 4, "warrior should get +4 health");
+        helper.assertTrue(player.getAttributeValue(Attributes.MAX_HEALTH) == base + 4, "paladin should get +4 health");
 
         stats.setPlayerClass(PlayerClass.MAGE);
         StatEffects.apply(player, stats);
-        helper.assertTrue(player.getAttributeValue(Attributes.MAX_HEALTH) == base, "warrior bonus should be removed");
+        helper.assertTrue(player.getAttributeValue(Attributes.MAX_HEALTH) == base, "paladin bonus should be removed");
         helper.assertTrue(Mana.max(player, stats) == Mana.BASE_MANA * 1.5F, "mage should have +50% mana");
         helper.succeed();
     }
@@ -161,5 +162,47 @@ public class ContentGameTests {
         golem.setHealth(golem.getMaxHealth() * 0.4F);
         helper.assertTrue(core.tick() && core.isEnraged(), "phase 2 not reached / not synced");
         helper.succeed();
+    }
+
+    @GameTest(template = EMPTY)
+    public static void classOffersFollowStats(GameTestHelper helper) {
+        PlayerStats stats = new PlayerStats();
+        stats.setLevel(PlayerClass.UNLOCK_LEVEL);
+        helper.assertTrue(PlayerClass.offers(stats).isEmpty(), "no offer before spending points");
+
+        spend(stats, Stat.STRENGTH, 30);
+        helper.assertTrue(PlayerClass.offers(stats).get(0) == PlayerClass.BERSERKER, "pure strength should offer berserker first");
+
+        stats.resetStats();
+        spend(stats, Stat.INTELLIGENCE, 25);
+        spend(stats, Stat.VITALITY, 20);
+        var offers = PlayerClass.offers(stats);
+        helper.assertTrue(offers.size() == PlayerClass.OFFERED, "should offer 3 classes");
+        helper.assertTrue(offers.get(0) == PlayerClass.CLERIC, "intelligence + vitality should offer cleric first, got " + offers);
+        helper.assertTrue(offers.contains(PlayerClass.MAGE), "a mostly intelligent build should also see mage");
+        helper.assertTrue(!offers.contains(PlayerClass.ASSASSIN), "no agility, no assassin");
+        helper.succeed();
+    }
+
+    @GameTest(template = EMPTY)
+    public static void classNeedsLevelAndOffer(GameTestHelper helper) {
+        PlayerStats stats = new PlayerStats();
+        stats.setLevel(PlayerClass.UNLOCK_LEVEL - 1);
+        spend(stats, Stat.AGILITY, 20);
+        helper.assertTrue(!PlayerClass.choose(stats, PlayerClass.ASSASSIN), "class must be locked before level 20");
+
+        stats.setLevel(PlayerClass.UNLOCK_LEVEL);
+        spend(stats, Stat.AGILITY, 20);
+        helper.assertTrue(!PlayerClass.choose(stats, PlayerClass.MAGE), "a class that isn't offered must be refused");
+        helper.assertTrue(PlayerClass.choose(stats, PlayerClass.ASSASSIN), "an offered class must be accepted");
+        helper.assertTrue(!PlayerClass.choose(stats, PlayerClass.DUELIST), "the choice is permanent");
+        helper.assertTrue(stats.getPlayerClass() == PlayerClass.ASSASSIN, "class should be assassin");
+        helper.succeed();
+    }
+
+    private static void spend(PlayerStats stats, Stat stat, int points) {
+        for (int i = 0; i < points; i++) {
+            stats.spendPoint(stat);
+        }
     }
 }
