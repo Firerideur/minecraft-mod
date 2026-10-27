@@ -84,4 +84,13 @@ python3 tools/generate_resources.py  # régénère textures, modèles, recettes,
 
 Les textures sont du pixel art original au style « PvP » (outils 32×32 sombres à reflets colorés), dessiné par `tools/textures.py`. Les traductions sont dans `src/main/resources/assets/arcanequest/lang/` (fr_fr, en_us).
 
+### Look « Rose Revamp »
+Si tu as le pack de textures Rose Revamp, `tools/build_rose_pack.py` crée à partir de ta copie un pack de ressources personnel qui donne aux objets du mod le même look :
+
+```bash
+python3 tools/build_rose_pack.py "Rose Revamp 1.15.zip" "ArcaneQuest x Rose Revamp.zip"
+```
+
+Mets le zip obtenu dans `.minecraft/resourcepacks` et active-le. Les textures de Rose Revamp appartiennent à leur auteur : elles ne sont pas dans ce dépôt, et le pack généré est pour un usage personnel.
+
 Pour jouer : copier `build/libs/arcanequest-<version>.jar` dans le dossier `mods` d'une installation Forge 1.21.1.
