@@ -18,7 +18,8 @@ public class DungeonMobRenderer<T extends DungeonMob, M extends EntityModel<T>> 
         super(context, model, shadow * scale);
         this.texture = ArcaneQuest.id("textures/entity/dungeon/" + name + ".png");
         this.scale = scale;
-        addLayer(new BossGlowLayer<>(this, ArcaneQuest.id("textures/entity/dungeon/" + name + "_glow.png"), mob -> 0xFFFFFFFF));
+        addLayer(new BossGlowLayer<>(this, ArcaneQuest.id("textures/entity/dungeon/" + name + "_glow.png"), // Sleeping statues and mimics don't glow: they must look harmless
+                mob -> mob.isDormant() ? 0 : 0xFFFFFFFF));
     }
 
     @Override

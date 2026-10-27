@@ -15,6 +15,14 @@ public final class DungeonRenderers {
     public static final ModelLayerLocation DEMON_KNIGHT = layer("demon_knight");
     public static final ModelLayerLocation STEELFANG_WOLF = layer("steelfang_wolf");
     public static final ModelLayerLocation ANT_SOLDIER = layer("ant_soldier");
+    public static final ModelLayerLocation TROLL = layer("troll");
+    public static final ModelLayerLocation MINOTAUR = layer("minotaur");
+    public static final ModelLayerLocation GARGOYLE = layer("gargoyle");
+    public static final ModelLayerLocation LICH = layer("lich");
+    public static final ModelLayerLocation NAGA = layer("naga");
+    public static final ModelLayerLocation MIMIC = layer("mimic");
+    public static final ModelLayerLocation TREANT = layer("treant");
+    public static final ModelLayerLocation BASILISK = layer("basilisk");
 
     private DungeonRenderers() {}
 
@@ -30,6 +38,14 @@ public final class DungeonRenderers {
         event.registerLayerDefinition(DEMON_KNIGHT, MobGeometry::demonKnight);
         event.registerLayerDefinition(STEELFANG_WOLF, MobGeometry::steelfangWolf);
         event.registerLayerDefinition(ANT_SOLDIER, MobGeometry::antSoldier);
+        event.registerLayerDefinition(TROLL, MobGeometry::troll);
+        event.registerLayerDefinition(MINOTAUR, MobGeometry::minotaur);
+        event.registerLayerDefinition(GARGOYLE, MobGeometry::gargoyle);
+        event.registerLayerDefinition(LICH, MobGeometry::lich);
+        event.registerLayerDefinition(NAGA, MobGeometry::naga);
+        event.registerLayerDefinition(MIMIC, MobGeometry::mimic);
+        event.registerLayerDefinition(TREANT, MobGeometry::treant);
+        event.registerLayerDefinition(BASILISK, MobGeometry::basilisk);
     }
 
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
@@ -48,5 +64,21 @@ public final class DungeonRenderers {
                 new QuadMobModel<>(c.bakeLayer(STEELFANG_WOLF)), "steelfang_wolf", 0.6F, 1.0F));
         event.registerEntityRenderer(ModEntities.ANT_SOLDIER.get(), c -> new DungeonMobRenderer<>(c,
                 new QuadMobModel<>(c.bakeLayer(ANT_SOLDIER)), "ant_soldier", 0.7F, 1.0F));
+        event.registerEntityRenderer(ModEntities.TROLL.get(), c -> new DungeonMobRenderer<>(c,
+                new BipedMobModel<>(c.bakeLayer(TROLL), Style.MELEE), "troll", 0.7F, 1.5F));
+        event.registerEntityRenderer(ModEntities.MINOTAUR.get(), c -> new DungeonMobRenderer<>(c,
+                new BipedMobModel<>(c.bakeLayer(MINOTAUR), Style.MELEE), "minotaur", 0.6F, 1.2F));
+        event.registerEntityRenderer(ModEntities.GARGOYLE.get(), c -> new DungeonMobRenderer<>(c,
+                new BipedMobModel<>(c.bakeLayer(GARGOYLE), Style.MELEE), "gargoyle", 0.5F, 1.05F));
+        event.registerEntityRenderer(ModEntities.LICH.get(), c -> new DungeonMobRenderer<>(c,
+                new BipedMobModel<>(c.bakeLayer(LICH), Style.CASTER), "lich", 0.5F, 1.1F));
+        event.registerEntityRenderer(ModEntities.NAGA.get(), c -> new DungeonMobRenderer<>(c,
+                new BipedMobModel<>(c.bakeLayer(NAGA), Style.CASTER), "naga", 0.6F, 1.0F));
+        event.registerEntityRenderer(ModEntities.MIMIC.get(), c -> new DungeonMobRenderer<>(c,
+                new MimicModel<>(c.bakeLayer(MIMIC)), "mimic", 0.6F, 1.0F));
+        event.registerEntityRenderer(ModEntities.TREANT.get(), c -> new DungeonMobRenderer<>(c,
+                new BipedMobModel<>(c.bakeLayer(TREANT), Style.MELEE), "treant", 0.8F, 1.4F));
+        event.registerEntityRenderer(ModEntities.BASILISK.get(), c -> new DungeonMobRenderer<>(c,
+                new QuadMobModel<>(c.bakeLayer(BASILISK)), "basilisk", 0.8F, 1.0F));
     }
 }

@@ -122,6 +122,22 @@ public final class ModItems {
             () -> new ForgeSpawnEggItem(ModEntities.HIGH_ORC, 0x687C52, 0x6E4C32, new Item.Properties()));
     public static final RegistryObject<Item> DEMON_KNIGHT_SPAWN_EGG = register("demon_knight_spawn_egg",
             () -> new ForgeSpawnEggItem(ModEntities.DEMON_KNIGHT, 0x2E242C, 0xFF6020, new Item.Properties()));
+    public static final RegistryObject<Item> TROLL_SPAWN_EGG = register("troll_spawn_egg",
+            () -> new ForgeSpawnEggItem(ModEntities.TROLL, 0x707E64, 0x78563A, new Item.Properties()));
+    public static final RegistryObject<Item> MINOTAUR_SPAWN_EGG = register("minotaur_spawn_egg",
+            () -> new ForgeSpawnEggItem(ModEntities.MINOTAUR, 0x684228, 0xE8DEC4, new Item.Properties()));
+    public static final RegistryObject<Item> GARGOYLE_SPAWN_EGG = register("gargoyle_spawn_egg",
+            () -> new ForgeSpawnEggItem(ModEntities.GARGOYLE, 0x7A7A80, 0xFF2820, new Item.Properties()));
+    public static final RegistryObject<Item> LICH_SPAWN_EGG = register("lich_spawn_egg",
+            () -> new ForgeSpawnEggItem(ModEntities.LICH, 0x2C1A38, 0x5AFFA0, new Item.Properties()));
+    public static final RegistryObject<Item> NAGA_SPAWN_EGG = register("naga_spawn_egg",
+            () -> new ForgeSpawnEggItem(ModEntities.NAGA, 0x287460, 0xE6B43C, new Item.Properties()));
+    public static final RegistryObject<Item> MIMIC_SPAWN_EGG = register("mimic_spawn_egg",
+            () -> new ForgeSpawnEggItem(ModEntities.MIMIC, 0x966836, 0xF0ECDC, new Item.Properties()));
+    public static final RegistryObject<Item> TREANT_SPAWN_EGG = register("treant_spawn_egg",
+            () -> new ForgeSpawnEggItem(ModEntities.TREANT, 0x5C422A, 0x3E7A34, new Item.Properties()));
+    public static final RegistryObject<Item> BASILISK_SPAWN_EGG = register("basilisk_spawn_egg",
+            () -> new ForgeSpawnEggItem(ModEntities.BASILISK, 0x345C34, 0xBE2828, new Item.Properties()));
 
     // Fusion Forge
     public static final RegistryObject<Item> FUSION_CATALYST = simple("fusion_catalyst");

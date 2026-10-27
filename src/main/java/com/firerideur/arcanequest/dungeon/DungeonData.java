@@ -23,14 +23,21 @@ public class DungeonData extends SavedData {
     public static final class Dungeon {
         public final int id;
         public final int stars;
+        /** Name of the {@link DungeonTheme}. */
+        public String theme;
         public boolean generated;
         public boolean cleared;
         public BlockPos entry = BlockPos.ZERO;
         public BlockPos bossRoom = BlockPos.ZERO;
 
-        Dungeon(int id, int stars) {
+        Dungeon(int id, int stars, String theme) {
             this.id = id;
             this.stars = stars;
+            this.theme = theme;
+        }
+
+        public DungeonTheme theme() {
+            return DungeonTheme.byName(theme, stars);
         }
 
         /** Where this dungeon is built in the dungeon dimension. */
@@ -46,8 +53,8 @@ public class DungeonData extends SavedData {
         return server.overworld().getDataStorage().computeIfAbsent(FACTORY, NAME);
     }
 
-    public Dungeon create(int stars) {
-        Dungeon dungeon = new Dungeon(nextId++, stars);
+    public Dungeon create(int stars, DungeonTheme theme) {
+        Dungeon dungeon = new Dungeon(nextId++, stars, theme.name());
         dungeons.put(dungeon.id, dungeon);
         setDirty();
         return dungeon;
@@ -62,7 +69,8 @@ public class DungeonData extends SavedData {
         data.nextId = tag.getInt("NextId");
         for (Tag element : tag.getList("Dungeons", Tag.TAG_COMPOUND)) {
             CompoundTag d = (CompoundTag) element;
-            Dungeon dungeon = new Dungeon(d.getInt("Id"), d.getInt("Stars"));
+            int stars = d.getInt("Stars");
+            Dungeon dungeon = new Dungeon(d.getInt("Id"), stars, d.contains("Theme") ? d.getString("Theme") : DungeonTheme.of(stars).name());
             dungeon.generated = d.getBoolean("Generated");
             dungeon.cleared = d.getBoolean("Cleared");
             dungeon.entry = NbtUtils.readBlockPos(d, "Entry").orElse(BlockPos.ZERO);
@@ -80,6 +88,7 @@ public class DungeonData extends SavedData {
             CompoundTag d = new CompoundTag();
             d.putInt("Id", dungeon.id);
             d.putInt("Stars", dungeon.stars);
+            d.putString("Theme", dungeon.theme);
             d.putBoolean("Generated", dungeon.generated);
             d.putBoolean("Cleared", dungeon.cleared);
             d.put("Entry", NbtUtils.writeBlockPos(dungeon.entry));

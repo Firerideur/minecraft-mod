@@ -2,6 +2,7 @@ package com.firerideur.arcanequest.client;
 
 import com.firerideur.arcanequest.client.ui.BarTrail;
 import com.firerideur.arcanequest.client.ui.UiKit;
+import com.firerideur.arcanequest.dungeon.DungeonMob;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -33,6 +34,10 @@ public final class TargetHud {
         }
         LivingEntity target = findTarget(mc, deltaTracker.getGameTimeDeltaPartialTick(true));
         if (target == null) {
+            return;
+        }
+        if (target instanceof DungeonMob mob && mob.isDormant()) {
+            // Don't give away statues and mimics
             return;
         }
         ClientMobLevels.Info info = ClientMobLevels.get(target.getId());

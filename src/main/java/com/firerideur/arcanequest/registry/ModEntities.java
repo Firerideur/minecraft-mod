@@ -5,6 +5,7 @@ import com.firerideur.arcanequest.boss.AdamantiteGolem;
 import com.firerideur.arcanequest.boss.CorruptedArchmage;
 import com.firerideur.arcanequest.boss.SkeletonKing;
 import com.firerideur.arcanequest.dungeon.DungeonMobs;
+import com.firerideur.arcanequest.dungeon.FantasyMobs;
 import com.firerideur.arcanequest.dungeon.GateEntity;
 import com.firerideur.arcanequest.magic.SpellProjectile;
 import com.firerideur.arcanequest.shadow.ShadowSoldier;
@@ -68,6 +69,39 @@ public final class ModEntities {
             () -> EntityType.Builder.of(DungeonMobs.DemonKnight::new, MobCategory.MONSTER)
                     .sized(0.8F, 2.2F).fireImmune().clientTrackingRange(8).build("demon_knight"));
 
+    // Fantasy monsters (behind the gates)
+    public static final RegistryObject<EntityType<FantasyMobs.Troll>> TROLL = ENTITIES.register("troll",
+            () -> EntityType.Builder.of(FantasyMobs.Troll::new, MobCategory.MONSTER)
+                    .sized(1.2F, 2.6F).clientTrackingRange(8).build("troll"));
+
+    public static final RegistryObject<EntityType<FantasyMobs.Minotaur>> MINOTAUR = ENTITIES.register("minotaur",
+            () -> EntityType.Builder.of(FantasyMobs.Minotaur::new, MobCategory.MONSTER)
+                    .sized(0.9F, 2.3F).clientTrackingRange(8).build("minotaur"));
+
+    public static final RegistryObject<EntityType<FantasyMobs.Gargoyle>> GARGOYLE = ENTITIES.register("gargoyle",
+            () -> EntityType.Builder.of(FantasyMobs.Gargoyle::new, MobCategory.MONSTER)
+                    .sized(0.8F, 1.8F).clientTrackingRange(8).build("gargoyle"));
+
+    public static final RegistryObject<EntityType<FantasyMobs.Lich>> LICH = ENTITIES.register("lich",
+            () -> EntityType.Builder.of(FantasyMobs.Lich::new, MobCategory.MONSTER)
+                    .sized(0.7F, 2.2F).clientTrackingRange(8).build("lich"));
+
+    public static final RegistryObject<EntityType<FantasyMobs.Naga>> NAGA = ENTITIES.register("naga",
+            () -> EntityType.Builder.of(FantasyMobs.Naga::new, MobCategory.MONSTER)
+                    .sized(0.9F, 2.2F).clientTrackingRange(8).build("naga"));
+
+    public static final RegistryObject<EntityType<FantasyMobs.Mimic>> MIMIC = ENTITIES.register("mimic",
+            () -> EntityType.Builder.of(FantasyMobs.Mimic::new, MobCategory.MONSTER)
+                    .sized(0.95F, 0.95F).clientTrackingRange(8).build("mimic"));
+
+    public static final RegistryObject<EntityType<FantasyMobs.Treant>> TREANT = ENTITIES.register("treant",
+            () -> EntityType.Builder.of(FantasyMobs.Treant::new, MobCategory.MONSTER)
+                    .sized(1.2F, 2.9F).clientTrackingRange(8).build("treant"));
+
+    public static final RegistryObject<EntityType<FantasyMobs.Basilisk>> BASILISK = ENTITIES.register("basilisk",
+            () -> EntityType.Builder.of(FantasyMobs.Basilisk::new, MobCategory.MONSTER)
+                    .sized(1.4F, 1.0F).clientTrackingRange(8).build("basilisk"));
+
     public static final RegistryObject<EntityType<GateEntity>> GATE = ENTITIES.register("gate",
             () -> EntityType.Builder.<GateEntity>of(GateEntity::new, MobCategory.MISC)
                     .sized(2.0F, 3.2F).clientTrackingRange(10).updateInterval(20).build("gate"));
@@ -86,5 +120,13 @@ public final class ModEntities {
         event.put(ANT_SOLDIER.get(), DungeonMobs.AntSoldier.createAttributes().build());
         event.put(HIGH_ORC.get(), DungeonMobs.HighOrc.createAttributes().build());
         event.put(DEMON_KNIGHT.get(), DungeonMobs.DemonKnight.createAttributes().build());
+        event.put(TROLL.get(), FantasyMobs.Troll.createAttributes().build());
+        event.put(MINOTAUR.get(), FantasyMobs.Minotaur.createAttributes().build());
+        event.put(GARGOYLE.get(), FantasyMobs.Gargoyle.createAttributes().build());
+        event.put(LICH.get(), FantasyMobs.Lich.createAttributes().build());
+        event.put(NAGA.get(), FantasyMobs.Naga.createAttributes().build());
+        event.put(MIMIC.get(), FantasyMobs.Mimic.createAttributes().build());
+        event.put(TREANT.get(), FantasyMobs.Treant.createAttributes().build());
+        event.put(BASILISK.get(), FantasyMobs.Basilisk.createAttributes().build());
     }
 }

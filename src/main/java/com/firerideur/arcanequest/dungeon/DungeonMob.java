@@ -3,6 +3,9 @@ package com.firerideur.arcanequest.dungeon;
 import com.firerideur.arcanequest.ArcaneQuest;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerBossEvent;
@@ -33,6 +36,8 @@ public abstract class DungeonMob extends Monster {
     private static final ResourceLocation BOSS_SCALE = ArcaneQuest.id("gate_boss_scale");
     private static final ResourceLocation BOSS_KNOCKBACK = ArcaneQuest.id("gate_boss_knockback");
 
+    private static final EntityDataAccessor<Boolean> DATA_DORMANT = SynchedEntityData.defineId(DungeonMob.class, EntityDataSerializers.BOOLEAN);
+
     /** Dungeon this mob belongs to, -1 if it was summoned elsewhere. */
     private int dungeonId = -1;
     private boolean gateBoss;
@@ -41,6 +46,74 @@ public abstract class DungeonMob extends Monster {
     protected DungeonMob(EntityType<? extends Monster> type, Level level) {
         super(type, level);
         setPersistenceRequired();
+    }
+
+    @Override
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_DORMANT, false);
+    }
+
+    // ---------------------------------------------------------------- dormant (statues, mimics)
+
+    /** A dormant mob doesn't move at all (a statue, a chest...) until a player comes close or hits it. */
+    public boolean isDormant() {
+        return entityData.get(DATA_DORMANT);
+    }
+
+    public void setDormant(boolean dormant) {
+        entityData.set(DATA_DORMANT, dormant);
+    }
+
+    /** Players closer than this wake the mob up; 0 for mobs that are never dormant. */
+    protected double wakeRadius() {
+        return 0;
+    }
+
+    /** Damage taken while dormant (stone skin...). */
+    protected float dormantDamageFactor() {
+        return 1.0F;
+    }
+
+    /** Effects when waking up. */
+    protected void onWake() {
+    }
+
+    private void wake() {
+        setDormant(false);
+        onWake();
+    }
+
+    @Override
+    protected boolean isImmobile() {
+        return super.isImmobile() || isDormant();
+    }
+
+    @Override
+    public boolean isPushable() {
+        return !isDormant() && super.isPushable();
+    }
+
+    @Override
+    public void aiStep() {
+        super.aiStep();
+        if (!level().isClientSide() && isDormant() && tickCount % 5 == 0) {
+            Player near = level().getNearestPlayer(this, wakeRadius());
+            if (near != null && !near.isSpectator() && !near.isCreative()) {
+                wake();
+                setTarget(near);
+            }
+        }
+    }
+
+    @Override
+    public boolean hurt(DamageSource source, float amount) {
+        if (isDormant() && !level().isClientSide() && source.getEntity() != null) {
+            float reduced = amount * dormantDamageFactor();
+            wake();
+            return super.hurt(source, reduced);
+        }
+        return super.hurt(source, amount);
     }
 
     /** Usual melee behavior; subclasses add their attack goal at priority 2. */
@@ -69,6 +142,7 @@ public abstract class DungeonMob extends Monster {
     /** Turns this mob into the boss of a gate: much tougher, bigger, with a boss bar. */
     public void makeGateBoss(int stars) {
         gateBoss = true;
+        setDormant(false);
         double health = 8.0 + stars;
         getAttribute(Attributes.MAX_HEALTH).addOrReplacePermanentModifier(
                 new AttributeModifier(BOSS_HEALTH, health, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
@@ -132,6 +206,7 @@ public abstract class DungeonMob extends Monster {
         super.addAdditionalSaveData(tag);
         tag.putInt("Dungeon", dungeonId);
         tag.putBoolean("GateBoss", gateBoss);
+        tag.putBoolean("Dormant", isDormant());
     }
 
     @Override
@@ -139,6 +214,7 @@ public abstract class DungeonMob extends Monster {
         super.readAdditionalSaveData(tag);
         dungeonId = tag.contains("Dungeon") ? tag.getInt("Dungeon") : -1;
         gateBoss = tag.getBoolean("GateBoss");
+        setDormant(tag.getBoolean("Dormant"));
         if (gateBoss) {
             createBossEvent();
             bossEvent.setName(getDisplayName());

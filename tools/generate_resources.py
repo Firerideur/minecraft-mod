@@ -180,7 +180,8 @@ def generate_textures_and_models():
     for weapon in ("kings_blade", "adamantite_hammer"):
         item_model(weapon, "item/handheld")
     for egg in ("skeleton_king", "corrupted_archmage", "adamantite_golem", "goblin", "goblin_shaman", "steelfang_wolf",
-                "ice_elf", "ant_soldier", "high_orc", "demon_knight"):
+                "ice_elf", "ant_soldier", "high_orc", "demon_knight", "troll", "minotaur", "gargoyle", "lich", "naga",
+                "mimic", "treant", "basilisk"):
         write_json(ASSETS / "models" / "item" / f"{egg}_spawn_egg.json", {"parent": "minecraft:item/template_spawn_egg"})
 
 

@@ -416,6 +416,405 @@ ANT_COLORS = {"head": CHITIN, "mandible": (40, 20, 16), "antenna": mul(CHITIN, 0
               "abdomen": mul(CHITIN, 1.1), "leg": mul(CHITIN, 0.6)}
 
 
+# ---------------------------------------------------------------------------
+# Troll
+# ---------------------------------------------------------------------------
+TROLL_SKIN = (112, 126, 100)
+
+
+def troll_parts():
+    root, a = biped((7, 7, 7), (12, 11, 7), (5, 15, 5), (5, 9, 5))
+    head = find(root, "head")
+    ht = a["head_top"]
+    head.cubes += [
+        Cube("nose", (-1, ht + 2, -4.5), (2, 3, 1)),
+        Cube("tusk", (-2.5, ht + 5, -4.5), (1, 2, 1)),
+        Cube("tusk", (1.5, ht + 5, -4.5), (1, 2, 1), True),
+    ]
+    body = find(root, "body")
+    body.cubes += [Cube("hump", (-4, a["body_top"] - 1, 2.5), (8, 4, 3)),
+                   Cube("loincloth", (-5, a["leg_top"] - 2, -4), (10, 4, 1))]
+    right = find(root, "right_arm")
+    hx, hy = -a["arm_x"], a["hand_y"]
+    right.children.append(Part("club", (hx, hy, 0), [Cube("club", (hx - 1.5, hy - 1.5, -11), (3, 3, 10))]))
+    return root
+
+
+def troll_details(tex, f):
+    if tex == "head" and f.name == "north":
+        eyes(f, 2, (1, 5), (255, 200, 60), 200)
+        for x in range(1, 6):
+            f.put(x, 5, (40, 36, 30))
+    if tex in ("body", "arm", "leg", "head", "hump") and f.side:
+        for y in range(f.h):
+            for x in range(f.w):
+                if f.n(x, y, 21) > 0.82:
+                    f.put(x, y, (70, 100, 50))
+    if tex == "club":
+        f.fill(lambda x, y: mix((80, 56, 34), (110, 80, 50), f.n(x, y)))
+        if f.name == "north":
+            for x in range(f.w):
+                f.put(x, 1, (60, 40, 24))
+    if tex == "tusk":
+        f.fill(lambda x, y: (232, 224, 196))
+
+
+TROLL_COLORS = {"head": TROLL_SKIN, "nose": mul(TROLL_SKIN, 0.85), "tusk": (232, 224, 196), "body": TROLL_SKIN,
+                "hump": mul(TROLL_SKIN, 0.9), "loincloth": (120, 90, 60), "arm": TROLL_SKIN, "leg": mul(TROLL_SKIN, 0.85),
+                "club": (90, 64, 40)}
+
+
+# ---------------------------------------------------------------------------
+# Minotaur
+# ---------------------------------------------------------------------------
+BULL = (104, 66, 40)
+IVORY = (232, 222, 196)
+
+
+def minotaur_parts():
+    root, a = biped((7, 7, 7), (10, 12, 6), (4, 12, 4), (4, 12, 4))
+    head = find(root, "head")
+    ht = a["head_top"]
+    head.cubes += [
+        Cube("snout", (-2.5, ht + 4, -5.5), (5, 3, 2)),
+        Cube("ear", (-5, ht + 2, -0.5), (2, 1, 2)),
+        Cube("ear", (3, ht + 2, -0.5), (2, 1, 2), True),
+    ]
+    head.children += [
+        Part("right_horn", (-3.5, ht + 1, 0), [Cube("horn", (-7.5, ht, -1), (4, 2, 2)),
+                                               Cube("horn_tip", (-8.5, ht - 2, -1), (2, 3, 2))]),
+        Part("left_horn", (3.5, ht + 1, 0), [Cube("horn", (3.5, ht, -1), (4, 2, 2), True),
+                                             Cube("horn_tip", (6.5, ht - 2, -1), (2, 3, 2), True)]),
+    ]
+    right = find(root, "right_arm")
+    hx, hy = -a["arm_x"], a["hand_y"]
+    right.children.append(Part("axe", (hx, hy, 0), [
+        Cube("axe_handle", (hx - 0.5, hy - 0.5, -14), (1, 1, 14)),
+        Cube("double_blade", (hx - 1, hy - 5, -15), (2, 10, 4)),
+    ]))
+    return root
+
+
+def minotaur_details(tex, f):
+    if tex == "head" and f.name == "north":
+        eyes(f, 2, (1, 5), (230, 30, 30), 230)
+    if tex == "snout" and f.name == "north":
+        f.put(1, 1, (30, 20, 16))
+        f.put(3, 1, (30, 20, 16))
+        f.put(2, 2, (230, 180, 60))
+    if tex == "leg" and f.side:
+        for y in range(f.h - 3, f.h):
+            for x in range(f.w):
+                f.put(x, y, (40, 34, 30))
+    if tex in ("horn", "horn_tip"):
+        f.fill(lambda x, y: mix(IVORY, (60, 50, 40), 0.15 if tex == "horn_tip" else 0.0))
+    if tex == "double_blade":
+        f.fill(lambda x, y: mix((180, 180, 186), (110, 110, 116), abs(y - f.h / 2) / (f.h / 2)))
+    if tex == "body" and f.name == "north":
+        for y in range(2, f.h - 2):
+            f.put(f.w // 2, y, mul(BULL, 0.75))
+
+
+MINOTAUR_COLORS = {"head": BULL, "snout": mul(BULL, 1.15), "ear": BULL, "horn": IVORY, "horn_tip": IVORY,
+                   "body": mul(BULL, 0.95), "arm": BULL, "leg": mul(BULL, 0.85), "axe_handle": WOOD,
+                   "double_blade": (160, 160, 165)}
+
+
+# ---------------------------------------------------------------------------
+# Gargoyle
+# ---------------------------------------------------------------------------
+STONE = (122, 122, 128)
+
+
+def gargoyle_parts():
+    root, a = biped((7, 7, 6), (8, 11, 5), (3, 12, 3), (3, 9, 3))
+    head = find(root, "head")
+    ht = a["head_top"]
+    head.cubes += [Cube("small_horn", (-3, ht - 2, -1), (1, 2, 1)), Cube("small_horn", (2, ht - 2, -1), (1, 2, 1), True)]
+    body = find(root, "body")
+    bt = a["body_top"]
+    body.children += [
+        Part("right_wing", (-1.5, bt + 1, 2.5), [Cube("wing", (-11.5, bt - 3, 2.5), (10, 13, 1))], rot=(0, 0.45, 0)),
+        Part("left_wing", (1.5, bt + 1, 2.5), [Cube("wing", (1.5, bt - 3, 2.5), (10, 13, 1), True)], rot=(0, -0.45, 0)),
+    ]
+    return root
+
+
+def gargoyle_details(tex, f):
+    if tex in ("head", "body", "arm", "leg", "wing"):
+        crack_x = int(f.n(1, 2, 5) * f.w)
+        for y in range(f.h):
+            if f.n(crack_x, y, 9) > 0.45:
+                f.put(crack_x, y, mul(STONE, 0.55))
+    if tex == "head" and f.name == "north":
+        eyes(f, 3, (1, 5), (255, 40, 30), 255)
+        for x in range(1, 6):
+            f.put(x, 5, (40, 40, 44) if x % 2 else (190, 190, 190))
+    if tex == "wing" and f.side:
+        for x in range(f.w):
+            for y in range(f.h):
+                if y > f.h - 1 - (x % 4):
+                    f.put(x, y, CLEAR)
+        for y in range(0, f.h, 3):
+            for x in range(f.w):
+                f.put(x, y, mul(STONE, 0.7))
+
+
+GARGOYLE_COLORS = {"head": STONE, "small_horn": mul(STONE, 0.7), "body": STONE, "arm": STONE, "leg": mul(STONE, 0.9),
+                   "wing": mul(STONE, 0.85)}
+
+
+# ---------------------------------------------------------------------------
+# Lich
+# ---------------------------------------------------------------------------
+LICH_ROBE = (44, 26, 56)
+SOUL_GREEN = (90, 255, 160)
+
+
+def lich_parts():
+    root, a = biped((8, 8, 8), (8, 12, 4), (3, 12, 3), (3, 12, 3))
+    head = find(root, "head")
+    ht = a["head_top"]
+    head.cubes += [
+        Cube("crown", (-4.5, ht - 2, -4.5), (9, 2, 9)),
+        Cube("crown_spike", (-0.5, ht - 4, -4.5), (1, 2, 1)),
+        Cube("crown_spike", (-4.5, ht - 4, -0.5), (1, 2, 1)),
+        Cube("crown_spike", (3.5, ht - 4, -0.5), (1, 2, 1)),
+    ]
+    body = find(root, "body")
+    body.cubes.append(Cube("robe", (-4.5, a["leg_top"] - 1, -2.5), (9, 12, 5)))
+    right = find(root, "right_arm")
+    hx, hy = -a["arm_x"], a["hand_y"]
+    right.children.append(Part("staff", (hx, hy, 0), [
+        Cube("staff", (hx - 0.5, hy - 15, -1.5), (1, 19, 1)),
+        Cube("staff_gem", (hx - 1.5, hy - 18, -2.5), (3, 3, 3)),
+    ]))
+    return root
+
+
+def lich_details(tex, f):
+    if tex == "head":
+        material((214, 206, 182), grain=0.1)(f)
+        if f.name == "north":
+            for x, y in ((1, 3), (2, 3), (5, 3), (6, 3), (1, 4), (2, 4), (5, 4), (6, 4)):
+                f.put(x, y, (20, 16, 22))
+            eyes(f, 4, (2, 5), SOUL_GREEN, 255)
+            for x in range(1, 7):
+                f.put(x, 6, (214, 206, 182) if x % 2 else (30, 24, 30))
+    if tex in ("arm", "leg"):
+        material((200, 192, 168), grain=0.1)(f)
+    if tex in ("body", "robe") and f.side:
+        for y in range(f.h):
+            f.put(0, y, (150, 120, 40))
+            f.put(f.w - 1, y, (150, 120, 40))
+        if tex == "robe":
+            for x in range(f.w):
+                tear = int(f.n(x, 3, 7) * 3)
+                for y in range(f.h - tear, f.h):
+                    f.put(x, y, CLEAR)
+            for x in range(1, f.w - 1, 3):
+                f.put(x, f.h - 5, mul(SOUL_GREEN, 0.6), rgba(SOUL_GREEN, 170))
+    if tex == "staff_gem":
+        f.fill(lambda x, y: mix(SOUL_GREEN, (255, 255, 255), 0.3 if (x + y) % 2 else 0.0))
+        for y in range(f.h):
+            for x in range(f.w):
+                f.glow[y][x] = rgba(SOUL_GREEN, 230)
+    if tex in ("crown", "crown_spike"):
+        material((120, 110, 60), grain=0.1, gradient=0.3)(f)
+
+
+LICH_COLORS = {"head": (214, 206, 182), "crown": (120, 110, 60), "crown_spike": (120, 110, 60), "body": LICH_ROBE,
+               "robe": LICH_ROBE, "arm": (200, 192, 168), "leg": (200, 192, 168), "staff": (50, 40, 50),
+               "staff_gem": SOUL_GREEN}
+
+
+# ---------------------------------------------------------------------------
+# Naga (no legs: a long snake tail)
+# ---------------------------------------------------------------------------
+NAGA_SCALES = (40, 116, 96)
+NAGA_SKIN = (120, 160, 120)
+GOLD = (230, 180, 60)
+
+
+def naga_parts():
+    head = Part("head", (0, -4, 0), [Cube("head", (-3.5, -11, -3.5), (7, 7, 7)),
+                                     Cube("hair", (-3.5, -11.5, 0.5), (7, 9, 3))])
+    arms = [
+        Part("right_arm", (-5.5, -3, 0), [Cube("arm", (-7, -4, -1.5), (3, 11, 3))], [
+            Part("spear", (-5.5, 6, 0), [Cube("spear", (-6, 5.5, -14), (1, 1, 18)),
+                                         Cube("spear_tip", (-6.5, 5, -17), (2, 2, 3))])]),
+        Part("left_arm", (5.5, -3, 0), [Cube("arm", (4, -4, -1.5), (3, 11, 3), True)]),
+    ]
+    tail4 = Part("tail4", (0, 20, 21), [Cube("tail4", (-2, 20, 21), (4, 4, 8))])
+    tail3 = Part("tail3", (0, 20, 11), [Cube("tail3", (-3, 18, 11), (6, 6, 10))], [tail4])
+    tail2 = Part("tail2", (0, 16, 0), [Cube("tail2", (-4, 16, -3), (8, 8, 14))], [tail3])
+    tail = Part("tail", (0, 8, 0), [Cube("tail1", (-4.5, 8, -3), (9, 8, 6))], [tail2])
+    body = Part("body", (0, 8, 0), [Cube("body", (-4, -4, -2), (8, 12, 4)),
+                                    Cube("jewel", (-2, -3, -2.5), (4, 2, 1))], [head] + arms + [tail])
+    return Part("base", (0, 0, 0), [], [body])
+
+
+def naga_details(tex, f):
+    if tex == "head" and f.name == "north":
+        eyes(f, 3, (1, 5), (255, 230, 40), 230)
+        f.put(2, 3, (20, 20, 10))
+        f.put(4, 3, (20, 20, 10))
+    if tex.startswith("tail") or tex == "body":
+        for y in range(f.h):
+            for x in range(f.w):
+                if (x + y * 2) % 4 == 0:
+                    f.put(x, y, mul(f.get(x, y), 0.8))
+        if f.name in ("down", "north") and tex.startswith("tail"):
+            f.fill(lambda x, y: mix((220, 210, 150), (180, 170, 110), (y % 3) / 2))
+    if tex == "jewel" or tex == "spear_tip":
+        material(GOLD, grain=0.08, gradient=0.4)(f)
+
+
+NAGA_COLORS = {"head": NAGA_SKIN, "hair": (20, 30, 26), "arm": NAGA_SKIN, "body": NAGA_SKIN, "jewel": GOLD,
+               "tail1": NAGA_SCALES, "tail2": NAGA_SCALES, "tail3": NAGA_SCALES, "tail4": mul(NAGA_SCALES, 0.9),
+               "spear": WOOD, "spear_tip": GOLD}
+
+
+# ---------------------------------------------------------------------------
+# Mimic (a chest with teeth)
+# ---------------------------------------------------------------------------
+CHEST_WOOD = (150, 104, 54)
+IRON = (70, 70, 74)
+
+
+def mimic_parts():
+    lid = Part("lid", (0, 15, 7), [
+        Cube("lid", (-7, 10, -7), (14, 5, 14)),
+        Cube("teeth_top", (-6, 15, -6.5), (12, 1, 1)),
+        Cube("latch", (-1, 12, -8), (2, 4, 1)),
+    ])
+    body = Part("body", (0, 15, 0), [
+        Cube("box", (-7, 15, -7), (14, 9, 14)),
+        Cube("teeth_bottom", (-6, 14, -6.5), (12, 1, 1)),
+        Cube("tongue", (-2, 14.5, -5), (4, 1, 9)),
+    ], [lid])
+    return Part("base", (0, 0, 0), [], [body])
+
+
+def mimic_details(tex, f):
+    if tex in ("lid", "box") and f.side:
+        for y in range(f.h):
+            for x in range(f.w):
+                if x in (0, f.w - 1) or y in (0, f.h - 1):
+                    f.put(x, y, IRON)
+    if tex == "lid" and f.name == "down":
+        f.fill(lambda x, y: (90, 20, 26))
+    if tex == "box" and f.name == "up":
+        f.fill(lambda x, y: (70, 14, 20))
+    if tex in ("teeth_top", "teeth_bottom"):
+        f.fill(lambda x, y: (240, 236, 220) if x % 2 == 0 else CLEAR)
+    if tex == "tongue":
+        f.fill(lambda x, y: (200, 60, 80))
+    if tex == "latch":
+        material((200, 190, 120), grain=0.05)(f)
+        if f.name == "north":
+            f.put(0, 2, (255, 60, 40), (255, 60, 40))
+            f.put(1, 2, (255, 60, 40), (255, 60, 40))
+
+
+MIMIC_COLORS = {"lid": CHEST_WOOD, "box": CHEST_WOOD, "teeth_top": (240, 236, 220), "teeth_bottom": (240, 236, 220),
+                "tongue": (200, 60, 80), "latch": (200, 190, 120)}
+
+
+# ---------------------------------------------------------------------------
+# Treant (walking tree)
+# ---------------------------------------------------------------------------
+BARK = (92, 66, 42)
+LEAVES = (62, 122, 52)
+
+
+def treant_parts():
+    root, a = biped((8, 8, 7), (9, 16, 7), (4, 16, 4), (4, 8, 4))
+    head = find(root, "head")
+    ht = a["head_top"]
+    head.cubes.append(Cube("foliage", (-6, ht - 5, -5), (12, 7, 10)))
+    for side, sign in (("right", -1), ("left", 1)):
+        arm = find(root, side + "_arm")
+        x = sign * a["arm_x"]
+        arm.cubes.append(Cube("leaves", (x - 3.5, a["body_top"] - 3, -3), (7, 5, 6), sign > 0))
+        arm.cubes.append(Cube("twig", (x - 0.5, a["hand_y"] + 1, -2), (1, 3, 1), sign > 0))
+    return root
+
+
+def treant_details(tex, f):
+    if tex in ("body", "arm", "leg", "head", "twig") and f.side:
+        for x in range(f.w):
+            if x % 3 == 1:
+                for y in range(f.h):
+                    f.put(x, y, mul(BARK, 0.75))
+        for y in range(f.h):
+            for x in range(f.w):
+                if f.n(x, y, 31) > 0.85:
+                    f.put(x, y, (70, 110, 50))
+    if tex == "head" and f.name == "north":
+        for x in range(1, 7):
+            f.put(x, 3, (30, 20, 12))
+        eyes(f, 3, (2, 5), (255, 180, 40), 230)
+        for x in range(2, 6):
+            f.put(x, 6, (30, 20, 12))
+    if tex in ("foliage", "leaves"):
+        f.fill(lambda x, y: mix(LEAVES, (100, 160, 70), f.n(x, y)) if f.n(x, y, 4) > 0.15 else CLEAR)
+    if tex == "leg" and f.side:
+        for x in range(f.w):
+            f.put(x, f.h - 1, (60, 44, 28))
+
+
+TREANT_COLORS = {"head": BARK, "foliage": LEAVES, "leaves": LEAVES, "body": BARK, "arm": BARK, "leg": mul(BARK, 0.9),
+                 "twig": BARK}
+
+
+# ---------------------------------------------------------------------------
+# Basilisk (huge lizard with a crest)
+# ---------------------------------------------------------------------------
+LIZARD = (52, 92, 52)
+
+
+def basilisk_parts():
+    legs = []
+    for i, (x, z) in enumerate(((-4, -6), (4, -6), (-4, 6), (4, 6))):
+        legs.append(Part(f"leg{i}", (x, 16, z), [Cube("leg", (x - 1.5, 16, z - 1.5), (3, 8, 3), x > 0)],
+                         rot=(0, 0, 0.35 if x < 0 else -0.35)))
+    head = Part("head", (0, 14, -9), [
+        Cube("head", (-3.5, 11, -16), (7, 5, 7)),
+        Cube("jaw", (-3, 16, -16), (6, 2, 6)),
+        Cube("crest", (-0.5, 7, -15), (1, 4, 9)),
+    ])
+    tail = Part("tail", (0, 14, 9), [Cube("tail", (-2.5, 12, 9), (5, 4, 10))], [
+        Part("tail_end", (0, 14, 19), [Cube("tail_end", (-1.5, 13, 19), (3, 3, 10))])])
+    body = Part("body", (0, 15, 0), [
+        Cube("body", (-4, 12, -9), (8, 6, 18)),
+        Cube("spike", (-1, 10, -6), (2, 2, 3)),
+        Cube("spike", (-1, 10, -1), (2, 2, 3)),
+        Cube("spike", (-1, 10, 4), (2, 2, 3)),
+    ], [head, tail] + legs)
+    return Part("base", (0, 0, 0), [], [body])
+
+
+def basilisk_details(tex, f):
+    if tex == "head" and f.name in ("east", "west"):
+        eyes(f, 1, (2,), (255, 230, 40), 255)
+    if tex == "head" and f.name == "north":
+        eyes(f, 1, (1, 5), (255, 230, 40), 255)
+    if tex in ("body", "tail", "tail_end", "head") and f.side:
+        for y in range(f.h):
+            for x in range(f.w):
+                if (x + y) % 3 == 0:
+                    f.put(x, y, mul(f.get(x, y), 0.8))
+    if tex in ("body", "tail", "jaw") and f.name == "down":
+        f.fill(lambda x, y: (170, 170, 110))
+    if tex in ("crest", "spike"):
+        f.fill(lambda x, y: mix((200, 40, 40), (120, 20, 20), y / max(1, f.h - 1)))
+
+
+BASILISK_COLORS = {"head": LIZARD, "jaw": mul(LIZARD, 0.9), "crest": (190, 40, 40), "body": LIZARD,
+                   "spike": (190, 40, 40), "tail": LIZARD, "tail_end": mul(LIZARD, 0.9), "leg": mul(LIZARD, 0.85)}
+
+
 MOBS = {
     "goblin": ("goblin", lambda: goblin_parts(False), painter(GOBLIN_COLORS, goblin_details(False))),
     "goblin_shaman": ("goblinShaman", lambda: goblin_parts(True), painter(SHAMAN_COLORS, goblin_details(True))),
@@ -424,6 +823,14 @@ MOBS = {
     "demon_knight": ("demonKnight", demon_parts, painter(DEMON_COLORS, demon_details)),
     "steelfang_wolf": ("steelfangWolf", wolf_parts, painter(WOLF_COLORS, wolf_details)),
     "ant_soldier": ("antSoldier", ant_parts, painter(ANT_COLORS, ant_details)),
+    "troll": ("troll", troll_parts, painter(TROLL_COLORS, troll_details)),
+    "minotaur": ("minotaur", minotaur_parts, painter(MINOTAUR_COLORS, minotaur_details)),
+    "gargoyle": ("gargoyle", gargoyle_parts, painter(GARGOYLE_COLORS, gargoyle_details)),
+    "lich": ("lich", lich_parts, painter(LICH_COLORS, lich_details)),
+    "naga": ("naga", naga_parts, painter(NAGA_COLORS, naga_details)),
+    "mimic": ("mimic", mimic_parts, painter(MIMIC_COLORS, mimic_details)),
+    "treant": ("treant", treant_parts, painter(TREANT_COLORS, treant_details)),
+    "basilisk": ("basilisk", basilisk_parts, painter(BASILISK_COLORS, basilisk_details)),
 }
 
 

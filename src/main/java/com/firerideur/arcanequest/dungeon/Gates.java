@@ -78,7 +78,7 @@ public final class Gates {
 
     /** Opens a gate of rank {@code stars} at {@code pos}, with a fresh dungeon behind it. */
     public static GateEntity open(ServerLevel level, Vec3 pos, int stars) {
-        DungeonData.Dungeon dungeon = DungeonData.get(level.getServer()).create(stars);
+        DungeonData.Dungeon dungeon = DungeonData.get(level.getServer()).create(stars, DungeonTheme.random(stars, level.random));
         GateEntity gate = new GateEntity(ModEntities.GATE.get(), level);
         gate.setup(dungeon.id, stars, false);
         gate.moveTo(pos.x, pos.y, pos.z, 0, 0);
@@ -119,7 +119,7 @@ public final class Gates {
         player.teleportTo(dungeonLevel, entry.getX() + 0.5, entry.getY(), entry.getZ() + 0.5, -90.0F, 0.0F);
         player.setPortalCooldown(60);
         dungeonLevel.playSound(null, entry, SoundEvents.PORTAL_TRAVEL, SoundSource.PLAYERS, 0.3F, 1.2F);
-        DungeonTheme theme = DungeonTheme.of(dungeon.stars);
+        DungeonTheme theme = dungeon.theme();
         player.sendSystemMessage(Component.empty().append(stars(dungeon.stars)).append(" ")
                 .append(theme.displayName().copy().withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)));
         player.sendSystemMessage(Component.translatable("message.arcanequest.gate_entered", recommendedLevel(dungeon.stars))

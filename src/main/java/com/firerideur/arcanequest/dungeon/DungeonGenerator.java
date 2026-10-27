@@ -31,6 +31,8 @@ public final class DungeonGenerator {
     static final int HALF = 8;
     static final int HEIGHT = 8;
     private static final int CORRIDOR_HALF = 2;
+    /** Part of the room chests that are mimics. */
+    static final float MIMIC_CHANCE = 0.3F;
     private static final int CORRIDOR_HEIGHT = 5;
 
     private DungeonGenerator() {}
@@ -46,7 +48,7 @@ public final class DungeonGenerator {
     }
 
     public static void generate(ServerLevel level, DungeonData.Dungeon dungeon, RandomSource random) {
-        DungeonTheme theme = DungeonTheme.of(dungeon.stars);
+        DungeonTheme theme = dungeon.theme();
         BlockPos origin = dungeon.origin();
         List<BlockPos> rooms = layout(origin, roomCount(dungeon.stars), random);
         for (BlockPos room : rooms) {
@@ -70,7 +72,18 @@ public final class DungeonGenerator {
                     spawnMob(level, dungeon, theme.randomMob(random), center, random);
                 }
                 if (random.nextFloat() < 0.35F) {
-                    chest(level, center.offset(HALF - 2, 1, HALF - 2), Rewards.roomLoot(dungeon.stars, random));
+                    BlockPos chestPos = center.offset(HALF - 2, 1, HALF - 2);
+                    if (random.nextFloat() < MIMIC_CHANCE) {
+                        // Not a chest
+                        DungeonMob mimic = spawnMob(level, dungeon, ModEntities.MIMIC.get(), center, random);
+                        if (mimic != null) {
+                            mimic.moveTo(chestPos.getX() + 0.5, chestPos.getY(), chestPos.getZ() + 0.5, 180.0F, 0);
+                            mimic.setYHeadRot(180.0F);
+                            mimic.setYBodyRot(180.0F);
+                        }
+                    } else {
+                        chest(level, chestPos, Rewards.roomLoot(dungeon.stars, random));
+                    }
                 }
             }
         }

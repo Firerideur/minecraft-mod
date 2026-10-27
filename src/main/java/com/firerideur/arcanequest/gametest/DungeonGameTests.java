@@ -4,6 +4,8 @@ import com.firerideur.arcanequest.ArcaneQuest;
 import com.firerideur.arcanequest.dungeon.DungeonData;
 import com.firerideur.arcanequest.dungeon.DungeonGenerator;
 import com.firerideur.arcanequest.dungeon.DungeonMob;
+import com.firerideur.arcanequest.dungeon.DungeonTheme;
+import com.firerideur.arcanequest.dungeon.FantasyMobs;
 import com.firerideur.arcanequest.dungeon.GateEntity;
 import com.firerideur.arcanequest.dungeon.Gates;
 import com.firerideur.arcanequest.mobs.MobLevels;
@@ -45,7 +47,7 @@ public class DungeonGameTests {
         ServerLevel dimension = helper.getLevel().getServer().getLevel(Gates.DUNGEON);
         ServerLevel dungeonLevel = dimension != null ? dimension : helper.getLevel();
         DungeonData data = DungeonData.get(helper.getLevel().getServer());
-        DungeonData.Dungeon dungeon = data.create(3);
+        DungeonData.Dungeon dungeon = data.create(3, DungeonTheme.ICE_FORTRESS);
         DungeonGenerator.generate(dungeonLevel, dungeon, RandomSource.create(7));
         helper.assertTrue(dungeon.generated, "dungeon should be generated");
         BlockPos entry = dungeon.entry;
@@ -78,7 +80,9 @@ public class DungeonGameTests {
     public static void everyDungeonMobSpawns(GameTestHelper helper) {
         List<EntityType<? extends DungeonMob>> types = List.of(ModEntities.GOBLIN.get(), ModEntities.GOBLIN_SHAMAN.get(),
                 ModEntities.STEELFANG_WOLF.get(), ModEntities.ICE_ELF.get(), ModEntities.ANT_SOLDIER.get(),
-                ModEntities.HIGH_ORC.get(), ModEntities.DEMON_KNIGHT.get());
+                ModEntities.HIGH_ORC.get(), ModEntities.DEMON_KNIGHT.get(), ModEntities.TROLL.get(), ModEntities.MINOTAUR.get(),
+                ModEntities.GARGOYLE.get(), ModEntities.LICH.get(), ModEntities.NAGA.get(), ModEntities.MIMIC.get(),
+                ModEntities.TREANT.get(), ModEntities.BASILISK.get());
         for (EntityType<? extends DungeonMob> type : types) {
             DungeonMob mob = helper.spawn(type, new BlockPos(1, 1, 1));
             helper.assertTrue(mob.isAlive() && mob.getMaxHealth() > 0, type + " should spawn");
@@ -93,6 +97,52 @@ public class DungeonGameTests {
         helper.assertTrue(gate.getStars() == 5 && !gate.isExit(), "a 5-star gate should open");
         helper.assertTrue(DungeonData.get(helper.getLevel().getServer()).get(gate.getDungeonId()) != null, "it needs a dungeon");
         gate.discard();
+        helper.succeed();
+    }
+
+    @GameTest(template = EMPTY)
+    public static void everyRankHasThemesWithABoss(GameTestHelper helper) {
+        for (int stars = 1; stars <= Gates.MAX_STARS; stars++) {
+            helper.assertTrue(!DungeonTheme.forStars(stars).isEmpty(), "no theme for " + stars + " stars");
+        }
+        helper.assertTrue(DungeonTheme.forStars(2).size() == 2 && DungeonTheme.forStars(6).size() == 2, "ranks 2, 4, 5, 6 have two themes");
+        for (DungeonTheme theme : DungeonTheme.values()) {
+            helper.assertTrue(theme.inhabitants().contains(theme.boss.get()), theme + " should list its boss");
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = EMPTY)
+    public static void gargoyleSleepsUntilHit(GameTestHelper helper) {
+        FantasyMobs.Gargoyle gargoyle = helper.spawn(ModEntities.GARGOYLE.get(), new BlockPos(1, 1, 1));
+        helper.assertTrue(gargoyle.isDormant(), "a gargoyle starts as a statue");
+        var player = helper.makeMockServerPlayerInLevel();
+        float before = gargoyle.getHealth();
+        gargoyle.hurt(player.damageSources().playerAttack(player), 10.0F);
+        helper.assertTrue(!gargoyle.isDormant(), "hitting it wakes it up");
+        helper.assertTrue(before - gargoyle.getHealth() <= 2.5F, "stone skin: a sleeping gargoyle takes 20% damage");
+        gargoyle.discard();
+        helper.succeed();
+    }
+
+    @GameTest(template = EMPTY, timeoutTicks = 100)
+    public static void trollRegenerates(GameTestHelper helper) {
+        FantasyMobs.Troll troll = helper.spawn(ModEntities.TROLL.get(), new BlockPos(1, 1, 1));
+        troll.setNoAi(true);
+        troll.setHealth(troll.getMaxHealth() / 2);
+        float hurt = troll.getHealth();
+        helper.runAfterDelay(45, () -> {
+            helper.assertTrue(troll.getHealth() > hurt, "a troll should heal over time");
+            troll.discard();
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = EMPTY)
+    public static void mimicLooksLikeAChest(GameTestHelper helper) {
+        FantasyMobs.Mimic mimic = helper.spawn(ModEntities.MIMIC.get(), new BlockPos(1, 1, 1));
+        helper.assertTrue(mimic.isDormant() && !mimic.isPushable(), "a mimic waits, still, like a chest");
+        mimic.discard();
         helper.succeed();
     }
 }
