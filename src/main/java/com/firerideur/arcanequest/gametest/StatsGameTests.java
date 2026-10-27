@@ -1,6 +1,7 @@
 package com.firerideur.arcanequest.gametest;
 
 import com.firerideur.arcanequest.ArcaneQuest;
+import com.firerideur.arcanequest.stats.PlayerClass;
 import com.firerideur.arcanequest.stats.PlayerStats;
 import com.firerideur.arcanequest.stats.Stat;
 import com.firerideur.arcanequest.stats.StatEffects;
@@ -87,6 +88,21 @@ public class StatsGameTests {
         PlayerStats reloadedStats = StatsCapability.get(reloaded).orElseThrow();
         helper.assertTrue(reloadedStats.getLevel() == 2 && reloadedStats.get(Stat.STRENGTH) == 2, "stats not saved with player");
         helper.assertTrue(reloaded.getAttributeValue(Attributes.MAX_HEALTH) == health, "health bonus not saved with player");
+        helper.succeed();
+    }
+
+    @GameTest(template = EMPTY)
+    public static void commandsWork(GameTestHelper helper) {
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        var server = helper.getLevel().getServer();
+        var dispatcher = server.getCommands().getDispatcher();
+        helper.assertTrue(dispatcher.getRoot().getChild("arcanequest") != null, "arcanequest command not registered");
+        helper.assertTrue(dispatcher.getRoot().getChild("aq") != null, "aq alias not registered");
+        var source = server.createCommandSourceStack().withEntity(player).withPermission(4).withSuppressedOutput();
+        server.getCommands().performPrefixedCommand(source, "/aq level set 10");
+        helper.assertTrue(StatsCapability.get(player).orElseThrow().getLevel() == 10, "/aq level set should work");
+        server.getCommands().performPrefixedCommand(source, "/arcanequest class mage");
+        helper.assertTrue(StatsCapability.get(player).orElseThrow().getPlayerClass() == PlayerClass.MAGE, "/arcanequest class should work");
         helper.succeed();
     }
 }

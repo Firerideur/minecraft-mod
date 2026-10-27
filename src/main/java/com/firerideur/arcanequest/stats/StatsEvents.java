@@ -1,5 +1,6 @@
 package com.firerideur.arcanequest.stats;
 
+import com.firerideur.arcanequest.ArcaneQuest;
 import com.firerideur.arcanequest.command.ArcaneQuestCommand;
 import com.firerideur.arcanequest.mobs.MobLevels;
 import com.firerideur.arcanequest.magic.Mana;
@@ -78,6 +79,7 @@ public final class StatsEvents {
     @SubscribeEvent
     public static void registerCommands(RegisterCommandsEvent event) {
         ArcaneQuestCommand.register(event.getDispatcher());
+        ArcaneQuest.LOGGER.info("Registered /arcanequest and /aq commands ({})", event.getCommandSelection());
     }
 
     public static void addXp(ServerPlayer player, long amount) {
