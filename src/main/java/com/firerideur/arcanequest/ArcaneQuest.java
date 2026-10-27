@@ -1,6 +1,7 @@
 package com.firerideur.arcanequest;
 
 import com.firerideur.arcanequest.client.ClientSetup;
+import com.firerideur.arcanequest.item.HammerItem;
 import com.firerideur.arcanequest.mobs.MobEvents;
 import com.firerideur.arcanequest.network.ModNetwork;
 import com.firerideur.arcanequest.registry.ModArmorMaterials;
@@ -52,6 +53,7 @@ public class ArcaneQuest {
         MinecraftForge.EVENT_BUS.register(ClassEvents.class);
         MinecraftForge.EVENT_BUS.register(MobEvents.class);
         MinecraftForge.EVENT_BUS.register(WeaponEvents.class);
+        MinecraftForge.EVENT_BUS.register(HammerItem.class);
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
             ClientSetup.init(modEventBus);

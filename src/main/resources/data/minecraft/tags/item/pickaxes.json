@@ -2,6 +2,14 @@
   "replace": false,
   "values": [
     "arcanequest:mithril_pickaxe",
-    "arcanequest:adamantite_pickaxe"
+    "arcanequest:adamantite_pickaxe",
+    "arcanequest:iron_mining_hammer",
+    "arcanequest:steel_mining_hammer",
+    "arcanequest:diamond_mining_hammer",
+    "arcanequest:mithril_mining_hammer",
+    "arcanequest:orichalcum_mining_hammer",
+    "arcanequest:adamantite_mining_hammer",
+    "arcanequest:arcanium_mining_hammer",
+    "arcanequest:starsteel_mining_hammer"
   ]
 }

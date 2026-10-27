@@ -2,6 +2,7 @@ package com.firerideur.arcanequest.gametest;
 
 import com.firerideur.arcanequest.ArcaneQuest;
 import com.firerideur.arcanequest.forge.WeaponForgeMenu;
+import com.firerideur.arcanequest.item.HammerItem;
 import com.firerideur.arcanequest.fusion.FusionForgeBlockEntity;
 import com.firerideur.arcanequest.registry.ModBlocks;
 import com.firerideur.arcanequest.registry.ModItems;
@@ -15,6 +16,9 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -110,8 +114,9 @@ public class ForgingGameTests {
         int fusions = recipes.getAllRecipesFor(ModRecipes.FUSION.get()).size();
         int weapons = recipes.getAllRecipesFor(ModRecipes.WEAPON_FORGING.get()).size();
         helper.assertTrue(fusions == 4, "expected 4 fusion recipes, got " + fusions);
-        helper.assertTrue(weapons == WeaponMaterial.values().length * WeaponType.values().length,
-                "expected one forging recipe per weapon, got " + weapons);
+        // One recipe per weapon, plus one mining hammer per material
+        helper.assertTrue(weapons == WeaponMaterial.values().length * (WeaponType.values().length + 1),
+                "expected one forging recipe per weapon and hammer, got " + weapons);
         helper.succeed();
     }
 
@@ -131,6 +136,37 @@ public class ForgingGameTests {
         helper.assertTrue(menu.getSlot(0).getItem().is(ModItems.TEMPLATES.get(WeaponType.KATANA).get()), "blueprint should go to slot 1");
         helper.assertTrue(menu.getSlot(1).getItem().is(ModItems.MITHRIL_INGOT.get()), "ingots should go to slot 2");
         helper.assertTrue(menu.getSlot(2).getItem().is(ModItems.WEAPON_GRIP.get()), "grip should go to slot 3");
+        helper.succeed();
+    }
+
+    @GameTest(template = EMPTY)
+    public static void hammerBreaksArea(GameTestHelper helper) {
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        player.setGameMode(GameType.SURVIVAL);
+        BlockPos center = helper.absolutePos(new BlockPos(1, 2, 2));
+        // 3x3 wall of stone facing the player, with obsidian in a corner that must stay
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dy = -1; dy <= 1; dy++) {
+                helper.getLevel().setBlock(center.offset(dx, dy, 0), Blocks.STONE.defaultBlockState(), 3);
+            }
+        }
+        helper.getLevel().setBlock(center.offset(1, 1, 0), Blocks.OBSIDIAN.defaultBlockState(), 3);
+        player.moveTo(center.getX() + 0.5, center.getY() - 0.6, center.getZ() - 2.5, 0.0F, 0.0F); // looking south (+Z)
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.MINING_HAMMERS.get(WeaponMaterial.IRON).get()));
+
+        player.gameMode.destroyBlock(center);
+
+        int stone = 0;
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dy = -1; dy <= 1; dy++) {
+                if (helper.getLevel().getBlockState(center.offset(dx, dy, 0)).is(Blocks.STONE)) {
+                    stone++;
+                }
+            }
+        }
+        helper.assertTrue(stone == 0, "iron hammer should break the whole 3x3, " + stone + " stone left");
+        helper.assertTrue(helper.getLevel().getBlockState(center.offset(1, 1, 0)).is(Blocks.OBSIDIAN), "obsidian is too hard to go with stone");
+        helper.assertTrue(((HammerItem) ModItems.MINING_HAMMERS.get(WeaponMaterial.STARSTEEL).get()).getSize() == 9, "starsteel hammer is 9x9");
         helper.succeed();
     }
 }

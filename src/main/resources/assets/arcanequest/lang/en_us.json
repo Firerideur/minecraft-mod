@@ -199,5 +199,16 @@
   "hud.arcanequest.compass.sw": "SW",
   "hud.arcanequest.compass.w": "W",
   "hud.arcanequest.compass.nw": "NW",
-  "hud.arcanequest.points": "+%s"
+  "hud.arcanequest.points": "+%s",
+  "item.arcanequest.iron_mining_hammer": "Iron Mining Hammer",
+  "item.arcanequest.steel_mining_hammer": "Steel Mining Hammer",
+  "item.arcanequest.diamond_mining_hammer": "Diamond Mining Hammer",
+  "item.arcanequest.mithril_mining_hammer": "Mithril Mining Hammer",
+  "item.arcanequest.orichalcum_mining_hammer": "Orichalcum Mining Hammer",
+  "item.arcanequest.adamantite_mining_hammer": "Adamantite Mining Hammer",
+  "item.arcanequest.arcanium_mining_hammer": "Arcanium Mining Hammer",
+  "item.arcanequest.starsteel_mining_hammer": "Starsteel Mining Hammer",
+  "item.arcanequest.hammer_template": "Mining Hammer Blueprint",
+  "tooltip.arcanequest.hammer": "Breaks %s×%s",
+  "tooltip.arcanequest.hammer.sneak": "Sneak: single block"
 }

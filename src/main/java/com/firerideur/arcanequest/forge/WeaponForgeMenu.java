@@ -90,7 +90,8 @@ public class WeaponForgeMenu extends ItemCombinerMenu {
     /** Shift-click sends blueprints, grips/shafts and ingots each to their own slot. */
     @Override
     public int getSlotToQuickMoveTo(ItemStack stack) {
-        if (ModItems.TEMPLATES.values().stream().anyMatch(template -> stack.is(template.get()))) {
+        if (stack.is(ModItems.HAMMER_TEMPLATE.get())
+                || ModItems.TEMPLATES.values().stream().anyMatch(template -> stack.is(template.get()))) {
             return 0;
         }
         if (stack.is(ModItems.WEAPON_GRIP.get()) || stack.is(ModItems.WEAPON_SHAFT.get())) {

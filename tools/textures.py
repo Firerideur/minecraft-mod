@@ -716,6 +716,23 @@ def pommel_at(c, pos, accent):
     c.put(x + 1, y - 1, mix_white(accent, 0.4))
 
 
+def mining_hammer(accent):
+    """Long haft with a heavy rectangular head set across it."""
+    c = Canvas()
+    handle(c, (3, 28), (19, 12))
+    pommel(c, accent)
+    head = [(11, 9), (18, 2), (28, 12), (21, 19)]
+    c.fill_polygon(head, lambda x, y: lerp(mix_white(accent, 0.25), shade(accent, 0.4), (x + y - 13) / 30))
+    # Dark band where the haft goes through, bright striking faces
+    for t, x, y in segment((15, 6), (24, 15)):
+        c.put(x, y, DARK)
+    for t, x, y in segment((11, 9), (18, 2)):
+        c.put(x, y, mix_white(accent, 0.5))
+    for t, x, y in segment((21, 19), (28, 12)):
+        c.put(x, y, shade(accent, 0.3))
+    return c.image()
+
+
 WEAPON_DRAWERS = {"dagger": dagger, "katana": katana, "longsword": longsword, "spear": spear, "scythe": scythe}
 
 
@@ -880,6 +897,9 @@ def generate_forging(assets: Path):
             save(draw(color), item / f"{material}_{weapon}.png")
     for weapon, draw in WEAPON_DRAWERS.items():
         save(template_icon(draw(WEAPON_COLORS["iron"])), item / f"{weapon}_template.png")
+    for material, color in WEAPON_COLORS.items():
+        save(mining_hammer(color), item / f"{material}_mining_hammer.png")
+    save(template_icon(mining_hammer(WEAPON_COLORS["iron"])), item / "hammer_template.png")
     save(grip_icon(), item / "weapon_grip.png")
     save(shaft_icon(), item / "weapon_shaft.png")
     save(catalyst_icon(), item / "fusion_catalyst.png")

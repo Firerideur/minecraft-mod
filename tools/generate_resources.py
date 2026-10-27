@@ -252,7 +252,7 @@ def generate_tags():
 
     tag("item", "swords", ["mithril_sword", "adamantite_sword", "kings_blade", "adamantite_hammer"] + ALL_WEAPONS)
     for tool in ("pickaxe", "axe", "shovel", "hoe"):
-        tag("item", f"{tool}s", [f"mithril_{tool}", f"adamantite_{tool}"])
+        tag("item", f"{tool}s", [f"mithril_{tool}", f"adamantite_{tool}"] + (ALL_HAMMERS if tool == "pickaxe" else []))
     for piece, tag_name in (("helmet", "head_armor"), ("chestplate", "chest_armor"), ("leggings", "leg_armor"), ("boots", "foot_armor")):
         tag("item", tag_name, [f"{metal}_{piece}" for metal in ("mithril", "arcanite", "adamantite")])
     tag("item", "enchantable/durability", list(STAFFS) + ["archmage_staff"])
@@ -289,6 +289,8 @@ WEAPON_MATERIALS = {  # material -> ingredient used in the Weapon Forge
     "starsteel": "starsteel_ingot",
 }
 ALL_WEAPONS = [f"{m}_{t}" for m in WEAPON_MATERIALS for t in WEAPON_TYPES]
+ALL_HAMMERS = [f"{m}_mining_hammer" for m in WEAPON_MATERIALS]
+HAMMER_COST = 5
 ALLOYS = ("steel", "orichalcum", "arcanium", "starsteel")
 
 
@@ -325,7 +327,9 @@ def generate_forging():
         weapon_model(name, WEAPON_TYPES[name.split("_", 1)[1]][2])
     for alloy in ALLOYS:
         item_model(f"{alloy}_ingot")
-    for weapon in WEAPON_TYPES:
+    for name in ALL_HAMMERS:
+        weapon_model(name, 1.3)
+    for weapon in list(WEAPON_TYPES) + ["hammer"]:
         item_model(f"{weapon}_template")
     for item in ("weapon_grip", "weapon_shaft", "fusion_catalyst"):
         item_model(item)
@@ -371,6 +375,7 @@ def generate_forging():
         "spear": ["minecraft:iron_ingot", "minecraft:stick"],
         "scythe": ["minecraft:iron_ingot", "minecraft:wheat"],
     }
+    template_extras["hammer"] = ["minecraft:iron_block"]
     for weapon, extras in template_extras.items():
         shapeless(f"{weapon}_template", f"{weapon}_template", ["minecraft:paper"] + extras)
 
@@ -382,6 +387,13 @@ def generate_forging():
 
     # Weapon Forge
     for material, ingot in WEAPON_MATERIALS.items():
+        write_json(DATA / MODID / "recipe" / "weapon_forging" / f"{material}_mining_hammer.json", {
+            "type": f"{MODID}:weapon_forging",
+            "template": ingredient("hammer_template"),
+            "material": {"ingredient": ingredient(ingot), "count": HAMMER_COST},
+            "handle": ingredient("weapon_shaft"),
+            "result": {"id": rl(f"{material}_mining_hammer"), "count": 1},
+        })
         for weapon, (cost, handle, _) in WEAPON_TYPES.items():
             write_json(DATA / MODID / "recipe" / "weapon_forging" / f"{material}_{weapon}.json", {
                 "type": f"{MODID}:weapon_forging",

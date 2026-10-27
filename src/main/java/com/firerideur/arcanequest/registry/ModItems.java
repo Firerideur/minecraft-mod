@@ -3,6 +3,7 @@ package com.firerideur.arcanequest.registry;
 import com.firerideur.arcanequest.ArcaneQuest;
 import com.firerideur.arcanequest.item.ArcaniteArmorItem;
 import com.firerideur.arcanequest.item.BossSummonItem;
+import com.firerideur.arcanequest.item.HammerItem;
 import com.firerideur.arcanequest.item.LegendaryWeaponItem;
 import com.firerideur.arcanequest.item.StaffItem;
 import com.firerideur.arcanequest.magic.Spell;
@@ -127,23 +128,26 @@ public final class ModItems {
 
     /** Weapon materials, in progression order. */
     public enum WeaponMaterial {
-        IRON("iron", () -> Tiers.IRON, false),
-        STEEL("steel", () -> ModTiers.STEEL, false),
-        DIAMOND("diamond", () -> Tiers.DIAMOND, false),
-        MITHRIL("mithril", () -> ModTiers.MITHRIL, false),
-        ORICHALCUM("orichalcum", () -> ModTiers.ORICHALCUM, false),
-        ADAMANTITE("adamantite", () -> ModTiers.ADAMANTITE, true),
-        ARCANIUM("arcanium", () -> ModTiers.ARCANIUM, true),
-        STARSTEEL("starsteel", () -> ModTiers.STARSTEEL, true);
+        IRON("iron", () -> Tiers.IRON, false, 1),
+        STEEL("steel", () -> ModTiers.STEEL, false, 1),
+        DIAMOND("diamond", () -> Tiers.DIAMOND, false, 2),
+        MITHRIL("mithril", () -> ModTiers.MITHRIL, false, 2),
+        ORICHALCUM("orichalcum", () -> ModTiers.ORICHALCUM, false, 2),
+        ADAMANTITE("adamantite", () -> ModTiers.ADAMANTITE, true, 3),
+        ARCANIUM("arcanium", () -> ModTiers.ARCANIUM, true, 3),
+        STARSTEEL("starsteel", () -> ModTiers.STARSTEEL, true, 4);
 
         public final String key;
         private final Supplier<Tier> tier;
         private final boolean fireResistant;
+        /** Mining hammer reach: 1 = 3x3, 2 = 5x5, 3 = 7x7, 4 = 9x9. */
+        private final int hammerRadius;
 
-        WeaponMaterial(String key, Supplier<Tier> tier, boolean fireResistant) {
+        WeaponMaterial(String key, Supplier<Tier> tier, boolean fireResistant, int hammerRadius) {
             this.key = key;
             this.tier = tier;
             this.fireResistant = fireResistant;
+            this.hammerRadius = hammerRadius;
         }
     }
 
@@ -157,6 +161,16 @@ public final class ModItems {
                         () -> new WeaponItem(material.tier.get(), type, props(material.fireResistant))));
             }
             WEAPONS.put(material, byType);
+        }
+    }
+
+    // Mining hammers: square size grows with the metal (3x3 to 9x9)
+    public static final RegistryObject<Item> HAMMER_TEMPLATE = register("hammer_template", () -> new Item(new Item.Properties().stacksTo(1)));
+    public static final Map<WeaponMaterial, RegistryObject<Item>> MINING_HAMMERS = new EnumMap<>(WeaponMaterial.class);
+    static {
+        for (WeaponMaterial material : WeaponMaterial.values()) {
+            MINING_HAMMERS.put(material, register(material.key + "_mining_hammer",
+                    () -> new HammerItem(material.tier.get(), material.hammerRadius, props(material.fireResistant))));
         }
     }
 

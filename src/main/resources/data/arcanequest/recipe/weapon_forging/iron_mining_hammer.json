@@ -1,0 +1,19 @@
+{
+  "type": "arcanequest:weapon_forging",
+  "template": {
+    "item": "arcanequest:hammer_template"
+  },
+  "material": {
+    "ingredient": {
+      "item": "minecraft:iron_ingot"
+    },
+    "count": 5
+  },
+  "handle": {
+    "item": "arcanequest:weapon_shaft"
+  },
+  "result": {
+    "id": "arcanequest:iron_mining_hammer",
+    "count": 1
+  }
+}

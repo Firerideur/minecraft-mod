@@ -199,5 +199,16 @@
   "hud.arcanequest.compass.sw": "SO",
   "hud.arcanequest.compass.w": "O",
   "hud.arcanequest.compass.nw": "NO",
-  "hud.arcanequest.points": "+%s"
+  "hud.arcanequest.points": "+%s",
+  "item.arcanequest.iron_mining_hammer": "Marteau de minage en fer",
+  "item.arcanequest.steel_mining_hammer": "Marteau de minage en acier",
+  "item.arcanequest.diamond_mining_hammer": "Marteau de minage en diamant",
+  "item.arcanequest.mithril_mining_hammer": "Marteau de minage en mithril",
+  "item.arcanequest.orichalcum_mining_hammer": "Marteau de minage en orichalque",
+  "item.arcanequest.adamantite_mining_hammer": "Marteau de minage en adamantite",
+  "item.arcanequest.arcanium_mining_hammer": "Marteau de minage en arcanium",
+  "item.arcanequest.starsteel_mining_hammer": "Marteau de minage en acier stellaire",
+  "item.arcanequest.hammer_template": "Plan de marteau de minage",
+  "tooltip.arcanequest.hammer": "Casse en %s×%s",
+  "tooltip.arcanequest.hammer.sneak": "Accroupi : un seul bloc"
 }

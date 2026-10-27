@@ -1,0 +1,19 @@
+{
+  "type": "arcanequest:weapon_forging",
+  "template": {
+    "item": "arcanequest:hammer_template"
+  },
+  "material": {
+    "ingredient": {
+      "item": "arcanequest:adamantite_ingot"
+    },
+    "count": 5
+  },
+  "handle": {
+    "item": "arcanequest:weapon_shaft"
+  },
+  "result": {
+    "id": "arcanequest:adamantite_mining_hammer",
+    "count": 1
+  }
+}
