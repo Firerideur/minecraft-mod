@@ -1,5 +1,6 @@
 package com.firerideur.arcanequest.client;
 
+import com.firerideur.arcanequest.client.ui.BarTrail;
 import com.firerideur.arcanequest.client.ui.UiKit;
 import com.firerideur.arcanequest.magic.Mana;
 import com.firerideur.arcanequest.stats.PlayerStats;
@@ -13,7 +14,8 @@ import net.minecraft.util.Mth;
 
 /** Top-left medallion with health, mana and XP bars, and the compass at the top-right. */
 public final class ArcaneHud {
-    private static final int BAR_HEIGHT = 4;
+    private static final int BAR_HEIGHT = 6;
+    private static final BarTrail HEALTH_TRAIL = new BarTrail();
     private static final int COMPASS_WIDTH = 140;
     private static final float COMPASS_FOV = 120.0F;
     private static final String[] DIRECTIONS = {"s", "sw", "w", "nw", "n", "ne", "e", "se"};
@@ -47,13 +49,18 @@ public final class ArcaneHud {
         float maxMana = Mana.max(player, stats);
         float xp = stats.isMaxLevel() ? 1 : (float) stats.getXp() / PlayerStats.xpForNextLevel(stats.getLevel());
         // Short enough to stay left of the boss bars, even on small screens
-        UiKit.bar(g, barX, y + 9, 70, BAR_HEIGHT, player.getHealth() / player.getMaxHealth(), 0xFFC0282D);
-        UiKit.bar(g, barX, y + 19, 58, BAR_HEIGHT, stats.getMana() / maxMana, 0xFF2F7FD8);
-        UiKit.bar(g, barX, y + 29, 46, BAR_HEIGHT, xp, 0xFF3FA34D);
+        float health = player.getHealth() / player.getMaxHealth();
+        UiKit.bar(g, barX, y + 6, 72, BAR_HEIGHT, health, HEALTH_TRAIL.update(health), 0xFFC0282D);
+        UiKit.barText(g, mc.font, Math.round(player.getHealth()) + " / " + Math.round(player.getMaxHealth()),
+                barX + 36, y + 7, 0.5F);
+        UiKit.bar(g, barX, y + 17, 60, BAR_HEIGHT, stats.getMana() / maxMana, 0xFF2F7FD8);
+        UiKit.barText(g, mc.font, (int) stats.getMana() + " / " + (int) maxMana, barX + 30, y + 18, 0.5F);
+        UiKit.bar(g, barX, y + 28, 48, BAR_HEIGHT, xp, 0xFF3FA34D);
+        UiKit.barText(g, mc.font, Math.round(xp * 100) + "%", barX + 24, y + 29, 0.5F);
         if (stats.getPoints() > 0) {
             // Unspent stat points, next to the XP bar
             g.drawString(mc.font, Component.translatable("hud.arcanequest.points", stats.getPoints()),
-                    barX + 54, y + 27, 0xFF7CFC00);
+                    barX + 56, y + 27, 0xFF7CFC00);
         }
     }
 
@@ -85,5 +92,25 @@ public final class ArcaneHud {
             }
         }
         g.blit(UiKit.ATLAS, center - 3, y + 6, 118, 0, 7, 7);
+    }
+
+    public static boolean minimapVisible = true;
+    private static final int MINIMAP_SIZE = 64;
+
+    /** Square minimap under the compass (toggle with M). */
+    public static void renderMinimap(GuiGraphics g, DeltaTracker deltaTracker) {
+        Minecraft mc = Minecraft.getInstance();
+        if (hidden(mc) || !minimapVisible) {
+            return;
+        }
+        int x = g.guiWidth() - MINIMAP_SIZE - 10;
+        int y = 24;
+        WorldMap.draw(g, x, y, MINIMAP_SIZE, 32, deltaTracker.getGameTimeDeltaPartialTick(true));
+        UiKit.frame(g, x - 1, y - 1, MINIMAP_SIZE + 2, MINIMAP_SIZE + 2, 0xFF000000);
+        UiKit.frame(g, x - 2, y - 2, MINIMAP_SIZE + 4, MINIMAP_SIZE + 4, UiKit.GOLD);
+        g.blit(UiKit.ATLAS, x - 4, y - 4, 100, 0, 9, 9);
+        g.blit(UiKit.ATLAS, x + MINIMAP_SIZE - 5, y - 4, 109, 0, 9, 9);
+        g.blit(UiKit.ATLAS, x - 4, y + MINIMAP_SIZE - 5, 100, 9, 9, 9);
+        g.blit(UiKit.ATLAS, x + MINIMAP_SIZE - 5, y + MINIMAP_SIZE - 5, 109, 9, 9, 9);
     }
 }

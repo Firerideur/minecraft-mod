@@ -995,6 +995,24 @@ def ui_atlas():
             if shaft or head:
                 img.putpixel((128 + x, y), lerp(UI_GOLD_LIGHT, UI_GOLD_DARK, y / 14) + (255,))
 
+    # (152,0) 9x9 map player arrow, pointing up (north)
+    arrow = [
+        "....k....",
+        "...kWk...",
+        "...kWk...",
+        "..kWWWk..",
+        "..kWWWk..",
+        ".kWWgWWk.",
+        ".kWg.gWk.",
+        "kWg...gWk",
+        "kk.....kk",
+    ]
+    for y, row in enumerate(arrow):
+        for x, ch in enumerate(row):
+            if ch != ".":
+                color = {"k": (20, 16, 10), "W": (255, 245, 220), "g": UI_GOLD}[ch]
+                img.putpixel((152 + x, y), color + (255,))
+
     # (0,64) 40x40 medallion ring with thorny gold rim
     cx = cy = 19.5
     for y in range(40):

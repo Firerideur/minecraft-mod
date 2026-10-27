@@ -210,5 +210,16 @@
   "item.arcanequest.starsteel_mining_hammer": "Starsteel Mining Hammer",
   "item.arcanequest.hammer_template": "Mining Hammer Blueprint",
   "tooltip.arcanequest.hammer": "Breaks %s×%s",
-  "tooltip.arcanequest.hammer.sneak": "Sneak: single block"
+  "tooltip.arcanequest.hammer.sneak": "Sneak: single block",
+  "screen.arcanequest.tab.map": "Map",
+  "screen.arcanequest.map.position": "Position",
+  "screen.arcanequest.map.biome": "Biome",
+  "screen.arcanequest.map.dimension": "Dimension",
+  "screen.arcanequest.map.day": "Day",
+  "screen.arcanequest.map.legend_mob": "Monster",
+  "screen.arcanequest.map.legend_player": "Player",
+  "dimension.arcanequest.overworld": "Overworld",
+  "dimension.arcanequest.the_nether": "Nether",
+  "dimension.arcanequest.the_end": "The End",
+  "key.arcanequest.toggle_minimap": "Toggle minimap"
 }

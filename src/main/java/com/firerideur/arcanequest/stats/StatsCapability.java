@@ -31,10 +31,15 @@ public final class StatsCapability {
 
     public static class Provider implements ICapabilitySerializable<CompoundTag> {
         private final PlayerStats stats = new PlayerStats();
-        private final LazyOptional<PlayerStats> optional = LazyOptional.of(() -> stats);
+        private LazyOptional<PlayerStats> optional = LazyOptional.of(() -> stats);
 
         @Override
         public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
+            if (!optional.isPresent()) {
+                // Invalidated when the player died, then revived for the Clone event: hand out a fresh one,
+                // otherwise the stats of the dead player can't be copied and are lost.
+                optional = LazyOptional.of(() -> stats);
+            }
             return STATS.orEmpty(cap, optional);
         }
 

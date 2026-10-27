@@ -12,6 +12,7 @@ import com.firerideur.arcanequest.stats.PlayerClass;
 import com.firerideur.arcanequest.stats.PlayerStats;
 import com.firerideur.arcanequest.stats.Stat;
 import com.firerideur.arcanequest.stats.StatEffects;
+import net.minecraft.Util;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
@@ -43,6 +44,7 @@ public class CharacterScreen extends AbstractContainerScreen<CharacterMenu> {
         INVENTORY("inventory", new ItemStack(Items.BUNDLE)),
         CRAFTING("crafting", new ItemStack(Items.CRAFTING_TABLE)),
         SKILLS("skills", new ItemStack(Items.EXPERIENCE_BOTTLE)),
+        MAP("map", new ItemStack(Items.FILLED_MAP)),
         SETTINGS("settings", new ItemStack(Items.COMPARATOR));
 
         final String key;
@@ -105,6 +107,7 @@ public class CharacterScreen extends AbstractContainerScreen<CharacterMenu> {
         menu.setView(switch (newTab) {
             case CRAFTING -> View.CRAFTING;
             case SKILLS -> View.SKILLS;
+            case MAP -> View.MAP;
             default -> View.INVENTORY;
         });
         updateWidgets();
@@ -171,6 +174,8 @@ public class CharacterScreen extends AbstractContainerScreen<CharacterMenu> {
         renderTabs(g, mouseX, mouseY);
         if (tab == Tab.SKILLS) {
             renderSkills(g);
+        } else if (tab == Tab.MAP) {
+            renderMap(g, partialTick);
         } else {
             renderInventoryPanel(g);
             if (tab == Tab.CRAFTING) {
@@ -288,6 +293,47 @@ public class CharacterScreen extends AbstractContainerScreen<CharacterMenu> {
                     (int) Mana.max(minecraft.player, stats));
             g.drawString(font, mana, x + 10, y + 43, 0xFF6FA8FF, false);
         }
+    }
+
+    private void renderMap(GuiGraphics g, float partialTick) {
+        int x = leftPos + CharacterMenu.INVENTORY_X;
+        int y = topPos;
+        int w = CharacterMenu.EQUIPMENT_X + CharacterMenu.EQUIPMENT_W - CharacterMenu.INVENTORY_X;
+        UiKit.panel(g, x, y, w, SKILLS_H);
+        UiKit.title(g, font, Component.translatable("screen.arcanequest.tab.map"), x + 8, y + 9, w - 16);
+        int mapSize = SKILLS_H - 34;
+        int mapX = x + 10, mapY = y + 24;
+        WorldMap.draw(g, mapX, mapY, mapSize, WorldMap.SIZE / 2, partialTick);
+        UiKit.frame(g, mapX - 1, mapY - 1, mapSize + 2, mapSize + 2, UiKit.GOLD);
+        g.drawCenteredString(font, Component.translatable("hud.arcanequest.compass.n"), mapX + mapSize / 2, mapY + 2, UiKit.GOLD_LIGHT);
+
+        if (minecraft.player == null || minecraft.level == null) {
+            return;
+        }
+        int infoX = mapX + mapSize + 12;
+        int line = mapY + 2;
+        var pos = minecraft.player.blockPosition();
+        line = info(g, Component.translatable("screen.arcanequest.map.position"),
+                Component.literal(pos.getX() + "  " + pos.getY() + "  " + pos.getZ()), infoX, line);
+        var biome = minecraft.level.getBiome(pos).unwrapKey()
+                .map(key -> Component.translatable(Util.makeDescriptionId("biome", key.location())))
+                .orElse(Component.literal("?"));
+        line = info(g, Component.translatable("screen.arcanequest.map.biome"), biome, infoX, line);
+        var dimension = minecraft.level.dimension().location();
+        line = info(g, Component.translatable("screen.arcanequest.map.dimension"),
+                Component.translatable("dimension.arcanequest." + dimension.getPath()), infoX, line);
+        long day = minecraft.level.getDayTime() / 24000L + 1;
+        line = info(g, Component.translatable("screen.arcanequest.map.day"), Component.literal(String.valueOf(day)), infoX, line);
+        g.fill(infoX, line + 4, infoX + 3, line + 7, 0xFFE03030);
+        g.drawString(font, Component.translatable("screen.arcanequest.map.legend_mob"), infoX + 6, line + 2, UiKit.TEXT_DIM, false);
+        g.fill(infoX, line + 16, infoX + 3, line + 19, 0xFFFFFFFF);
+        g.drawString(font, Component.translatable("screen.arcanequest.map.legend_player"), infoX + 6, line + 14, UiKit.TEXT_DIM, false);
+    }
+
+    private int info(GuiGraphics g, Component label, Component value, int x, int y) {
+        g.drawString(font, label, x, y, UiKit.GOLD, false);
+        g.drawString(font, value, x, y + 10, UiKit.TEXT, false);
+        return y + 24;
     }
 
     private static Component bonus(Stat stat, int value) {

@@ -1,5 +1,7 @@
 package com.firerideur.arcanequest.client;
 
+import com.firerideur.arcanequest.client.ui.BarTrail;
+import com.firerideur.arcanequest.client.ui.UiKit;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -14,14 +16,17 @@ import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
-/** Shows the name, level and health of the leveled mob under the crosshair. */
+/** Name plate with level and health of the leveled mob under the crosshair. */
 public final class TargetHud {
     private static final double RANGE = 24.0;
-    private static final int BAR_WIDTH = 80;
+    private static final int WIDTH = 120, HEIGHT = 30;
+
+    private static final BarTrail TRAIL = new BarTrail();
+    private static int trailTarget = -1;
 
     private TargetHud() {}
 
-    public static void render(GuiGraphics graphics, DeltaTracker deltaTracker) {
+    public static void render(GuiGraphics g, DeltaTracker deltaTracker) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.options.hideGui || mc.screen != null) {
             return;
@@ -35,17 +40,37 @@ public final class TargetHud {
             return;
         }
         int playerLevel = ClientStats.get().getLevel();
-        MutableComponent text = target.getDisplayName().copy()
-                .append(Component.literal(" "))
-                .append(Component.translatable("hud.arcanequest.level", info.level()).withStyle(levelColor(info.level(), playerLevel)));
+        MutableComponent name = target.getDisplayName().copy();
         if (info.level() >= playerLevel + 10) {
-            text.append(Component.literal(" ☠").withStyle(ChatFormatting.DARK_RED));
+            name.append(Component.literal(" \u2620").withStyle(ChatFormatting.DARK_RED));
         }
-        int centerX = graphics.guiWidth() / 2;
-        int y = graphics.guiHeight() / 2 + 14;
-        graphics.drawCenteredString(mc.font, text, centerX, y, 0xFFFFFF);
-        ClientSetup.drawBar(graphics, centerX - BAR_WIDTH / 2, y + 11, BAR_WIDTH, 2,
-                target.getHealth() / target.getMaxHealth(), info.elite() ? 0xFFFFAA00 : 0xFFE03030);
+        // Grow with long names (Champions)
+        int width = Math.max(WIDTH, mc.font.width(name) + 40);
+        int x = g.guiWidth() / 2 - width / 2;
+        int y = g.guiHeight() / 2 + 14;
+
+        UiKit.panel(g, x, y, width, HEIGHT);
+        if (info.elite()) {
+            UiKit.frame(g, x + 1, y + 1, width - 2, HEIGHT - 2, 0xFFD9A030);
+        }
+        // Level badge on the left
+        String level = String.valueOf(info.level());
+        int badgeColor = levelColor(info.level(), playerLevel).getColor() | 0xFF000000;
+        g.fill(x + 6, y + 6, x + 24, y + 18, 0xFF0A0908);
+        UiKit.frame(g, x + 6, y + 6, 18, 12, badgeColor);
+        g.drawCenteredString(mc.font, level, x + 15, y + 8, badgeColor);
+
+        g.drawString(mc.font, name, x + 28, y + 7, UiKit.TEXT, false);
+
+        float health = target.getHealth() / target.getMaxHealth();
+        if (trailTarget != target.getId()) {
+            TRAIL.reset(health);
+            trailTarget = target.getId();
+        }
+        int barColor = info.elite() ? 0xFFD9A030 : 0xFFC0282D;
+        UiKit.bar(g, x + 28, y + 19, width - 40, 4, health, TRAIL.update(health), barColor);
+        UiKit.barText(g, mc.font, Math.round(target.getHealth()) + " / " + Math.round(target.getMaxHealth()),
+                x + 28 + (width - 40) / 2, y + 19, 0.5F);
     }
 
     /** Like World of Warcraft: grey = trivial, green = easy, white = even, yellow/red = dangerous. */

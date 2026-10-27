@@ -33,6 +33,9 @@ public final class ClientSetup {
     public static final KeyMapping OPEN_STATS = new KeyMapping("key.arcanequest.open_stats",
             KeyConflictContext.IN_GAME, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_K, KEY_CATEGORY);
 
+    public static final KeyMapping TOGGLE_MINIMAP = new KeyMapping("key.arcanequest.toggle_minimap",
+            KeyConflictContext.IN_GAME, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_M, KEY_CATEGORY);
+
     private ClientSetup() {}
 
     public static void init(IEventBus modEventBus) {
@@ -42,15 +45,18 @@ public final class ClientSetup {
         modEventBus.addListener(ClientSetup::clientSetup);
         MinecraftForge.EVENT_BUS.addListener(ClientSetup::onClientTick);
         MinecraftForge.EVENT_BUS.addListener(ClientSetup::onLoggingOut);
+        MinecraftForge.EVENT_BUS.addListener(BossBars::onBossBar);
     }
 
     private static void registerKeys(RegisterKeyMappingsEvent event) {
         event.register(OPEN_STATS);
+        event.register(TOGGLE_MINIMAP);
     }
 
     private static void registerOverlays(AddGuiOverlayLayersEvent event) {
         event.getLayeredDraw().add(ArcaneQuest.id("status_hud"), ArcaneHud::renderStatus);
         event.getLayeredDraw().add(ArcaneQuest.id("compass"), ArcaneHud::renderCompass);
+        event.getLayeredDraw().add(ArcaneQuest.id("minimap"), ArcaneHud::renderMinimap);
         event.getLayeredDraw().add(ArcaneQuest.id("target_hud"), TargetHud::render);
     }
 
@@ -71,6 +77,10 @@ public final class ClientSetup {
 
     private static void onClientTick(TickEvent.ClientTickEvent.Post event) {
         Minecraft mc = Minecraft.getInstance();
+        WorldMap.tick(mc);
+        while (TOGGLE_MINIMAP.consumeClick()) {
+            ArcaneHud.minimapVisible = !ArcaneHud.minimapVisible;
+        }
         while (OPEN_STATS.consumeClick()) {
             if (mc.player != null && mc.screen == null) {
                 ModNetwork.sendToServer(new OpenCharacterMenuPacket());
@@ -81,6 +91,7 @@ public final class ClientSetup {
     private static void onLoggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
         ClientStats.get().load(new CompoundTag());
         ClientMobLevels.clear();
+        BossBars.clear();
     }
 
     static void drawBar(GuiGraphics graphics, int x, int y, int width, int height, float progress, int color) {

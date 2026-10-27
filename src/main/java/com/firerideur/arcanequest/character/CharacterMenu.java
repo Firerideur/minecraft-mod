@@ -33,7 +33,7 @@ import java.util.Optional;
  * Slot order matches {@link InventoryMenu}: 0 result, 1-4 grid, 5-8 armor, 9-35 inventory, 36-44 hotbar, 45 offhand.
  */
 public class CharacterMenu extends AbstractContainerMenu {
-    public enum View { INVENTORY, CRAFTING, SKILLS }
+    public enum View { INVENTORY, CRAFTING, SKILLS, MAP }
 
     // Layout, relative to the screen's top-left corner (slot frames; items are 1 pixel inside)
     public static final int INVENTORY_X = 100, INVENTORY_W = 176, PANEL_H = 130;
@@ -82,7 +82,7 @@ public class CharacterMenu extends AbstractContainerMenu {
                 addSlot(new Slot(inventory, col + (row + 1) * 9, GRID_X + col * 18 + 1, GRID_Y + row * 18 + 1) {
                     @Override
                     public boolean isActive() {
-                        return view != View.SKILLS;
+                        return view == View.INVENTORY || view == View.CRAFTING;
                     }
                 });
             }
@@ -91,7 +91,7 @@ public class CharacterMenu extends AbstractContainerMenu {
             addSlot(new Slot(inventory, col, GRID_X + col * 18 + 1, HOTBAR_Y + 1) {
                 @Override
                 public boolean isActive() {
-                    return view != View.SKILLS;
+                    return view == View.INVENTORY || view == View.CRAFTING;
                 }
             });
         }

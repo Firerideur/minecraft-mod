@@ -106,9 +106,18 @@ public final class UiKit {
      * Ornate resource bar: black groove, colored fill with a lighter top line, gold frame and diamond end caps.
      */
     public static void bar(GuiGraphics g, int x, int y, int width, int height, float progress, int color) {
+        bar(g, x, y, width, height, progress, progress, color);
+    }
+
+    /** Same, with a pale "damage trail" up to {@code trail} behind the fill (see {@link BarTrail}). */
+    public static void bar(GuiGraphics g, int x, int y, int width, int height, float progress, float trail, int color) {
         float p = Math.max(0, Math.min(1, progress));
         g.fill(x - 1, y - 1, x + width + 1, y + height + 1, GOLD_DARK);
         g.fill(x, y, x + width, y + height, 0xFF0A0908);
+        int trailEnd = Math.round(width * Math.max(0, Math.min(1, trail)));
+        if (trailEnd > 0) {
+            g.fill(x, y, x + trailEnd, y + height, 0xFFE8D8A8);
+        }
         int filled = Math.round(width * p);
         if (filled > 0) {
             g.fillGradient(x, y, x + filled, y + height, brighten(color), darken(color));
@@ -116,6 +125,15 @@ public final class UiKit {
         }
         frame(g, x - 2, y - 2, width + 4, height + 4, GOLD);
         g.blit(ATLAS, x + width - 1, y + height / 2 - 3, 118, 0, 7, 7);
+    }
+
+    /** Small text scaled down to fit inside a bar, centered. */
+    public static void barText(GuiGraphics g, Font font, String text, int centerX, int y, float scale) {
+        g.pose().pushPose();
+        g.pose().translate(centerX, y, 0);
+        g.pose().scale(scale, scale, 1);
+        g.drawString(font, text, -font.width(text) / 2, 0, 0xFFFFFFFF, true);
+        g.pose().popPose();
     }
 
     /** Dark button with gold border and gold text; brighter when hovered, dimmed when inactive. */

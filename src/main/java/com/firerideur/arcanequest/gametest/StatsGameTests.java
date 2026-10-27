@@ -12,6 +12,7 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.gametest.GameTestHolder;
 
 /** Run with {@code ./gradlew runGameTestServer}. */
@@ -103,6 +104,26 @@ public class StatsGameTests {
         helper.assertTrue(StatsCapability.get(player).orElseThrow().getLevel() == 10, "/aq level set should work");
         server.getCommands().performPrefixedCommand(source, "/arcanequest class mage");
         helper.assertTrue(StatsCapability.get(player).orElseThrow().getPlayerClass() == PlayerClass.MAGE, "/arcanequest class should work");
+        helper.succeed();
+    }
+
+    @GameTest(template = EMPTY)
+    public static void statsSurviveDeath(GameTestHelper helper) {
+        ServerPlayer original = helper.makeMockServerPlayerInLevel();
+        PlayerStats stats = StatsCapability.get(original).orElseThrow();
+        stats.setLevel(10);
+        stats.setPlayerClass(PlayerClass.MAGE);
+        stats.spendPoint(Stat.STRENGTH);
+
+        // What happens on death: the old player's capabilities are invalidated, then the new player is cloned from it
+        original.invalidateCaps();
+        ServerPlayer respawned = helper.makeMockServerPlayerInLevel();
+        StatsEvents.onClone(new PlayerEvent.Clone(respawned, original, true));
+
+        PlayerStats copied = StatsCapability.get(respawned).orElseThrow();
+        helper.assertTrue(copied.getLevel() == 10, "level lost on death: " + copied.getLevel());
+        helper.assertTrue(copied.getPlayerClass() == PlayerClass.MAGE, "class lost on death");
+        helper.assertTrue(copied.get(Stat.STRENGTH) == 1, "stats lost on death");
         helper.succeed();
     }
 }

@@ -210,5 +210,16 @@
   "item.arcanequest.starsteel_mining_hammer": "Marteau de minage en acier stellaire",
   "item.arcanequest.hammer_template": "Plan de marteau de minage",
   "tooltip.arcanequest.hammer": "Casse en %s×%s",
-  "tooltip.arcanequest.hammer.sneak": "Accroupi : un seul bloc"
+  "tooltip.arcanequest.hammer.sneak": "Accroupi : un seul bloc",
+  "screen.arcanequest.tab.map": "Carte",
+  "screen.arcanequest.map.position": "Position",
+  "screen.arcanequest.map.biome": "Biome",
+  "screen.arcanequest.map.dimension": "Dimension",
+  "screen.arcanequest.map.day": "Jour",
+  "screen.arcanequest.map.legend_mob": "Monstre",
+  "screen.arcanequest.map.legend_player": "Joueur",
+  "dimension.arcanequest.overworld": "Surface",
+  "dimension.arcanequest.the_nether": "Nether",
+  "dimension.arcanequest.the_end": "End",
+  "key.arcanequest.toggle_minimap": "Afficher/masquer la minicarte"
 }
