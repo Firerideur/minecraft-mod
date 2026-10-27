@@ -4,6 +4,8 @@ import com.firerideur.arcanequest.ArcaneQuest;
 import com.firerideur.arcanequest.boss.AdamantiteGolem;
 import com.firerideur.arcanequest.boss.CorruptedArchmage;
 import com.firerideur.arcanequest.boss.SkeletonKing;
+import com.firerideur.arcanequest.dungeon.DungeonMobs;
+import com.firerideur.arcanequest.dungeon.GateEntity;
 import com.firerideur.arcanequest.magic.SpellProjectile;
 import com.firerideur.arcanequest.shadow.ShadowSoldier;
 import net.minecraft.world.entity.EntityType;
@@ -37,6 +39,39 @@ public final class ModEntities {
             () -> EntityType.Builder.of(ShadowSoldier::new, MobCategory.MISC)
                     .sized(0.6F, 1.95F).clientTrackingRange(8).build("shadow_soldier"));
 
+    // Dungeon monsters (behind the gates)
+    public static final RegistryObject<EntityType<DungeonMobs.Goblin>> GOBLIN = ENTITIES.register("goblin",
+            () -> EntityType.Builder.of(DungeonMobs.Goblin::new, MobCategory.MONSTER)
+                    .sized(0.6F, 1.2F).clientTrackingRange(8).build("goblin"));
+
+    public static final RegistryObject<EntityType<DungeonMobs.GoblinShaman>> GOBLIN_SHAMAN = ENTITIES.register("goblin_shaman",
+            () -> EntityType.Builder.of(DungeonMobs.GoblinShaman::new, MobCategory.MONSTER)
+                    .sized(0.6F, 1.3F).clientTrackingRange(8).build("goblin_shaman"));
+
+    public static final RegistryObject<EntityType<DungeonMobs.SteelfangWolf>> STEELFANG_WOLF = ENTITIES.register("steelfang_wolf",
+            () -> EntityType.Builder.of(DungeonMobs.SteelfangWolf::new, MobCategory.MONSTER)
+                    .sized(0.9F, 1.0F).clientTrackingRange(8).build("steelfang_wolf"));
+
+    public static final RegistryObject<EntityType<DungeonMobs.IceElf>> ICE_ELF = ENTITIES.register("ice_elf",
+            () -> EntityType.Builder.of(DungeonMobs.IceElf::new, MobCategory.MONSTER)
+                    .sized(0.6F, 2.0F).clientTrackingRange(8).build("ice_elf"));
+
+    public static final RegistryObject<EntityType<DungeonMobs.AntSoldier>> ANT_SOLDIER = ENTITIES.register("ant_soldier",
+            () -> EntityType.Builder.of(DungeonMobs.AntSoldier::new, MobCategory.MONSTER)
+                    .sized(1.1F, 1.0F).clientTrackingRange(8).build("ant_soldier"));
+
+    public static final RegistryObject<EntityType<DungeonMobs.HighOrc>> HIGH_ORC = ENTITIES.register("high_orc",
+            () -> EntityType.Builder.of(DungeonMobs.HighOrc::new, MobCategory.MONSTER)
+                    .sized(1.0F, 2.3F).clientTrackingRange(8).build("high_orc"));
+
+    public static final RegistryObject<EntityType<DungeonMobs.DemonKnight>> DEMON_KNIGHT = ENTITIES.register("demon_knight",
+            () -> EntityType.Builder.of(DungeonMobs.DemonKnight::new, MobCategory.MONSTER)
+                    .sized(0.8F, 2.2F).fireImmune().clientTrackingRange(8).build("demon_knight"));
+
+    public static final RegistryObject<EntityType<GateEntity>> GATE = ENTITIES.register("gate",
+            () -> EntityType.Builder.<GateEntity>of(GateEntity::new, MobCategory.MISC)
+                    .sized(2.0F, 3.2F).clientTrackingRange(10).updateInterval(20).build("gate"));
+
     private ModEntities() {}
 
     public static void registerAttributes(EntityAttributeCreationEvent event) {
@@ -44,5 +79,12 @@ public final class ModEntities {
         event.put(CORRUPTED_ARCHMAGE.get(), CorruptedArchmage.createAttributes().build());
         event.put(ADAMANTITE_GOLEM.get(), AdamantiteGolem.createAttributes().build());
         event.put(SHADOW_SOLDIER.get(), ShadowSoldier.createAttributes().build());
+        event.put(GOBLIN.get(), DungeonMobs.Goblin.createAttributes().build());
+        event.put(GOBLIN_SHAMAN.get(), DungeonMobs.GoblinShaman.createAttributes().build());
+        event.put(STEELFANG_WOLF.get(), DungeonMobs.SteelfangWolf.createAttributes().build());
+        event.put(ICE_ELF.get(), DungeonMobs.IceElf.createAttributes().build());
+        event.put(ANT_SOLDIER.get(), DungeonMobs.AntSoldier.createAttributes().build());
+        event.put(HIGH_ORC.get(), DungeonMobs.HighOrc.createAttributes().build());
+        event.put(DEMON_KNIGHT.get(), DungeonMobs.DemonKnight.createAttributes().build());
     }
 }

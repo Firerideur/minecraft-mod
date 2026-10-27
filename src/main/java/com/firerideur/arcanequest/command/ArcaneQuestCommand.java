@@ -1,5 +1,6 @@
 package com.firerideur.arcanequest.command;
 
+import com.firerideur.arcanequest.dungeon.Gates;
 import com.firerideur.arcanequest.network.ModNetwork;
 import com.firerideur.arcanequest.stats.PlayerClass;
 import com.firerideur.arcanequest.stats.PlayerStats;
@@ -8,11 +9,13 @@ import com.firerideur.arcanequest.stats.StatsCapability;
 import com.firerideur.arcanequest.stats.StatsEvents;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.function.Consumer;
 
@@ -24,6 +27,7 @@ import java.util.function.Consumer;
  *     <li>/aq reset [player] — refunds every stat point</li>
  *     <li>/aq class &lt;class|none&gt; [player] — sets any class (37, see PlayerClass), ignoring level, offers and hidden conditions; none lets the player pick again</li>
  *     <li>/aq info [player]</li>
+ *     <li>/aq gate [stars] — opens a gate (1 to 7 stars, random if omitted) in front of you</li>
  * </ul>
  */
 public final class ArcaneQuestCommand {
@@ -46,6 +50,10 @@ public final class ArcaneQuestCommand {
                                 .then(Commands.argument("player", EntityArgument.player())
                                         .executes(ctx -> setLevel(ctx.getSource(), EntityArgument.getPlayer(ctx, "player"),
                                                 IntegerArgumentType.getInteger(ctx, "level")))))))
+                .then(Commands.literal("gate")
+                        .executes(ctx -> openGate(ctx.getSource(), 0))
+                        .then(Commands.argument("stars", IntegerArgumentType.integer(1, Gates.MAX_STARS))
+                                .executes(ctx -> openGate(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "stars")))))
                 .then(Commands.literal("reset")
                         .executes(ctx -> reset(ctx.getSource(), ctx.getSource().getPlayerOrException()))
                         .then(Commands.argument("player", EntityArgument.player())
@@ -65,6 +73,15 @@ public final class ArcaneQuestCommand {
         root.addChild(classCommand.build());
 
         dispatcher.register(Commands.literal("aq").requires(source -> source.hasPermission(2)).redirect(root));
+    }
+
+    private static int openGate(CommandSourceStack source, int stars) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        int rank = stars > 0 ? stars : Gates.randomStars(player.getRandom());
+        Vec3 pos = player.position().add(player.getLookAngle().multiply(1, 0, 1).normalize().scale(5.0));
+        Gates.open(player.serverLevel(), pos, rank);
+        source.sendSuccess(() -> Component.translatable("command.arcanequest.gate_opened", Gates.stars(rank)), true);
+        return 1;
     }
 
     private static int addXp(CommandSourceStack source, ServerPlayer player, int amount) {

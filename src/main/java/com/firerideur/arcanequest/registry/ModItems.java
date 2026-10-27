@@ -108,6 +108,20 @@ public final class ModItems {
             () -> new ForgeSpawnEggItem(ModEntities.CORRUPTED_ARCHMAGE, 0x3B1F5C, 0xB070E0, new Item.Properties()));
     public static final RegistryObject<Item> ADAMANTITE_GOLEM_SPAWN_EGG = register("adamantite_golem_spawn_egg",
             () -> new ForgeSpawnEggItem(ModEntities.ADAMANTITE_GOLEM, 0x5A1010, 0xC03030, new Item.Properties()));
+    public static final RegistryObject<Item> GOBLIN_SPAWN_EGG = register("goblin_spawn_egg",
+            () -> new ForgeSpawnEggItem(ModEntities.GOBLIN, 0x5E8C3E, 0x3A2614, new Item.Properties()));
+    public static final RegistryObject<Item> GOBLIN_SHAMAN_SPAWN_EGG = register("goblin_shaman_spawn_egg",
+            () -> new ForgeSpawnEggItem(ModEntities.GOBLIN_SHAMAN, 0x587450, 0x782822, new Item.Properties()));
+    public static final RegistryObject<Item> STEELFANG_WOLF_SPAWN_EGG = register("steelfang_wolf_spawn_egg",
+            () -> new ForgeSpawnEggItem(ModEntities.STEELFANG_WOLF, 0x404048, 0x9EA2AC, new Item.Properties()));
+    public static final RegistryObject<Item> ICE_ELF_SPAWN_EGG = register("ice_elf_spawn_egg",
+            () -> new ForgeSpawnEggItem(ModEntities.ICE_ELF, 0xCCDEF0, 0x345CAA, new Item.Properties()));
+    public static final RegistryObject<Item> ANT_SOLDIER_SPAWN_EGG = register("ant_soldier_spawn_egg",
+            () -> new ForgeSpawnEggItem(ModEntities.ANT_SOLDIER, 0x6C261C, 0xFF8C1E, new Item.Properties()));
+    public static final RegistryObject<Item> HIGH_ORC_SPAWN_EGG = register("high_orc_spawn_egg",
+            () -> new ForgeSpawnEggItem(ModEntities.HIGH_ORC, 0x687C52, 0x6E4C32, new Item.Properties()));
+    public static final RegistryObject<Item> DEMON_KNIGHT_SPAWN_EGG = register("demon_knight_spawn_egg",
+            () -> new ForgeSpawnEggItem(ModEntities.DEMON_KNIGHT, 0x2E242C, 0xFF6020, new Item.Properties()));
 
     // Fusion Forge
     public static final RegistryObject<Item> FUSION_CATALYST = simple("fusion_catalyst");

@@ -44,6 +44,34 @@ Les détails de chaque éveil s'affichent en survolant les boutons. Effets possi
 
 **Soldats de l'ombre** : les monstres tués par vous ou par vos ombres peuvent se relever pour vous servir. Ils vous suivent, attaquent ce que vous combattez (ou ce qui vous attaque) et l'XP de leurs victimes vous revient. Nécromancien : 15 %, 3 max, 1 min ; Seigneur liche : 30 %, 5 max, 2 min ; **Monarque des Ombres** : 50 %, 8 max, permanents et bien plus forts.
 
+### Aptitudes de classe (touches R, C, V, B, N)
+Chaque classe a ses propres aptitudes actives, débloquées en montant de niveau : **3 aptitudes** pour la première classe (niveaux **20, 30 et 40**), puis **2 de plus** avec l'Éveil (niveaux **50 et 75**). La classe éveillée garde celles de sa première classe ; le Monarque des Ombres a ses 5 aptitudes propres.
+
+- Barre d'aptitudes en bas à droite de l'écran : icône, touche, recharge, niveau requis (cadenas).
+- Onglet **Aptitudes** du menu K : description, coût en mana et recharge de chaque aptitude.
+- Les aptitudes deviennent plus fortes avec le niveau, et avec la puissance des sorts (aptitudes magiques) ou la Force (les autres).
+- 45 aptitudes en tout, par exemple : Tourbillon, Ruée, Séisme, Exécution, Danse des lames, Provocation, Parade, Pas de l'ombre, Bombe fumigène, Pluie de flèches, Tir perçant, Meute de loups, Boule de feu, Nova de givre, Chaîne d'éclairs, Météore, Arrêt du temps, Rembobinage, Drain de vie, Jugement, Sanctuaire, Invocation des ombres, « Lève-toi ! », Domaine du Monarque…
+
+### Portes et donjons (style Solo Leveling)
+Des **Portes** s'ouvrent près des joueurs dans l'Overworld (toutes les 5 minutes, 40 % de chance ; un message indique la distance et la direction). Elles sont classées de **1 à 7 étoiles** : plus il y a d'étoiles, plus la porte est rare et dangereuse. Une porte reste ouverte un jour Minecraft.
+
+| Étoiles | Rareté | Donjon | Monstres (niveau) | Maître de la porte |
+|---|---|---|---|---|
+| ★ | 35 % | Grotte des gobelins | Gobelins, chamans (4-9) | Gobelin |
+| ★★ | 25 % | Tanière des crocs-d'acier | Gobelins, chamans, loups croc-d'acier (16-21) | Loup croc-d'acier |
+| ★★★ | 17 % | Forteresse de glace | Elfes des glaces, loups (28-33) | Elfe des glaces |
+| ★★★★ | 11 % | Fourmilière géante | Fourmis soldats, loups (40-45) | Fourmi soldat |
+| ★★★★★ | 7 % | Camp des orcs | Orcs, gobelins, chamans (52-57) | Orc supérieur |
+| ★★★★★★ | 3,5 % | Citadelle noire | Orcs, chevaliers démons (64-69) | Chevalier démon |
+| ★★★★★★★ | 1,5 % | Abysse démoniaque | Chevaliers démons, fourmis, orcs (76-81) | Chevalier démon |
+
+- **Entrer** : marcher dans la porte. Le donjon (salles + couloirs, plus grand avec les étoiles) est dans une dimension à part.
+- **Monstres inédits** (7, modèles et textures propres) : Gobelin, Chaman gobelin (sorts), Loup croc-d'acier (bondit), Elfe des glaces (flèches qui ralentissent), Fourmi soldat (morsure empoisonnée), Orc supérieur (coups qui projettent), Chevalier démon (lame enflammée).
+- Les monstres des portes donnent **+50 % d'XP**, le maître de la porte ×3.
+- **Nettoyer la porte** : vaincre le maître dans la dernière salle → bonus d'**XP** pour tous les joueurs du donjon (400 × étoiles², soit 400 pour ★ et 19 600 pour ★★★★★★★), un **coffre au trésor** (diamants, mithril, arcanite, adamantite, une arme forgée du rang de la porte, et plus rare à haut rang) et une sortie. Des coffres plus petits se trouvent aussi dans certaines salles.
+- **Sortir** : la sortie est dans la première salle (et dans la salle du boss une fois nettoyée).
+- `/aq gate [étoiles]` ouvre une porte devant vous (pour tester).
+
 ### Magie
 Mana de base : 20 (+5 par Intelligence, +15 par pièce d'armure d'arcanite). Clic droit avec un bâton pour lancer son sort.
 
@@ -137,6 +165,7 @@ Fabrication : forge de fusion (3 mithril, 2 arcanite, haut fourneau, 3 briques d
 - `/aq class <classe|none> [joueur]` : donne n'importe quelle classe (`none` permet de rechoisir)
 - `/aq reset [joueur]` : rembourse les points de stats
 - `/aq info [joueur]`
+- `/aq gate [1-7]` : ouvre une porte devant soi
 
 ## Développement
 

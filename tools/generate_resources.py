@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 
 import boss_models
+import dungeon_mobs
 import textures
 
 MODID = "arcanequest"
@@ -159,6 +160,7 @@ BLOCKS = ("mithril_ore", "deepslate_mithril_ore", "mithril_block", "raw_mithril_
 def generate_textures_and_models():
     textures.generate(ASSETS)
     boss_models.generate(ASSETS)
+    dungeon_mobs.generate(ASSETS)
 
     for block in BLOCKS:
         block_assets(block)
@@ -177,8 +179,25 @@ def generate_textures_and_models():
         item_model(item)
     for weapon in ("kings_blade", "adamantite_hammer"):
         item_model(weapon, "item/handheld")
-    for egg in ("skeleton_king", "corrupted_archmage", "adamantite_golem"):
+    for egg in ("skeleton_king", "corrupted_archmage", "adamantite_golem", "goblin", "goblin_shaman", "steelfang_wolf",
+                "ice_elf", "ant_soldier", "high_orc", "demon_knight"):
         write_json(ASSETS / "models" / "item" / f"{egg}_spawn_egg.json", {"parent": "minecraft:item/template_spawn_egg"})
+
+
+def generate_dimension():
+    """The dungeon dimension behind the gates: an empty, dark void where dungeons are built."""
+    write_json(DATA / MODID / "dimension_type" / "dungeon.json", {
+        "ultrawarm": False, "natural": False, "coordinate_scale": 1.0, "has_skylight": False, "has_ceiling": True,
+        "ambient_light": 0.05, "fixed_time": 18000, "monster_spawn_light_level": 0, "monster_spawn_block_light_limit": 0,
+        "piglin_safe": False, "bed_works": False, "respawn_anchor_works": False, "has_raids": False,
+        "logical_height": 256, "min_y": 0, "height": 256, "infiniburn": "#minecraft:infiniburn_overworld",
+        "effects": "minecraft:the_end",
+    })
+    write_json(DATA / MODID / "dimension" / "dungeon.json", {
+        "type": "arcanequest:dungeon",
+        "generator": {"type": "minecraft:flat", "settings": {
+            "biome": "minecraft:the_void", "layers": [], "lakes": False, "features": False, "structure_overrides": []}},
+    })
 
 
 def generate_loot():
@@ -413,4 +432,5 @@ if __name__ == "__main__":
     generate_recipes()
     generate_tags()
     generate_worldgen()
+    generate_dimension()
     print("Resources generated in", ROOT)

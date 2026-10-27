@@ -2,6 +2,7 @@ package com.firerideur.arcanequest.mobs;
 
 import com.firerideur.arcanequest.ArcaneQuest;
 import com.firerideur.arcanequest.boss.ArcaneBoss;
+import com.firerideur.arcanequest.dungeon.DungeonMob;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
@@ -138,6 +139,10 @@ public final class MobLevels {
         if (mobLevel > 1) {
             // Max health already grows with level, so this stays moderate.
             base = Math.round(base * (1.0 + 0.05 * (mobLevel - 1)));
+        }
+        if (victim instanceof DungeonMob dungeonMob) {
+            // Monsters behind the gates are worth more; their boss much more
+            base = Math.round(base * (dungeonMob.isGateBoss() ? 3.0 : 1.5));
         }
         return isElite(victim) ? base * 3 : base;
     }

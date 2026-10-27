@@ -2,6 +2,7 @@ package com.firerideur.arcanequest.client;
 
 import com.firerideur.arcanequest.ArcaneQuest;
 import com.firerideur.arcanequest.client.boss.BossRenderers;
+import com.firerideur.arcanequest.client.dungeon.DungeonRenderers;
 import com.firerideur.arcanequest.network.ModNetwork;
 import com.firerideur.arcanequest.network.OpenCharacterMenuPacket;
 import com.firerideur.arcanequest.network.UseSkillPacket;
@@ -52,6 +53,8 @@ public final class ClientSetup {
         modEventBus.addListener(ClientSetup::registerRenderers);
         modEventBus.addListener(BossRenderers::registerLayers);
         modEventBus.addListener(BossRenderers::registerRenderers);
+        modEventBus.addListener(DungeonRenderers::registerLayers);
+        modEventBus.addListener(DungeonRenderers::registerRenderers);
         modEventBus.addListener(ClientSetup::clientSetup);
         MinecraftForge.EVENT_BUS.addListener(ClientSetup::onClientTick);
         MinecraftForge.EVENT_BUS.addListener(ClientSetup::onLoggingOut);
