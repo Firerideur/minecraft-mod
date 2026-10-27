@@ -36,10 +36,10 @@ public final class ClientSetup {
     public static final KeyMapping TOGGLE_MINIMAP = new KeyMapping("key.arcanequest.toggle_minimap",
             KeyConflictContext.IN_GAME, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_M, KEY_CATEGORY);
 
-    /** Keys of the skill slots: R, C, V, B, N by default. */
+    /** Keys of the skill slots: R, C, V, B, N and G (ultimate) by default. */
     public static final KeyMapping[] SKILL_KEYS = {
             skillKey(1, GLFW.GLFW_KEY_R), skillKey(2, GLFW.GLFW_KEY_C), skillKey(3, GLFW.GLFW_KEY_V),
-            skillKey(4, GLFW.GLFW_KEY_B), skillKey(5, GLFW.GLFW_KEY_N)};
+            skillKey(4, GLFW.GLFW_KEY_B), skillKey(5, GLFW.GLFW_KEY_N), skillKey(6, GLFW.GLFW_KEY_G)};
 
     private ClientSetup() {}
 

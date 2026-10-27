@@ -1,29 +1,42 @@
 package com.firerideur.arcanequest.skill;
 
+import com.firerideur.arcanequest.ArcaneQuest;
+import com.firerideur.arcanequest.boss.ArcaneBoss;
+import com.firerideur.arcanequest.magic.Mana;
 import com.firerideur.arcanequest.magic.SpellProjectile;
+import com.firerideur.arcanequest.shadow.Corpses;
 import com.firerideur.arcanequest.shadow.ShadowSoldier;
 import com.firerideur.arcanequest.skill.SkillRuntime.Buff;
+import com.firerideur.arcanequest.stats.PlayerClass;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
 import net.minecraft.core.Holder;
+import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.EntityTypeTags;
+import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.animal.Wolf;
 import net.minecraft.world.entity.decoration.ArmorStand;
@@ -35,6 +48,7 @@ import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -52,6 +66,8 @@ import java.util.Set;
 final class SkillActions {
     private static final DustParticleOptions SHADOW_DUST = new DustParticleOptions(new Vector3f(0.25F, 0.2F, 0.6F), 1.5F);
     private static final DustParticleOptions HOLY_DUST = new DustParticleOptions(new Vector3f(1.0F, 0.9F, 0.4F), 1.5F);
+    private static final DustParticleOptions BLOOD_DUST = new DustParticleOptions(new Vector3f(0.8F, 0.05F, 0.05F), 1.5F);
+    private static final DustParticleOptions ARCANE_DUST = new DustParticleOptions(new Vector3f(0.6F, 0.3F, 1.0F), 1.3F);
 
     private SkillActions() {}
 
@@ -100,6 +116,88 @@ final class SkillActions {
         HitResult hit = c.level().clip(new ClipContext(eye, eye.add(p.getLookAngle().scale(range)),
                 ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, p));
         return hit.getLocation();
+    }
+
+    /** Healing of a skill: grows with power and with the class's healing bonus. */
+    static float healAmount(SkillContext c, float base) {
+        return base * c.power() * c.stats().getPlayerClass().bonuses().heals();
+    }
+
+    /** Enemies in front of the player, up to {@code range} blocks, in a cone ({@code minDot} = cosine of the half-angle). */
+    static List<LivingEntity> inCone(SkillContext c, double range, double minDot) {
+        ServerPlayer p = c.player();
+        Vec3 look = flatLook(p);
+        return enemiesAround(c, p.position(), range).stream().filter(e -> {
+            Vec3 to = e.position().subtract(p.position()).multiply(1, 0, 1);
+            return to.lengthSqr() < 2.25 || to.normalize().dot(look) >= minDot;
+        }).toList();
+    }
+
+    /** Enemies touching the segment {@code from}-{@code to}, {@code width} blocks around it. */
+    static List<LivingEntity> onLine(SkillContext c, Vec3 from, Vec3 to, double width) {
+        return c.level().getEntitiesOfClass(LivingEntity.class, new AABB(from, to).inflate(width + 1.0),
+                e -> isEnemy(c.player(), e) && e.getBoundingBox().inflate(width).clip(from, to).isPresent());
+    }
+
+    static Vec3 flatLook(Player p) {
+        Vec3 look = p.getLookAngle().multiply(1, 0, 1);
+        return look.lengthSqr() < 1.0E-4 ? Vec3.directionFromRotation(0, p.getYRot()) : look.normalize();
+    }
+
+    /**
+     * Fear (Bloodlust, Dragon's Fear): the monster forgets its target and runs away from the player, weakened.
+     * Bosses are only weakened.
+     */
+    static void frighten(SkillContext c, LivingEntity e, int ticks) {
+        ServerPlayer p = c.player();
+        effect(e, MobEffects.MOVEMENT_SLOWDOWN, ticks, 1);
+        effect(e, MobEffects.WEAKNESS, ticks, 1);
+        c.level().sendParticles(ParticleTypes.SMOKE, e.getX(), e.getY(1.1), e.getZ(), 6, 0.2, 0.2, 0.2, 0.01);
+        if (!(e instanceof Mob mob) || e instanceof ArcaneBoss) {
+            return;
+        }
+        SkillRuntime.fear(mob, ticks);
+        mob.setTarget(null);
+        for (int t = 0; t < ticks; t += 10) {
+            SkillRuntime.later(t, () -> {
+                if (!mob.isAlive()) {
+                    return;
+                }
+                Vec3 away = mob.position().subtract(p.position()).multiply(1, 0, 1);
+                away = mob.position().add(away.lengthSqr() < 1.0E-4 ? Vec3.ZERO : away.normalize().scale(8.0));
+                mob.getNavigation().moveTo(away.x, away.y, away.z, 1.3);
+            });
+        }
+    }
+
+    /**
+     * Temporary attribute bonus (transformations): a transient modifier with a fixed id, removed after {@code ticks}.
+     * Transient modifiers aren't saved, so a logout can't keep them.
+     */
+    static void temporary(LivingEntity entity, Holder<Attribute> attribute, String id, double amount,
+                          AttributeModifier.Operation operation, int ticks) {
+        AttributeInstance instance = entity.getAttribute(attribute);
+        if (instance == null) {
+            return;
+        }
+        ResourceLocation key = ArcaneQuest.id("skill_" + id);
+        instance.addOrUpdateTransientModifier(new AttributeModifier(key, amount, operation));
+        SkillRuntime.later(ticks, () -> {
+            instance.removeModifier(key);
+            if (entity.getHealth() > entity.getMaxHealth()) {
+                entity.setHealth(entity.getMaxHealth());
+            }
+        });
+    }
+
+    static void lightning(SkillContext c, Vec3 pos) {
+        LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(c.level());
+        if (bolt != null) {
+            bolt.moveTo(pos.x, pos.y, pos.z);
+            // Only the flash and the thunder: the damage is the skill's
+            bolt.setVisualOnly(true);
+            c.level().addFreshEntity(bolt);
+        }
     }
 
     static boolean hurt(SkillContext c, LivingEntity target, float amount, boolean magic) {
@@ -229,7 +327,22 @@ final class SkillActions {
         return true;
     }
 
+    /** Sung Jinwoo's Bloodlust: killing intent that terrifies the weak. */
     static boolean bloodlust(SkillContext c) {
+        ServerPlayer p = c.player();
+        int ticks = ticks(c, 80);
+        for (LivingEntity e : enemiesAround(c, p.position(), 10.0)) {
+            frighten(c, e, ticks);
+        }
+        effect(p, MobEffects.DAMAGE_BOOST, ticks, 0);
+        ring(c, p.position().add(0, 0.5, 0), 4.0, BLOOD_DUST, 24);
+        c.level().sendParticles(BLOOD_DUST, p.getX(), p.getY(1.0), p.getZ(), 30, 0.5, 0.7, 0.5, 0);
+        sound(c, SoundEvents.WARDEN_HEARTBEAT, 2.0F, 0.8F);
+        sound(c, SoundEvents.RAVAGER_ROAR, 0.6F, 1.4F);
+        return true;
+    }
+
+    static boolean bloodFrenzy(SkillContext c) {
         SkillRuntime.addBuff(c.player(), Buff.LIFESTEAL, ticks(c, 200), c.power());
         c.level().sendParticles(new DustParticleOptions(new Vector3f(0.8F, 0.05F, 0.05F), 1.5F),
                 c.player().getX(), c.player().getY(1.0), c.player().getZ(), 30, 0.5, 0.7, 0.5, 0);
@@ -468,29 +581,37 @@ final class SkillActions {
     }
 
     static boolean summonWolves(SkillContext c) {
+        spawnWolves(c, 2, 30.0, 5.0, 1200);
+        sound(c, SoundEvents.WOLF_HOWL, 1.5F, 1.0F);
+        return true;
+    }
+
+    /** Spirit wolves fighting for the player, fading after {@code lifetime} ticks. Health and damage grow with power. */
+    static List<Wolf> spawnWolves(SkillContext c, int count, double health, double damage, int lifetime) {
         ServerPlayer p = c.player();
-        for (int i = 0; i < 2; i++) {
+        List<Wolf> wolves = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
             Wolf wolf = EntityType.WOLF.create(c.level());
             if (wolf == null) {
                 continue;
             }
-            wolf.moveTo(p.getX() + (i == 0 ? 1 : -1), p.getY(), p.getZ(), p.getYRot(), 0);
+            double a = i * Math.PI * 2 / count;
+            wolf.moveTo(p.getX() + Math.cos(a), p.getY(), p.getZ() + Math.sin(a), p.getYRot(), 0);
             wolf.tame(p);
-            wolf.getAttribute(Attributes.MAX_HEALTH).setBaseValue(30.0 * c.power());
-            wolf.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(5.0 * c.power());
+            wolf.getAttribute(Attributes.MAX_HEALTH).setBaseValue(Math.min(200.0, health * c.power()));
+            wolf.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(damage * c.power());
             wolf.setHealth(wolf.getMaxHealth());
             c.level().addFreshEntity(wolf);
             c.level().sendParticles(ParticleTypes.POOF, wolf.getX(), wolf.getY(0.5), wolf.getZ(), 10, 0.3, 0.3, 0.3, 0.02);
-            // Spirit wolves fade after a minute
-            SkillRuntime.later(1200, () -> {
+            SkillRuntime.later(lifetime, () -> {
                 if (wolf.isAlive()) {
                     c.level().sendParticles(ParticleTypes.POOF, wolf.getX(), wolf.getY(0.5), wolf.getZ(), 10, 0.3, 0.3, 0.3, 0.02);
                     wolf.discard();
                 }
             });
+            wolves.add(wolf);
         }
-        sound(c, SoundEvents.WOLF_HOWL, 1.5F, 1.0F);
-        return true;
+        return wolves;
     }
 
     // =================================================================== spells
@@ -661,7 +782,7 @@ final class SkillActions {
 
     static boolean healAura(SkillContext c) {
         ServerPlayer p = c.player();
-        float amount = 8.0F * c.power();
+        float amount = healAmount(c, 8.0F);
         for (Player ally : c.level().getEntitiesOfClass(Player.class, p.getBoundingBox().inflate(8.0))) {
             ally.heal(amount);
             ally.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 100, 0));
@@ -726,7 +847,7 @@ final class SkillActions {
             SkillRuntime.later(pulse * 20, () -> {
                 ring(c, center, 6.0, HOLY_DUST, 36);
                 for (Player ally : c.level().getEntitiesOfClass(Player.class, new AABB(center, center).inflate(6.0))) {
-                    ally.heal(2.0F * c.power());
+                    ally.heal(healAmount(c, 2.0F));
                 }
                 for (LivingEntity e : enemiesAround(c, center, 6.0)) {
                     hurt(c, e, holy(e, 3.0F * c.power()), true);
@@ -747,34 +868,62 @@ final class SkillActions {
         return true;
     }
 
+    /**
+     * Shadow Extraction: the corpses of the monsters the player killed nearby (last minute) rise as shadows.
+     * Each corpse may resist; it can be tried {@link Corpses#MAX_ATTEMPTS} times, like in Solo Leveling.
+     */
     static boolean arise(SkillContext c) {
         ServerPlayer p = c.player();
-        int max = Math.max(4, c.stats().getPlayerClass().bonuses().shadowMax());
-        int missing = max - ShadowSoldier.armyOf(p).size();
-        if (missing <= 0) {
+        PlayerClass.Bonuses bonus = c.stats().getPlayerClass().bonuses();
+        List<Corpses.Corpse> corpses = Corpses.take(p, 12.0, Math.max(3, bonus.shadowMax() / 2 + 1));
+        if (corpses.isEmpty()) {
+            p.displayClientMessage(Component.translatable("message.arcanequest.arise_none").withStyle(ChatFormatting.GRAY), true);
             return false;
         }
-        int lifetime = c.stats().getPlayerClass().bonuses().shadowLifetime();
-        for (int i = 0; i < missing; i++) {
-            ShadowSoldier.summon(p, c.stats(), c.power() * 1.3F, lifetime);
-        }
-        c.level().sendParticles(ParticleTypes.SCULK_SOUL, p.getX(), p.getY() + 0.2, p.getZ(), 60, 3.0, 0.2, 3.0, 0.05);
+        boolean monarch = bonus.shadowLifetime() == 0;
+        float power = bonus.shadowPower() * Math.min(1.5F, 0.8F + 0.2F * c.power());
+        int raised = 0;
         p.sendSystemMessage(Component.translatable("message.arcanequest.arise").withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.BOLD));
+        for (Corpses.Corpse corpse : corpses) {
+            Vec3 pos = corpse.position();
+            c.level().sendParticles(ParticleTypes.SCULK_SOUL, pos.x, pos.y + 0.2, pos.z, 20, 0.4, 0.1, 0.4, 0.05);
+            if (p.getRandom().nextFloat() < extractionChance(corpse, monarch)) {
+                ShadowSoldier.extract(p, c.stats(), pos, corpse.name(), corpse.maxHealth(), corpse.rank(), power, bonus.shadowLifetime());
+                raised++;
+            } else {
+                Corpses.retry(corpse);
+                c.level().sendParticles(ParticleTypes.LARGE_SMOKE, pos.x, pos.y + 0.5, pos.z, 8, 0.3, 0.3, 0.3, 0.02);
+            }
+        }
+        p.displayClientMessage(Component.translatable("message.arcanequest.arise_result", raised, corpses.size())
+                .withStyle(raised > 0 ? ChatFormatting.LIGHT_PURPLE : ChatFormatting.GRAY), true);
         sound(c, SoundEvents.WARDEN_EMERGE, 1.0F, 1.2F);
         return true;
     }
 
+    /** Weak monsters always answer the Monarch; strong ones and bosses may resist. */
+    static float extractionChance(Corpses.Corpse corpse, boolean monarch) {
+        float chance = monarch ? 1.1F - corpse.maxHealth() / 600.0F : 0.9F - corpse.maxHealth() / 300.0F;
+        return Mth.clamp(chance, monarch ? 0.4F : 0.25F, 1.0F);
+    }
+
+    /** The shadow closest to where the player looks (else the farthest one): the player appears at its place. */
     static boolean shadowExchange(SkillContext c) {
         ServerPlayer p = c.player();
-        List<ShadowSoldier> army = ShadowSoldier.armyOf(p);
-        ShadowSoldier farthest = army.stream().max(Comparator.comparingDouble(p::distanceToSqr)).orElse(null);
-        if (farthest == null) {
+        Vec3 eye = p.getEyePosition();
+        Vec3 look = p.getLookAngle();
+        List<ShadowSoldier> army = ShadowSoldier.armyOf(p).stream().filter(s -> s.distanceToSqr(p) > 4.0).toList();
+        ShadowSoldier aimed = army.stream()
+                .max(Comparator.comparingDouble((ShadowSoldier s) -> s.getBoundingBox().getCenter().subtract(eye).normalize().dot(look)))
+                .filter(s -> s.getBoundingBox().getCenter().subtract(eye).normalize().dot(look) > 0.85)
+                .orElse(army.stream().max(Comparator.comparingDouble(p::distanceToSqr)).orElse(null));
+        if (aimed == null) {
             return false;
         }
-        Vec3 mine = p.position();
-        c.level().sendParticles(SHADOW_DUST, mine.x, mine.y + 1, mine.z, 25, 0.3, 0.6, 0.3, 0);
-        p.teleportTo(farthest.getX(), farthest.getY(), farthest.getZ());
-        farthest.teleportTo(mine.x, mine.y, mine.z);
+        c.level().sendParticles(SHADOW_DUST, p.getX(), p.getY() + 1, p.getZ(), 25, 0.3, 0.6, 0.3, 0);
+        c.level().sendParticles(ParticleTypes.SQUID_INK, p.getX(), p.getY() + 0.1, p.getZ(), 15, 0.4, 0.05, 0.4, 0.02);
+        p.teleportTo(aimed.getX(), aimed.getY(), aimed.getZ());
+        p.fallDistance = 0;
         c.level().sendParticles(SHADOW_DUST, p.getX(), p.getY() + 1, p.getZ(), 25, 0.3, 0.6, 0.3, 0);
         sound(c, SoundEvents.ENDERMAN_TELEPORT, 1.0F, 0.6F);
         return true;
@@ -786,6 +935,7 @@ final class SkillActions {
         effect(p, MobEffects.DAMAGE_BOOST, ticks, 1);
         effect(p, MobEffects.MOVEMENT_SPEED, ticks, 1);
         for (ShadowSoldier shadow : ShadowSoldier.armyOf(p)) {
+            shadow.setHealth(shadow.getMaxHealth());
             effect(shadow, MobEffects.DAMAGE_BOOST, ticks, 2);
             effect(shadow, MobEffects.MOVEMENT_SPEED, ticks, 1);
             effect(shadow, MobEffects.DAMAGE_RESISTANCE, ticks, 1);
@@ -800,6 +950,1003 @@ final class SkillActions {
             effect(e, MobEffects.WEAKNESS, ticks, 1);
         }
         sound(c, SoundEvents.WARDEN_ROAR, 1.0F, 0.8F);
+        return true;
+    }
+
+    // =================================================================== fighters (new)
+
+    /** A wide swing; ×2 on weakened enemies, each kill heals. */
+    static boolean reapingCleave(SkillContext c) {
+        ServerPlayer p = c.player();
+        Vec3 look = flatLook(p);
+        for (int i = -2; i <= 2; i++) {
+            Vec3 pos = p.position().add(look.yRot(i * 0.4F).scale(2.5));
+            c.level().sendParticles(ParticleTypes.SWEEP_ATTACK, pos.x, p.getY(0.6), pos.z, 1, 0, 0, 0, 0);
+        }
+        for (LivingEntity e : inCone(c, 5.0, 0.5)) {
+            boolean weak = e.getHealth() < e.getMaxHealth() * 0.3F;
+            if (hurt(c, e, 9.0F * c.power() * (weak ? 2.0F : 1.0F), false) && !e.isAlive()) {
+                p.heal(4.0F);
+            }
+        }
+        sound(c, SoundEvents.PLAYER_ATTACK_SWEEP, 1.2F, 0.6F);
+        return true;
+    }
+
+    /** Ultimate: marks every enemy around; 3 s later the sentence falls, heavier on the wounded. */
+    static boolean deathSentence(SkillContext c) {
+        List<LivingEntity> enemies = enemiesAround(c, c.player().position(), 12.0);
+        if (enemies.isEmpty()) {
+            return false;
+        }
+        for (LivingEntity e : enemies) {
+            effect(e, MobEffects.GLOWING, 60, 0);
+            effect(e, MobEffects.MOVEMENT_SLOWDOWN, 60, 2);
+            c.level().sendParticles(ParticleTypes.SOUL, e.getX(), e.getY(1.2), e.getZ(), 8, 0.2, 0.3, 0.2, 0.01);
+        }
+        sound(c, SoundEvents.BELL_RESONATE, 2.0F, 0.5F);
+        SkillRuntime.later(60, () -> {
+            for (LivingEntity e : enemies) {
+                if (!e.isAlive()) {
+                    continue;
+                }
+                // Bosses don't take the "missing health" part
+                float missing = e instanceof ArcaneBoss ? 0 : (e.getMaxHealth() - e.getHealth()) * 0.4F;
+                hurt(c, e, 20.0F * c.power() + missing, false);
+                for (int i = 0; i < 10; i++) {
+                    c.level().sendParticles(ParticleTypes.SOUL_FIRE_FLAME, e.getX(), e.getY() + 3.0 - i * 0.3, e.getZ(), 1, 0.05, 0, 0.05, 0);
+                }
+            }
+            sound(c, SoundEvents.PLAYER_ATTACK_CRIT, 1.5F, 0.5F);
+        });
+        return true;
+    }
+
+    /** Ultimate: leaps where the player looks and crashes down in three shockwaves that terrify. */
+    static boolean cataclysm(SkillContext c) {
+        ServerPlayer p = c.player();
+        Vec3 target = lookedAt(c, 16.0);
+        Vec3 jump = target.subtract(p.position()).multiply(1, 0, 1).scale(0.12);
+        p.setDeltaMovement(jump.x, 1.1, jump.z);
+        p.hurtMarked = true;
+        effect(p, MobEffects.DAMAGE_RESISTANCE, 40, 2);
+        // The landing is the attack, not a fall
+        temporary(p, Attributes.SAFE_FALL_DISTANCE, "cataclysm_fall", 32.0, AttributeModifier.Operation.ADD_VALUE, 40);
+        sound(c, SoundEvents.RAVAGER_ROAR, 1.5F, 0.6F);
+        SkillRuntime.later(14, () -> {
+            p.setDeltaMovement(0, -2.5, 0);
+            p.hurtMarked = true;
+        });
+        SkillRuntime.later(20, () -> {
+            p.fallDistance = 0;
+            Vec3 center = p.position();
+            float[] damage = {14.0F, 8.0F, 5.0F};
+            for (int wave = 0; wave < 3; wave++) {
+                int w = wave;
+                SkillRuntime.later(wave * 6, () -> {
+                    double radius = 4.0 + w * 3.0;
+                    ring(c, center, radius, ParticleTypes.EXPLOSION, 16);
+                    ring(c, center, radius, new BlockParticleOption(ParticleTypes.BLOCK, Blocks.DIRT.defaultBlockState()), 30);
+                    c.level().playSound(null, center.x, center.y, center.z, SoundEvents.GENERIC_EXPLODE.value(), p.getSoundSource(), 1.5F, 0.5F);
+                    for (LivingEntity e : enemiesAround(c, center, radius)) {
+                        if (hurt(c, e, damage[w] * c.power(), false)) {
+                            push(e, center, 0.6, 0.7);
+                            if (w == 0) {
+                                frighten(c, e, 60);
+                            }
+                        }
+                    }
+                });
+            }
+        });
+        return true;
+    }
+
+    // =================================================================== tanks (new)
+
+    static boolean shieldBash(SkillContext c) {
+        ServerPlayer p = c.player();
+        LivingEntity target = targetInFront(c, 4.0);
+        if (target == null) {
+            return false;
+        }
+        if (hurt(c, target, 6.0F * c.power(), false)) {
+            push(target, p.position(), 1.2, 0.3);
+        }
+        // Stunned for a moment, and angry at the guardian
+        effect(target, MobEffects.MOVEMENT_SLOWDOWN, 30, 9);
+        effect(target, MobEffects.WEAKNESS, 40, 1);
+        if (target instanceof Mob mob) {
+            mob.setTarget(p);
+        }
+        c.level().sendParticles(ParticleTypes.CRIT, target.getX(), target.getY(0.8), target.getZ(), 15, 0.3, 0.3, 0.3, 0.2);
+        sound(c, SoundEvents.SHIELD_BLOCK, 1.5F, 0.6F);
+        return true;
+    }
+
+    /** Taunts every monster and shields the nearby players. */
+    static boolean bulwark(SkillContext c) {
+        ServerPlayer p = c.player();
+        for (Mob mob : c.level().getEntitiesOfClass(Mob.class, p.getBoundingBox().inflate(12.0), m -> isEnemy(p, m))) {
+            mob.setTarget(p);
+        }
+        for (Player ally : c.level().getEntitiesOfClass(Player.class, p.getBoundingBox().inflate(8.0))) {
+            effect(ally, MobEffects.DAMAGE_RESISTANCE, ticks(c, 120), 1);
+            effect(ally, MobEffects.ABSORPTION, ticks(c, 200), 1);
+            c.level().sendParticles(ParticleTypes.WAX_ON, ally.getX(), ally.getY(1.0), ally.getZ(), 10, 0.4, 0.5, 0.4, 0);
+        }
+        ring(c, p.position().add(0, 0.2, 0), 8.0, ParticleTypes.WAX_ON, 40);
+        sound(c, SoundEvents.ANVIL_PLACE, 1.0F, 0.6F);
+        return true;
+    }
+
+    /** Ultimate, Thomas Andre's Goliath: the player grows into a giant, tougher and heavier. */
+    static boolean goliath(SkillContext c) {
+        ServerPlayer p = c.player();
+        int ticks = ticks(c, 300);
+        temporary(p, Attributes.SCALE, "goliath_scale", 0.6, AttributeModifier.Operation.ADD_VALUE, ticks);
+        temporary(p, Attributes.MAX_HEALTH, "goliath_health", 20.0, AttributeModifier.Operation.ADD_VALUE, ticks);
+        temporary(p, Attributes.ARMOR, "goliath_armor", 8.0, AttributeModifier.Operation.ADD_VALUE, ticks);
+        temporary(p, Attributes.KNOCKBACK_RESISTANCE, "goliath_knockback", 1.0, AttributeModifier.Operation.ADD_VALUE, ticks);
+        temporary(p, Attributes.ATTACK_DAMAGE, "goliath_damage", 0.3, AttributeModifier.Operation.ADD_MULTIPLIED_BASE, ticks);
+        temporary(p, Attributes.ENTITY_INTERACTION_RANGE, "goliath_reach", 1.5, AttributeModifier.Operation.ADD_VALUE, ticks);
+        p.heal(20.0F);
+        c.level().sendParticles(ParticleTypes.EXPLOSION, p.getX(), p.getY(), p.getZ(), 4, 1.0, 0.2, 1.0, 0);
+        ring(c, p.position(), 3.0, ParticleTypes.CAMPFIRE_COSY_SMOKE, 24);
+        sound(c, SoundEvents.IRON_GOLEM_REPAIR, 2.0F, 0.5F);
+        sound(c, SoundEvents.RAVAGER_ROAR, 1.0F, 0.5F);
+        return true;
+    }
+
+    /** Glyph on the ground: allies inside resist, enemies are slowed and burnt by the runes. */
+    static boolean runicWard(SkillContext c) {
+        Vec3 center = c.player().position();
+        for (int pulse = 0; pulse < 8; pulse++) {
+            SkillRuntime.later(pulse * 20, () -> {
+                ring(c, center, 6.0, ParticleTypes.ENCHANT, 40);
+                ring(c, center, 3.0, ParticleTypes.GLOW, 16);
+                for (Player ally : c.level().getEntitiesOfClass(Player.class, new AABB(center, center).inflate(6.0))) {
+                    effect(ally, MobEffects.DAMAGE_RESISTANCE, 30, 0);
+                }
+                for (LivingEntity e : enemiesAround(c, center, 6.0)) {
+                    effect(e, MobEffects.MOVEMENT_SLOWDOWN, 30, 1);
+                    hurt(c, e, 2.0F * c.power(), true);
+                }
+            });
+        }
+        sound(c, SoundEvents.ENCHANTMENT_TABLE_USE, 2.0F, 0.6F);
+        return true;
+    }
+
+    /** Ultimate: everything that hits the player is sent back to the attacker. */
+    static boolean aegis(SkillContext c) {
+        ServerPlayer p = c.player();
+        int ticks = ticks(c, 160);
+        SkillRuntime.addBuff(p, Buff.AEGIS, ticks, c.power());
+        effect(p, MobEffects.DAMAGE_RESISTANCE, ticks, 1);
+        for (int r = 1; r <= 3; r++) {
+            ring(c, p.position().add(0, r * 0.6, 0), 1.3, ParticleTypes.END_ROD, 16);
+        }
+        sound(c, SoundEvents.BEACON_ACTIVATE, 2.0F, 0.8F);
+        return true;
+    }
+
+    // =================================================================== assassins (new)
+
+    /** Sung Jinwoo's Mutilation: three strikes at the vital points, critical, then bleeding. */
+    static boolean mutilation(SkillContext c) {
+        LivingEntity target = targetInFront(c, 4.5);
+        if (target == null) {
+            return false;
+        }
+        float classCrit = c.stats().getPlayerClass().bonuses().crit();
+        float crit = classCrit > 0 ? classCrit : 1.5F;
+        for (int i = 0; i < 3; i++) {
+            SkillRuntime.later(i * 4, () -> {
+                if (target.isAlive()) {
+                    hurt(c, target, 4.0F * c.power() * crit, false);
+                    c.level().sendParticles(ParticleTypes.CRIT, target.getX(), target.getY(0.6), target.getZ(), 10, 0.2, 0.3, 0.2, 0.3);
+                    c.level().sendParticles(BLOOD_DUST, target.getX(), target.getY(0.6), target.getZ(), 6, 0.2, 0.3, 0.2, 0);
+                    sound(c, SoundEvents.PLAYER_ATTACK_CRIT, 1.0F, 1.4F);
+                }
+            });
+        }
+        for (int i = 1; i <= 4; i++) {
+            SkillRuntime.later(10 + i * 20, () -> {
+                if (target.isAlive()) {
+                    hurt(c, target, 1.0F * c.power(), false);
+                    c.level().sendParticles(BLOOD_DUST, target.getX(), target.getY(0.5), target.getZ(), 4, 0.2, 0.2, 0.2, 0);
+                }
+            });
+        }
+        return true;
+    }
+
+    /** Sung Jinwoo's Stealth: unseen and forgotten; the first hit is an ambush (×2). */
+    static boolean stealth(SkillContext c) {
+        ServerPlayer p = c.player();
+        int ticks = ticks(c, 160);
+        effect(p, MobEffects.INVISIBILITY, ticks, 0);
+        effect(p, MobEffects.MOVEMENT_SPEED, ticks, 0);
+        SkillRuntime.addBuff(p, Buff.STEALTH, ticks, c.power());
+        for (Mob mob : c.level().getEntitiesOfClass(Mob.class, p.getBoundingBox().inflate(16.0), m -> m.getTarget() == p)) {
+            mob.setTarget(null);
+        }
+        c.level().sendParticles(ParticleTypes.SQUID_INK, p.getX(), p.getY(0.5), p.getZ(), 25, 0.4, 0.6, 0.4, 0.02);
+        sound(c, SoundEvents.ILLUSIONER_MIRROR_MOVE, 1.0F, 1.0F);
+        return true;
+    }
+
+    /** Sung Jinwoo's Dagger Rush: daggers strike the target from every direction. */
+    static boolean daggerRush(SkillContext c) {
+        LivingEntity target = targetInFront(c, 14.0);
+        if (target == null) {
+            return false;
+        }
+        for (int i = 0; i < 8; i++) {
+            double a = i * Math.PI / 4;
+            SkillRuntime.later(i * 2, () -> {
+                if (!target.isAlive()) {
+                    return;
+                }
+                Vec3 to = target.getBoundingBox().getCenter();
+                Vec3 from = to.add(Math.cos(a) * 3.0, 1.0, Math.sin(a) * 3.0);
+                line(c, from, to, ParticleTypes.CRIT);
+                hurt(c, target, 3.0F * c.power(), false);
+                sound(c, SoundEvents.TRIDENT_HIT, 0.6F, 1.6F);
+            });
+        }
+        return true;
+    }
+
+    static boolean shurikenStorm(SkillContext c) {
+        ServerPlayer p = c.player();
+        for (int i = -4; i <= 4; i++) {
+            shootArrow(c, p.getEyePosition().add(0, -0.1, 0), p.getLookAngle().yRot(i * 0.12F), 3.2F, 2.0 * c.power(), false);
+        }
+        sound(c, SoundEvents.TRIDENT_THROW.value(), 1.0F, 1.8F);
+        return true;
+    }
+
+    /** Ultimate: untouchable, the ninja flashes between the enemies around, then comes back. */
+    static boolean thousandCuts(SkillContext c) {
+        ServerPlayer p = c.player();
+        List<LivingEntity> targets = new ArrayList<>(enemiesAround(c, p.position(), 10.0));
+        if (targets.isEmpty()) {
+            return false;
+        }
+        targets.sort(Comparator.comparingDouble(p::distanceToSqr));
+        Vec3 start = p.position();
+        effect(p, MobEffects.DAMAGE_RESISTANCE, 50, 4);
+        for (int i = 0; i < 12; i++) {
+            LivingEntity e = targets.get(i % Math.min(8, targets.size()));
+            SkillRuntime.later(i * 3, () -> {
+                if (!e.isAlive()) {
+                    return;
+                }
+                Vec3 behind = e.position().subtract(e.getLookAngle().multiply(1, 0, 1).normalize().scale(1.2));
+                c.level().sendParticles(SHADOW_DUST, p.getX(), p.getY(1.0), p.getZ(), 6, 0.2, 0.4, 0.2, 0);
+                p.teleportTo(behind.x, e.getY(), behind.z);
+                hurt(c, e, 5.0F * c.power(), false);
+                c.level().sendParticles(ParticleTypes.SWEEP_ATTACK, e.getX(), e.getY(0.6), e.getZ(), 1, 0, 0, 0, 0);
+                sound(c, SoundEvents.PLAYER_ATTACK_SWEEP, 0.8F, 1.6F);
+            });
+        }
+        SkillRuntime.later(38, () -> {
+            p.teleportTo(start.x, start.y, start.z);
+            p.fallDistance = 0;
+            c.level().sendParticles(SHADOW_DUST, p.getX(), p.getY(1.0), p.getZ(), 20, 0.3, 0.6, 0.3, 0);
+        });
+        return true;
+    }
+
+    /** Ultimate: a single killing blow from behind, doubled from invisibility; a kill hides the assassin again. */
+    static boolean assassination(SkillContext c) {
+        ServerPlayer p = c.player();
+        LivingEntity target = targetInFront(c, 24.0);
+        if (target == null) {
+            return false;
+        }
+        boolean hidden = p.isInvisible() || SkillRuntime.buff(p, Buff.STEALTH) > 0;
+        SkillRuntime.removeBuff(p, Buff.STEALTH);
+        c.level().sendParticles(SHADOW_DUST, p.getX(), p.getY(1.0), p.getZ(), 20, 0.3, 0.6, 0.3, 0);
+        Vec3 behind = target.position().subtract(target.getLookAngle().multiply(1, 0, 1).normalize().scale(1.3));
+        p.teleportTo(behind.x, target.getY(), behind.z);
+        p.lookAt(EntityAnchorArgument.Anchor.EYES, target.getEyePosition());
+        hurt(c, target, 30.0F * c.power() * (hidden ? 2.0F : 1.0F), false);
+        c.level().sendParticles(ParticleTypes.SQUID_INK, target.getX(), target.getY(0.6), target.getZ(), 30, 0.3, 0.5, 0.3, 0.1);
+        if (!target.isAlive()) {
+            effect(p, MobEffects.INVISIBILITY, 100, 0);
+            SkillRuntime.addBuff(p, Buff.STEALTH, 100, c.power());
+        }
+        sound(c, SoundEvents.PLAYER_ATTACK_CRIT, 1.5F, 0.5F);
+        return true;
+    }
+
+    // =================================================================== mages (new)
+
+    /** Choi Jong-In's Flame Spear: a lance of fire through everything in line. */
+    static boolean flameSpear(SkillContext c) {
+        ServerPlayer p = c.player();
+        Vec3 from = p.getEyePosition();
+        Vec3 to = lookedAt(c, 30.0);
+        line(c, from.add(p.getLookAngle()), to, ParticleTypes.FLAME);
+        line(c, from.add(p.getLookAngle()), to, ParticleTypes.SMALL_FLAME);
+        for (LivingEntity e : onLine(c, from, to, 0.6)) {
+            if (hurt(c, e, 14.0F * c.power(), true)) {
+                e.igniteForSeconds(6);
+            }
+        }
+        c.level().sendParticles(ParticleTypes.EXPLOSION, to.x, to.y, to.z, 1, 0, 0, 0, 0);
+        sound(c, SoundEvents.BLAZE_SHOOT, 1.2F, 0.6F);
+        sound(c, SoundEvents.FIRECHARGE_USE, 1.0F, 0.8F);
+        return true;
+    }
+
+    /** Ultimate: fire rains on the area for three seconds. */
+    static boolean inferno(SkillContext c) {
+        Vec3 center = lookedAt(c, 40.0);
+        ring(c, center, 6.0, ParticleTypes.FLAME, 40);
+        for (int i = 0; i < 12; i++) {
+            SkillRuntime.later(i * 5, () -> {
+                double a = c.level().random.nextDouble() * Math.PI * 2;
+                double r = c.level().random.nextDouble() * 6.0;
+                Vec3 hit = center.add(Math.cos(a) * r, 0, Math.sin(a) * r);
+                line(c, hit.add(0, 10, 0), hit, ParticleTypes.FLAME);
+                c.level().sendParticles(ParticleTypes.EXPLOSION, hit.x, hit.y + 0.5, hit.z, 1, 0, 0, 0, 0);
+                c.level().playSound(null, hit.x, hit.y, hit.z, SoundEvents.GENERIC_EXPLODE.value(), c.player().getSoundSource(), 1.0F, 1.0F);
+                for (LivingEntity e : enemiesAround(c, hit, 3.0)) {
+                    if (hurt(c, e, 10.0F * c.power(), true)) {
+                        e.igniteForSeconds(4);
+                    }
+                }
+            });
+        }
+        sound(c, SoundEvents.BLAZE_AMBIENT, 2.0F, 0.5F);
+        return true;
+    }
+
+    /** The Frost Monarch's ice: spikes burst out of the ground in a line, freezing what they pierce. */
+    static boolean glacialSpikes(SkillContext c) {
+        ServerPlayer p = c.player();
+        Vec3 dir = flatLook(p);
+        Vec3 start = p.position();
+        Set<LivingEntity> hit = new HashSet<>();
+        BlockParticleOption ice = new BlockParticleOption(ParticleTypes.BLOCK, Blocks.PACKED_ICE.defaultBlockState());
+        for (int i = 1; i <= 14; i++) {
+            Vec3 pos = start.add(dir.scale(i));
+            SkillRuntime.later(i, () -> {
+                c.level().sendParticles(ice, pos.x, pos.y + 0.5, pos.z, 12, 0.3, 0.6, 0.3, 0.1);
+                c.level().sendParticles(ParticleTypes.SNOWFLAKE, pos.x, pos.y + 1.0, pos.z, 4, 0.2, 0.5, 0.2, 0.02);
+                for (LivingEntity e : enemiesAround(c, pos, 1.6)) {
+                    if (hit.add(e) && hurt(c, e, 10.0F * c.power(), true)) {
+                        effect(e, MobEffects.MOVEMENT_SLOWDOWN, 60, 4);
+                        e.setTicksFrozen(Math.max(e.getTicksFrozen(), 300));
+                        e.push(0, 0.5, 0);
+                        e.hurtMarked = true;
+                    }
+                }
+            });
+        }
+        sound(c, SoundEvents.GLASS_BREAK, 1.5F, 0.5F);
+        return true;
+    }
+
+    /** Ultimate, the white flames of Baran, Monarch of White Flames: lightning falls on every enemy, five times. */
+    static boolean whiteFlames(SkillContext c) {
+        ServerPlayer p = c.player();
+        if (enemiesAround(c, p.position(), 16.0).isEmpty()) {
+            return false;
+        }
+        for (int wave = 0; wave < 5; wave++) {
+            SkillRuntime.later(wave * 10, () -> {
+                List<LivingEntity> targets = new ArrayList<>(enemiesAround(c, p.position(), 16.0));
+                targets.sort(Comparator.comparingDouble(p::distanceToSqr));
+                for (LivingEntity e : targets.subList(0, Math.min(6, targets.size()))) {
+                    lightning(c, e.position());
+                    c.level().sendParticles(ParticleTypes.END_ROD, e.getX(), e.getY(0.5), e.getZ(), 10, 0.3, 0.6, 0.3, 0.05);
+                    if (hurt(c, e, 12.0F * c.power(), true)) {
+                        e.igniteForSeconds(3);
+                    }
+                }
+            });
+        }
+        return true;
+    }
+
+    static boolean arcaneSlash(SkillContext c) {
+        ServerPlayer p = c.player();
+        Vec3 look = flatLook(p);
+        for (int i = -4; i <= 4; i++) {
+            Vec3 pos = p.position().add(look.yRot(i * 0.2F).scale(3.5));
+            c.level().sendParticles(ARCANE_DUST, pos.x, p.getY(0.6), pos.z, 2, 0.1, 0.1, 0.1, 0);
+            c.level().sendParticles(ParticleTypes.WITCH, pos.x, p.getY(0.6), pos.z, 1, 0.1, 0.1, 0.1, 0);
+        }
+        for (LivingEntity e : inCone(c, 6.0, 0.6)) {
+            if (hurt(c, e, 9.0F * c.power(), true)) {
+                effect(e, MobEffects.MOVEMENT_SLOWDOWN, 40, 1);
+            }
+        }
+        sound(c, SoundEvents.PLAYER_ATTACK_SWEEP, 1.0F, 1.4F);
+        sound(c, SoundEvents.EVOKER_CAST_SPELL, 0.8F, 1.6F);
+        return true;
+    }
+
+    /** Ultimate, the Demon King Baran's lightning: three bolts fall along the blade's path, then the runes stay. */
+    static boolean thunderBlade(SkillContext c) {
+        ServerPlayer p = c.player();
+        Vec3 dir = flatLook(p);
+        Vec3 start = p.position();
+        for (int i = 1; i <= 3; i++) {
+            Vec3 pos = start.add(dir.scale(4.0 * i));
+            SkillRuntime.later(i * 5, () -> {
+                lightning(c, pos);
+                ring(c, pos, 2.5, ParticleTypes.ELECTRIC_SPARK, 16);
+                for (LivingEntity e : enemiesAround(c, pos, 2.5)) {
+                    hurt(c, e, 16.0F * c.power(), true);
+                }
+            });
+        }
+        SkillRuntime.addBuff(p, Buff.RUNE_BLADE, ticks(c, 200), c.power());
+        sound(c, SoundEvents.TRIDENT_THUNDER.value(), 1.0F, 1.0F);
+        return true;
+    }
+
+    /** Ultimate: a quarter of the warlock's life for fifteen seconds of devastating, life stealing spells. */
+    static boolean demonicPact(SkillContext c) {
+        ServerPlayer p = c.player();
+        p.setHealth(Math.max(1.0F, p.getHealth() * 0.75F));
+        SkillRuntime.addBuff(p, Buff.PACT, ticks(c, 300), c.power());
+        c.level().sendParticles(ParticleTypes.SOUL_FIRE_FLAME, p.getX(), p.getY(1.0), p.getZ(), 40, 0.5, 0.8, 0.5, 0.05);
+        ring(c, p.position(), 2.0, ParticleTypes.SOUL, 20);
+        sound(c, SoundEvents.WITHER_SPAWN, 0.5F, 1.5F);
+        return true;
+    }
+
+    /** Space folds around a point: the enemies are pulled in, then crushed. */
+    static boolean gravityWell(SkillContext c) {
+        Vec3 center = lookedAt(c, 24.0);
+        for (int i = 0; i < 12; i++) {
+            int pulse = i;
+            SkillRuntime.later(i * 5, () -> {
+                ring(c, center, 8.0 - pulse * 0.5, ParticleTypes.PORTAL, 24);
+                for (LivingEntity e : enemiesAround(c, center, 8.0)) {
+                    push(e, center, -0.35, 0.05);
+                    hurt(c, e, 1.5F * c.power(), true);
+                }
+            });
+        }
+        SkillRuntime.later(62, () -> {
+            c.level().sendParticles(ParticleTypes.EXPLOSION_EMITTER, center.x, center.y + 0.5, center.z, 1, 0, 0, 0, 0);
+            c.level().playSound(null, center.x, center.y, center.z, SoundEvents.GENERIC_EXPLODE.value(), c.player().getSoundSource(), 1.5F, 1.4F);
+            for (LivingEntity e : enemiesAround(c, center, 4.0)) {
+                hurt(c, e, 8.0F * c.power(), true);
+            }
+        });
+        sound(c, SoundEvents.PORTAL_TRIGGER, 0.6F, 1.8F);
+        return true;
+    }
+
+    /** Ultimate: time collapses; the frozen enemies take every blow at once when it starts again. */
+    static boolean temporalCollapse(SkillContext c) {
+        ServerPlayer p = c.player();
+        List<LivingEntity> enemies = enemiesAround(c, p.position(), 16.0);
+        if (enemies.isEmpty()) {
+            return false;
+        }
+        int ticks = 100;
+        for (LivingEntity e : enemies) {
+            effect(e, MobEffects.MOVEMENT_SLOWDOWN, ticks, 9);
+            effect(e, MobEffects.DIG_SLOWDOWN, ticks, 9);
+            effect(e, MobEffects.WEAKNESS, ticks, 9);
+            if (e instanceof Mob mob) {
+                mob.getNavigation().stop();
+            }
+        }
+        for (int r = 4; r <= 16; r += 4) {
+            ring(c, p.position().add(0, 1, 0), r, ParticleTypes.END_ROD, r * 4);
+        }
+        sound(c, SoundEvents.BEACON_DEACTIVATE, 2.0F, 0.3F);
+        SkillRuntime.later(ticks, () -> {
+            for (LivingEntity e : enemies) {
+                if (e.isAlive()) {
+                    c.level().sendParticles(ParticleTypes.REVERSE_PORTAL, e.getX(), e.getY(0.5), e.getZ(), 20, 0.3, 0.5, 0.3, 0.1);
+                    hurt(c, e, 25.0F * c.power(), true);
+                }
+            }
+            sound(c, SoundEvents.RESPAWN_ANCHOR_DEPLETE.value(), 2.0F, 0.8F);
+        });
+        return true;
+    }
+
+    /** Ultimate, Esil Radiru's battle magic: faster, stronger, and every hit bursts with arcane force. */
+    static boolean arcaneAvatar(SkillContext c) {
+        ServerPlayer p = c.player();
+        int ticks = ticks(c, 300);
+        effect(p, MobEffects.MOVEMENT_SPEED, ticks, 1);
+        effect(p, MobEffects.DAMAGE_BOOST, ticks, 0);
+        effect(p, MobEffects.DAMAGE_RESISTANCE, ticks, 0);
+        SkillRuntime.addBuff(p, Buff.AVATAR, ticks, c.power());
+        c.level().sendParticles(ARCANE_DUST, p.getX(), p.getY(1.0), p.getZ(), 40, 0.5, 0.8, 0.5, 0);
+        sound(c, SoundEvents.EVOKER_PREPARE_SUMMON, 1.5F, 1.2F);
+        return true;
+    }
+
+    // =================================================================== paladins and healers (new)
+
+    /** A holy banner: allies around fight stronger and heal, enemies burn. */
+    static boolean holyBanner(SkillContext c) {
+        Vec3 center = c.player().position();
+        for (int pulse = 0; pulse < 10; pulse++) {
+            SkillRuntime.later(pulse * 20, () -> {
+                ring(c, center, 8.0, HOLY_DUST, 36);
+                for (int i = 0; i < 8; i++) {
+                    c.level().sendParticles(ParticleTypes.END_ROD, center.x, center.y + i * 0.4, center.z, 1, 0, 0, 0, 0);
+                }
+                for (Player ally : c.level().getEntitiesOfClass(Player.class, new AABB(center, center).inflate(8.0))) {
+                    effect(ally, MobEffects.DAMAGE_BOOST, 30, 0);
+                    effect(ally, MobEffects.REGENERATION, 30, 0);
+                }
+                for (LivingEntity e : enemiesAround(c, center, 8.0)) {
+                    hurt(c, e, holy(e, 2.0F * c.power()), true);
+                }
+            });
+        }
+        sound(c, SoundEvents.ARMOR_EQUIP_GOLD.value(), 1.5F, 0.8F);
+        return true;
+    }
+
+    /** Ultimate: the crusader and every ally around rush into battle; the crusader's hits smite. */
+    static boolean crusade(SkillContext c) {
+        ServerPlayer p = c.player();
+        int ticks = ticks(c, 300);
+        for (Player ally : c.level().getEntitiesOfClass(Player.class, p.getBoundingBox().inflate(12.0))) {
+            effect(ally, MobEffects.DAMAGE_BOOST, ticks, 1);
+            effect(ally, MobEffects.DAMAGE_RESISTANCE, ticks, 0);
+            effect(ally, MobEffects.MOVEMENT_SPEED, ticks, 0);
+            c.level().sendParticles(HOLY_DUST, ally.getX(), ally.getY(1.0), ally.getZ(), 15, 0.4, 0.6, 0.4, 0);
+        }
+        SkillRuntime.addBuff(p, Buff.CRUSADE, ticks, c.power());
+        ring(c, p.position(), 12.0, HOLY_DUST, 60);
+        sound(c, SoundEvents.RAID_HORN.value(), 1.0F, 1.2F);
+        return true;
+    }
+
+    /** Ultimate, the light of the Rulers: columns of light strike every enemy, the allies are healed and shielded. */
+    static boolean rulersLight(SkillContext c) {
+        ServerPlayer p = c.player();
+        for (LivingEntity e : enemiesAround(c, p.position(), 12.0)) {
+            pillar(c, e);
+            hurt(c, e, holy(e, 16.0F * c.power()), true);
+            effect(e, MobEffects.BLINDNESS, 60, 0);
+        }
+        for (Player ally : c.level().getEntitiesOfClass(Player.class, p.getBoundingBox().inflate(12.0))) {
+            ally.heal(healAmount(c, 6.0F));
+            effect(ally, MobEffects.ABSORPTION, 200, 1);
+        }
+        for (int i = 0; i < 30; i++) {
+            c.level().sendParticles(ParticleTypes.END_ROD, p.getX(), p.getY() + i * 0.5, p.getZ(), 2, 0.2, 0, 0.2, 0);
+        }
+        ring(c, p.position(), 12.0, HOLY_DUST, 60);
+        sound(c, SoundEvents.BEACON_POWER_SELECT, 2.0F, 0.6F);
+        sound(c, SoundEvents.TRIDENT_THUNDER.value(), 0.8F, 1.6F);
+        return true;
+    }
+
+    /** Lee Joohee's care: harmful effects are washed away from the allies, undead are burnt. */
+    static boolean purify(SkillContext c) {
+        ServerPlayer p = c.player();
+        for (Player ally : c.level().getEntitiesOfClass(Player.class, p.getBoundingBox().inflate(10.0))) {
+            for (MobEffectInstance active : new ArrayList<>(ally.getActiveEffects())) {
+                if (active.getEffect().value().getCategory() == MobEffectCategory.HARMFUL) {
+                    ally.removeEffect(active.getEffect());
+                }
+            }
+            ally.clearFire();
+            ally.heal(healAmount(c, 4.0F));
+            effect(ally, MobEffects.DAMAGE_RESISTANCE, 100, 0);
+            c.level().sendParticles(ParticleTypes.END_ROD, ally.getX(), ally.getY(1.0), ally.getZ(), 12, 0.4, 0.6, 0.4, 0.02);
+        }
+        for (LivingEntity e : enemiesAround(c, p.position(), 10.0)) {
+            if (e.getType().is(EntityTypeTags.UNDEAD)) {
+                pillar(c, e);
+                hurt(c, e, holy(e, 6.0F * c.power()), true);
+            }
+        }
+        ring(c, p.position(), 10.0, ParticleTypes.GLOW, 40);
+        sound(c, SoundEvents.AMETHYST_BLOCK_CHIME, 2.0F, 1.6F);
+        return true;
+    }
+
+    /** Ultimate, Min Byung-Gu's blessing: allies are healed, and survive the next deadly blow. */
+    static boolean savingGrace(SkillContext c) {
+        ServerPlayer p = c.player();
+        for (Player ally : c.level().getEntitiesOfClass(Player.class, p.getBoundingBox().inflate(16.0))) {
+            ally.heal(healAmount(c, 10.0F));
+            SkillRuntime.addBuff(ally, Buff.GRACE, ticks(c, 400), c.power());
+            c.level().sendParticles(ParticleTypes.TOTEM_OF_UNDYING, ally.getX(), ally.getY(1.0), ally.getZ(), 30, 0.4, 0.6, 0.4, 0.2);
+        }
+        ring(c, p.position(), 16.0, HOLY_DUST, 64);
+        sound(c, SoundEvents.BEACON_ACTIVATE, 2.0F, 1.6F);
+        return true;
+    }
+
+    /** Ultimate, Tusk the shaman: a sacred grove heals the allies and chokes the enemies. */
+    static boolean verdantGrove(SkillContext c) {
+        Vec3 center = c.player().position();
+        for (int pulse = 0; pulse < 10; pulse++) {
+            SkillRuntime.later(pulse * 20, () -> {
+                ring(c, center, 7.0, ParticleTypes.HAPPY_VILLAGER, 40);
+                ring(c, center, 4.0, ParticleTypes.SPORE_BLOSSOM_AIR, 16);
+                for (Player ally : c.level().getEntitiesOfClass(Player.class, new AABB(center, center).inflate(7.0))) {
+                    ally.heal(healAmount(c, 2.0F));
+                    effect(ally, MobEffects.REGENERATION, 40, 0);
+                }
+                for (LivingEntity e : enemiesAround(c, center, 7.0)) {
+                    effect(e, MobEffects.POISON, 40, 0);
+                    effect(e, MobEffects.MOVEMENT_SLOWDOWN, 40, 2);
+                    hurt(c, e, 2.0F * c.power(), true);
+                }
+            });
+        }
+        sound(c, SoundEvents.AZALEA_LEAVES_PLACE, 2.0F, 0.6F);
+        return true;
+    }
+
+    // =================================================================== duelists (new)
+
+    /** Cha Hae-In's Sword Dance: five flowing slashes while gliding forward. */
+    static boolean swordDance(SkillContext c) {
+        ServerPlayer p = c.player();
+        effect(p, MobEffects.DAMAGE_RESISTANCE, 24, 1);
+        for (int i = 0; i < 5; i++) {
+            SkillRuntime.later(i * 4, () -> {
+                Vec3 dir = flatLook(p);
+                p.setDeltaMovement(dir.x * 0.6, p.getDeltaMovement().y, dir.z * 0.6);
+                p.hurtMarked = true;
+                ring(c, p.position().add(0, 0.9, 0), 2.0, ParticleTypes.SWEEP_ATTACK, 4);
+                c.level().sendParticles(ParticleTypes.CHERRY_LEAVES, p.getX(), p.getY(1.0), p.getZ(), 8, 0.8, 0.5, 0.8, 0);
+                for (LivingEntity e : enemiesAround(c, p.position(), 3.0)) {
+                    hurt(c, e, 5.0F * c.power(), false);
+                }
+                sound(c, SoundEvents.PLAYER_ATTACK_SWEEP, 0.9F, 1.5F);
+            });
+        }
+        return true;
+    }
+
+    /** A wave of sword energy that cuts through a line of enemies. */
+    static boolean swordWave(SkillContext c) {
+        ServerPlayer p = c.player();
+        Vec3 from = p.position().add(0, 1.0, 0);
+        Vec3 to = from.add(flatLook(p).scale(12.0));
+        for (int i = 1; i <= 12; i += 2) {
+            Vec3 pos = from.add(flatLook(p).scale(i));
+            c.level().sendParticles(ParticleTypes.SWEEP_ATTACK, pos.x, pos.y, pos.z, 1, 0, 0, 0, 0);
+        }
+        for (LivingEntity e : onLine(c, from, to, 1.5)) {
+            hurt(c, e, 10.0F * c.power(), false);
+        }
+        sound(c, SoundEvents.PLAYER_ATTACK_SWEEP, 1.2F, 0.7F);
+        return true;
+    }
+
+    /** Ultimate, Liu Zhigang's sword: one second to gather, then a cut that splits everything in front. */
+    static boolean heavenSplitter(SkillContext c) {
+        ServerPlayer p = c.player();
+        effect(p, MobEffects.MOVEMENT_SLOWDOWN, 20, 3);
+        c.level().sendParticles(ParticleTypes.ENCHANT, p.getX(), p.getY(1.0), p.getZ(), 40, 0.5, 0.8, 0.5, 0.5);
+        sound(c, SoundEvents.ENCHANTMENT_TABLE_USE, 1.5F, 0.5F);
+        SkillRuntime.later(20, () -> {
+            Vec3 dir = flatLook(p);
+            Vec3 from = p.position().add(0, 1.0, 0);
+            Vec3 to = from.add(dir.scale(24.0));
+            for (int i = 1; i <= 24; i++) {
+                Vec3 pos = from.add(dir.scale(i));
+                c.level().sendParticles(ParticleTypes.SWEEP_ATTACK, pos.x, pos.y, pos.z, 1, 0, 0, 0, 0);
+                c.level().sendParticles(ParticleTypes.END_ROD, pos.x, pos.y + 1.0, pos.z, 2, 0.05, 1.0, 0.05, 0);
+            }
+            for (LivingEntity e : onLine(c, from, to, 2.0)) {
+                if (hurt(c, e, 30.0F * c.power(), false)) {
+                    push(e, p.position(), 1.5, 0.4);
+                }
+            }
+            sound(c, SoundEvents.PLAYER_ATTACK_SWEEP, 2.0F, 0.4F);
+            sound(c, SoundEvents.TRIDENT_THUNDER.value(), 0.6F, 1.4F);
+        });
+        return true;
+    }
+
+    /** Ultimate: the windblade becomes a storm, cutting and pulling everything around; half of the attacks miss. */
+    static boolean tempestDance(SkillContext c) {
+        ServerPlayer p = c.player();
+        int ticks = ticks(c, 100);
+        effect(p, MobEffects.MOVEMENT_SPEED, ticks, 2);
+        SkillRuntime.addBuff(p, Buff.TEMPEST, ticks, c.power());
+        for (int t = 0; t < ticks; t += 10) {
+            SkillRuntime.later(t, () -> {
+                if (!p.isAlive()) {
+                    return;
+                }
+                ring(c, p.position().add(0, 0.8, 0), 3.5, ParticleTypes.CLOUD, 16);
+                ring(c, p.position().add(0, 1.2, 0), 3.0, ParticleTypes.SWEEP_ATTACK, 4);
+                for (LivingEntity e : enemiesAround(c, p.position(), 4.0)) {
+                    if (hurt(c, e, 4.0F * c.power(), false)) {
+                        push(e, p.position(), -0.3, 0.05);
+                    }
+                }
+            });
+        }
+        sound(c, SoundEvents.BREEZE_WIND_CHARGE_BURST.value(), 2.0F, 0.6F);
+        return true;
+    }
+
+    // =================================================================== rangers (new)
+
+    /** Jumps back while shooting three arrows; enemies close by are slowed. */
+    static boolean evasiveShot(SkillContext c) {
+        ServerPlayer p = c.player();
+        for (LivingEntity e : enemiesAround(c, p.position(), 4.0)) {
+            effect(e, MobEffects.MOVEMENT_SLOWDOWN, 60, 2);
+        }
+        Vec3 back = flatLook(p).scale(-1.4);
+        p.setDeltaMovement(back.x, 0.45, back.z);
+        p.hurtMarked = true;
+        c.level().sendParticles(ParticleTypes.CLOUD, p.getX(), p.getY() + 0.2, p.getZ(), 10, 0.3, 0.1, 0.3, 0.02);
+        SkillRuntime.later(3, () -> {
+            for (int i = -1; i <= 1; i++) {
+                shootArrow(c, p.getEyePosition().add(0, -0.1, 0), p.getLookAngle().yRot(i * 0.08F), 3.0F, 3.0 * c.power(), true);
+            }
+            sound(c, SoundEvents.ARROW_SHOOT, 1.0F, 1.2F);
+        });
+        return true;
+    }
+
+    static boolean explosiveArrow(SkillContext c) {
+        ServerPlayer p = c.player();
+        LivingEntity aimed = targetInFront(c, 40.0);
+        Vec3 to = aimed != null ? aimed.getBoundingBox().getCenter() : lookedAt(c, 40.0);
+        line(c, p.getEyePosition().add(p.getLookAngle()), to, ParticleTypes.CRIT);
+        c.level().sendParticles(ParticleTypes.EXPLOSION, to.x, to.y, to.z, 2, 0.5, 0.5, 0.5, 0);
+        c.level().playSound(null, to.x, to.y, to.z, SoundEvents.GENERIC_EXPLODE.value(), p.getSoundSource(), 1.2F, 1.2F);
+        for (LivingEntity e : enemiesAround(c, to, 3.0)) {
+            if (hurt(c, e, 12.0F * c.power(), false)) {
+                push(e, to, 0.8, 0.4);
+            }
+        }
+        sound(c, SoundEvents.CROSSBOW_SHOOT, 1.0F, 0.6F);
+        return true;
+    }
+
+    /** Ultimate: a one second aim, then an arrow of light pierces everything on 64 blocks. */
+    static boolean heavensArrow(SkillContext c) {
+        ServerPlayer p = c.player();
+        effect(p, MobEffects.MOVEMENT_SLOWDOWN, 20, 4);
+        ring(c, p.position().add(0, 1, 0), 1.5, ParticleTypes.END_ROD, 16);
+        sound(c, SoundEvents.CROSSBOW_LOADING_END.value(), 1.5F, 0.5F);
+        SkillRuntime.later(20, () -> {
+            Vec3 from = p.getEyePosition();
+            Vec3 to = lookedAt(c, 64.0);
+            line(c, from.add(p.getLookAngle()), to, ParticleTypes.END_ROD);
+            for (LivingEntity e : onLine(c, from, to, 1.2)) {
+                hurt(c, e, 40.0F * c.power(), false);
+                effect(e, MobEffects.GLOWING, 100, 0);
+            }
+            sound(c, SoundEvents.TRIDENT_RIPTIDE_3.value(), 1.5F, 1.4F);
+        });
+        return true;
+    }
+
+    /** Marks the prey: it glows, and takes more damage from the hunter and their wolves. */
+    static boolean huntersMark(SkillContext c) {
+        ServerPlayer p = c.player();
+        LivingEntity target = targetInFront(c, 30.0);
+        if (target == null) {
+            return false;
+        }
+        int ticks = ticks(c, 200);
+        SkillRuntime.mark(p, target, ticks);
+        effect(target, MobEffects.GLOWING, ticks, 0);
+        for (Wolf wolf : c.level().getEntitiesOfClass(Wolf.class, p.getBoundingBox().inflate(32.0), w -> w.isOwnedBy(p))) {
+            wolf.setTarget(target);
+        }
+        c.level().sendParticles(ParticleTypes.CRIT, target.getX(), target.getY(1.1), target.getZ(), 20, 0.3, 0.3, 0.3, 0.1);
+        sound(c, SoundEvents.ARROW_HIT_PLAYER, 1.2F, 0.8F);
+        return true;
+    }
+
+    /** Ultimate, Rakan, Monarch of Fangs: a pack of great wolves answers the howl, the enemies tremble. */
+    static boolean rakansHowl(SkillContext c) {
+        ServerPlayer p = c.player();
+        spawnWolves(c, 4, 40.0, 7.0, 600);
+        int ticks = ticks(c, 300);
+        effect(p, MobEffects.MOVEMENT_SPEED, ticks, 1);
+        effect(p, MobEffects.DAMAGE_BOOST, ticks, 0);
+        for (LivingEntity e : enemiesAround(c, p.position(), 12.0)) {
+            frighten(c, e, 60);
+        }
+        sound(c, SoundEvents.WOLF_HOWL, 2.0F, 0.6F);
+        sound(c, SoundEvents.RAVAGER_ROAR, 0.8F, 1.3F);
+        return true;
+    }
+
+    // =================================================================== monks (new)
+
+    /** A palm strike whose shockwave throws the enemies in front far away; stronger bare-handed. */
+    static boolean palmStrike(SkillContext c) {
+        ServerPlayer p = c.player();
+        Vec3 from = p.position().add(0, 1.0, 0);
+        Vec3 to = from.add(flatLook(p).scale(6.0));
+        float unarmed = p.getMainHandItem().isEmpty() ? 2.0F * c.stats().getPlayerClass().bonuses().unarmed() : 0;
+        line(c, from, to, ParticleTypes.CLOUD);
+        c.level().sendParticles(ParticleTypes.SONIC_BOOM, to.x, to.y, to.z, 1, 0, 0, 0, 0);
+        for (LivingEntity e : onLine(c, from, to, 1.5)) {
+            if (hurt(c, e, (10.0F + unarmed) * c.power(), false)) {
+                push(e, p.position(), 1.8, 0.4);
+            }
+        }
+        sound(c, SoundEvents.PLAYER_ATTACK_KNOCKBACK, 1.5F, 0.5F);
+        return true;
+    }
+
+    /** Ultimate, Baek Yoonho's beast form: bigger, faster, wilder. */
+    static boolean beastForm(SkillContext c) {
+        ServerPlayer p = c.player();
+        int ticks = ticks(c, 400);
+        temporary(p, Attributes.SCALE, "beast_scale", 0.3, AttributeModifier.Operation.ADD_VALUE, ticks);
+        temporary(p, Attributes.ATTACK_DAMAGE, "beast_damage", 0.4, AttributeModifier.Operation.ADD_MULTIPLIED_BASE, ticks);
+        temporary(p, Attributes.ATTACK_SPEED, "beast_attack_speed", 0.3, AttributeModifier.Operation.ADD_MULTIPLIED_BASE, ticks);
+        temporary(p, Attributes.MOVEMENT_SPEED, "beast_speed", 0.25, AttributeModifier.Operation.ADD_MULTIPLIED_BASE, ticks);
+        temporary(p, Attributes.JUMP_STRENGTH, "beast_jump", 0.2, AttributeModifier.Operation.ADD_VALUE, ticks);
+        temporary(p, Attributes.SAFE_FALL_DISTANCE, "beast_fall", 6.0, AttributeModifier.Operation.ADD_VALUE, ticks);
+        effect(p, MobEffects.REGENERATION, ticks, 0);
+        c.level().sendParticles(ParticleTypes.ANGRY_VILLAGER, p.getX(), p.getY(1.2), p.getZ(), 10, 0.5, 0.5, 0.5, 0);
+        c.level().sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, Blocks.WHITE_WOOL.defaultBlockState()),
+                p.getX(), p.getY(1.0), p.getZ(), 40, 0.5, 0.8, 0.5, 0.1);
+        sound(c, SoundEvents.RAVAGER_ROAR, 1.5F, 1.3F);
+        return true;
+    }
+
+    /** Ultimate, the shadow Iron: unbreakable and unmovable, it hits back, then everything is released at once. */
+    static boolean adamantineBody(SkillContext c) {
+        ServerPlayer p = c.player();
+        int ticks = ticks(c, 160);
+        effect(p, MobEffects.DAMAGE_RESISTANCE, ticks, 2);
+        temporary(p, Attributes.KNOCKBACK_RESISTANCE, "adamantine_knockback", 1.0, AttributeModifier.Operation.ADD_VALUE, ticks);
+        SkillRuntime.addBuff(p, Buff.ADAMANT, ticks, c.power());
+        c.level().sendParticles(ParticleTypes.WAX_OFF, p.getX(), p.getY(1.0), p.getZ(), 30, 0.4, 0.7, 0.4, 0);
+        sound(c, SoundEvents.ANVIL_LAND, 1.0F, 0.5F);
+        SkillRuntime.later(ticks, () -> {
+            if (!p.isAlive()) {
+                return;
+            }
+            ring(c, p.position(), 6.0, ParticleTypes.EXPLOSION, 16);
+            sound(c, SoundEvents.GENERIC_EXPLODE.value(), 1.2F, 0.8F);
+            for (LivingEntity e : enemiesAround(c, p.position(), 6.0)) {
+                if (hurt(c, e, 10.0F * c.power(), false)) {
+                    push(e, p.position(), 1.0, 0.5);
+                }
+            }
+        });
+        return true;
+    }
+
+    // =================================================================== shadows (new)
+
+    /** A shadow soldier bursts into dark flames: the closer to the crosshair, the better. */
+    static boolean corpseExplosion(SkillContext c) {
+        ServerPlayer p = c.player();
+        Vec3 eye = p.getEyePosition();
+        Vec3 look = p.getLookAngle();
+        ShadowSoldier shadow = ShadowSoldier.armyOf(p).stream().filter(s -> s.distanceToSqr(p) < 32 * 32)
+                .max(Comparator.comparingDouble(s -> s.getBoundingBox().getCenter().subtract(eye).normalize().dot(look)))
+                .orElse(null);
+        if (shadow == null) {
+            return false;
+        }
+        Vec3 center = shadow.position();
+        float damage = 10.0F * c.power() + shadow.getMaxHealth() * 0.3F;
+        shadow.fade();
+        c.level().sendParticles(ParticleTypes.EXPLOSION, center.x, center.y + 0.5, center.z, 2, 0.5, 0.5, 0.5, 0);
+        c.level().sendParticles(ParticleTypes.SOUL_FIRE_FLAME, center.x, center.y + 0.5, center.z, 40, 1.5, 0.5, 1.5, 0.05);
+        c.level().playSound(null, center.x, center.y, center.z, SoundEvents.GENERIC_EXPLODE.value(), p.getSoundSource(), 1.2F, 0.6F);
+        for (LivingEntity e : enemiesAround(c, center, 4.0)) {
+            if (hurt(c, e, damage, true)) {
+                push(e, center, 0.6, 0.4);
+            }
+        }
+        return true;
+    }
+
+    /** Souls are torn from every enemy around: life and mana for the necromancer. */
+    static boolean soulHarvest(SkillContext c) {
+        ServerPlayer p = c.player();
+        List<LivingEntity> enemies = enemiesAround(c, p.position(), 8.0);
+        if (enemies.isEmpty()) {
+            return false;
+        }
+        for (LivingEntity e : enemies) {
+            line(c, e.getBoundingBox().getCenter(), p.getEyePosition().add(0, -0.4, 0), ParticleTypes.SOUL);
+            hurt(c, e, 5.0F * c.power(), true);
+        }
+        p.heal(1.5F * enemies.size());
+        c.stats().setMana(Math.min(Mana.max(p, c.stats()), c.stats().getMana() + 4.0F * enemies.size()));
+        sound(c, SoundEvents.SOUL_ESCAPE.value(), 2.0F, 0.8F);
+        return true;
+    }
+
+    /** Ultimate, Yogumunt's plague: a cloud of death; for its duration, every monster killed rises as a shadow. */
+    static boolean deathPlague(SkillContext c) {
+        Vec3 center = lookedAt(c, 24.0);
+        SkillRuntime.addBuff(c.player(), Buff.PLAGUE, 200, c.power());
+        for (int pulse = 0; pulse < 10; pulse++) {
+            SkillRuntime.later(pulse * 20, () -> {
+                ring(c, center, 6.0, ParticleTypes.SOUL, 30);
+                c.level().sendParticles(ParticleTypes.SQUID_INK, center.x, center.y + 0.5, center.z, 30, 3.0, 0.5, 3.0, 0.01);
+                for (LivingEntity e : enemiesAround(c, center, 6.0)) {
+                    effect(e, MobEffects.WITHER, 40, 1);
+                    hurt(c, e, 3.0F * c.power(), true);
+                }
+            });
+        }
+        sound(c, SoundEvents.WITHER_AMBIENT, 1.5F, 0.5F);
+        return true;
+    }
+
+    /**
+     * Sung Jinwoo's Ruler's Authority (telekinesis): the enemies in front are lifted, then slammed into the ground.
+     * Sneaking: everything around is thrown away instead.
+     */
+    static boolean rulersAuthority(SkillContext c) {
+        ServerPlayer p = c.player();
+        if (p.isShiftKeyDown()) {
+            for (LivingEntity e : enemiesAround(c, p.position(), 7.0)) {
+                if (hurt(c, e, 6.0F * c.power(), true)) {
+                    push(e, p.position(), 2.0, 0.5);
+                }
+            }
+            ring(c, p.position().add(0, 1, 0), 7.0, SHADOW_DUST, 40);
+            sound(c, SoundEvents.WARDEN_SONIC_BOOM, 0.8F, 1.4F);
+            return true;
+        }
+        List<LivingEntity> lifted = inCone(c, 10.0, 0.7);
+        if (lifted.isEmpty()) {
+            return false;
+        }
+        for (LivingEntity e : lifted) {
+            e.setDeltaMovement(0, 1.1, 0);
+            e.hurtMarked = true;
+            c.level().sendParticles(SHADOW_DUST, e.getX(), e.getY(0.5), e.getZ(), 15, 0.3, 0.5, 0.3, 0);
+        }
+        sound(c, SoundEvents.SHULKER_SHOOT, 1.5F, 0.5F);
+        SkillRuntime.later(12, () -> {
+            for (LivingEntity e : lifted) {
+                if (!e.isAlive()) {
+                    continue;
+                }
+                e.setDeltaMovement(0, -2.5, 0);
+                e.hurtMarked = true;
+                hurt(c, e, 8.0F * c.power(), true);
+                c.level().sendParticles(ParticleTypes.EXPLOSION, e.getX(), e.getY(), e.getZ(), 1, 0, 0, 0, 0);
+            }
+            sound(c, SoundEvents.GENERIC_EXPLODE.value(), 1.0F, 1.2F);
+        });
+        return true;
+    }
+
+    /** Dragon's Fear, the roar of Kamish: every enemy around is seized with terror. */
+    static boolean dragonsFear(SkillContext c) {
+        ServerPlayer p = c.player();
+        int ticks = ticks(c, 100);
+        for (LivingEntity e : enemiesAround(c, p.position(), 16.0)) {
+            frighten(c, e, ticks);
+            effect(e, MobEffects.DIG_SLOWDOWN, ticks, 1);
+            hurt(c, e, 4.0F * c.power(), true);
+        }
+        for (int r = 4; r <= 16; r += 4) {
+            ring(c, p.position().add(0, 0.5, 0), r, SHADOW_DUST, r * 5);
+        }
+        sound(c, SoundEvents.ENDER_DRAGON_GROWL, 1.5F, 0.8F);
         return true;
     }
 }

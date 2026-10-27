@@ -19,38 +19,108 @@ Mod RPG pour **Minecraft 1.21.1** (Forge 52.1.20).
 | Intelligence | +5 mana max, +5 % puissance des sorts, régénération du mana plus rapide |
 
 ### Classes (style Solo Leveling, touche K → Compétences)
-37 classes avec des **rangs** (C, B, A, S), en deux étapes :
+37 classes avec des **rangs** (C, B, A, S), en deux étapes, chacune inspirée d'un chasseur, d'un Monarque ou d'une technique de Solo Leveling (survoler une classe dans le menu affiche ses bonus et son inspiration) :
 
 1. **Niveau 20 : première classe.** Le jeu propose les **3 classes** qui correspondent le mieux à la façon dont vous avez réparti vos points (aperçu visible avant le niveau 20).
 2. **Niveau 50 : Éveil.** Votre classe évolue : choisissez parmi ses 2 éveils (rang A).
 3. **Classe cachée (rang S) : Monarque des Ombres.** Proposée à l'éveil du Nécromancien ou de l'Assassin, seulement si vous avez vaincu le **Roi Squelette** (avant ça, elle apparaît comme « ??? [S] »).
 
-| Première classe (rang) | Stats | Bonus | Éveils (rang A) |
-|---|---|---|---|
-| Berserker (C) | Force | +15 % mêlée, +10 % vitesse d'attaque, +30 % dégâts sous la moitié de la vie | Seigneur de guerre, Bourreau |
-| Gardien (C) | Vitalité | +4 cœurs, +4 armure, +2 robustesse, +30 % anti-recul | Forteresse, Gardien runique |
-| Assassin (C) | Agilité | Critiques ×2, +10 % vitesse et vitesse d'attaque | Ninja, Assassin des ombres, (Monarque des Ombres) |
-| Mage (C) | Intelligence | +50 % mana, +30 % sorts | Archimage, Élémentaliste |
-| Paladin (B) | Force + Vitalité | +2 cœurs, +2 armure, +10 % mêlée, chaque coup soigne | Croisé, Chevalier sacré |
-| Duelliste (B) | Force + Agilité | +10 % mêlée, +15 % vitesse d'attaque, critiques ×1,75 | Maître d'armes, Lame-vent |
-| Rôdeur (B) | Agilité + Vitalité | +35 % flèches, +10 % vitesse | Tireur d'élite, Chasseur |
-| Lame-sort (B) | Force + Intelligence | +10 % mêlée, +15 % sorts, chaque coup rend du mana | Chevalier runique, Démoniste |
-| Clerc (B) | Vitalité + Intelligence | +2 cœurs, soins ×1,5, régénération | Saint, Druide |
-| Arcaniste (B) | Agilité + Intelligence | Sorts -30 % de mana, +10 % sorts et vitesse | Chronomancien, Mage de bataille |
-| Moine (B) | Force + Agilité + Vitalité | +5 dégâts à mains nues, vitesse | Grand maître, Moine de fer |
-| Nécromancien (B) | Intelligence + un peu de tout | Les monstres tués peuvent se relever en **soldats de l'ombre** | Seigneur liche, (Monarque des Ombres) |
+| Première classe (rang) | Stats | Inspiration | Bonus | Éveils (rang A) |
+|---|---|---|---|---|
+| Berserker (C) | Force | Combattant, Soif de sang de Sung Jinwoo | +15 % mêlée, +10 % vit. d'attaque, +30 % sous ½ vie, frénésie à chaque élimination | Seigneur de guerre, Bourreau |
+| Gardien (C) | Vitalité | Tank (Arise), Ténacité | +4 cœurs, +4 armure, +2 robustesse, +30 % anti-recul, Ténacité 20 % | Forteresse, Gardien runique |
+| Assassin (C) | Agilité | Sung Jinwoo avant son changement de classe | Critiques ×2, +10 % vitesse et vit. d'attaque, +30 % dans le dos | Ninja, Assassin des ombres, (Monarque des Ombres) |
+| Mage (C) | Intelligence | Choi Jong-In | +50 % mana, +30 % sorts, 10 % de critiques magiques, mana par élimination | Archimage, Élémentaliste |
+| Paladin (B) | Force + Vitalité | La lumière des Souverains | +2 cœurs, +2 armure, +10 % mêlée, chaque coup soigne, +20 % contre les morts-vivants | Croisé, Chevalier sacré |
+| Duelliste (B) | Force + Agilité | Cha Hae-In | +10 % mêlée, +15 % vit. d'attaque, critiques ×1,75, 5 % d'esquive | Maître d'armes, Lame-vent |
+| Rôdeur (B) | Agilité + Vitalité | Ranger (Arise) | +35 % flèches, +10 % vitesse, +20 % contre une cible intacte | Tireur d'élite, Chasseur |
+| Lame-sort (B) | Force + Intelligence | Les dagues du Roi-Démon Baran | +10 % mêlée, +15 % sorts, chaque coup rend du mana | Chevalier runique, Démoniste |
+| Clerc (B) | Vitalité + Intelligence | Lee Joohee | +2 cœurs, soins ×1,5, régénération, aura de soin | Saint, Druide |
+| Arcaniste (B) | Agilité + Intelligence | Magie spatiale des mages de rang S | Sorts -30 % de mana, +10 % sorts et vitesse, 8 % de critiques magiques | Chronomancien, Mage de bataille |
+| Moine (B) | Force + Agilité + Vitalité | Combattants à mains nues | +5 dégâts à mains nues, vitesse, enchaînement (+6 % par coup, 5 max) | Grand maître, Moine de fer |
+| Nécromancien (B) | Intelligence + un peu de tout | La classe offerte à Sung Jinwoo lors de son changement de classe | Les monstres tués peuvent se relever en **soldats de l'ombre** | Seigneur liche, (Monarque des Ombres) |
 
-Les détails de chaque éveil s'affichent en survolant les boutons. Effets possibles : esquive (Ninja), renvoi de dégâts (Gardien runique), exécution des ennemis affaiblis (Bourreau), bonus contre les morts-vivants (Chevalier sacré), invisibilité accroupi (Assassin des ombres), brûlure/ralentissement/poison à chaque coup, vol de vie des sorts (Démoniste)…
+| Éveil (rang) | Inspiration | Passifs marquants |
+|---|---|---|
+| Seigneur de guerre (A) | Go Gunhee | +25 % mêlée, +50 % sous ½ vie, frénésie 5 s, Ténacité 15 % |
+| Bourreau (A) | Hwang Dongsoo | +60 % contre les ennemis sous 30 % de vie, chaque élimination soigne |
+| Forteresse (A) | Thomas Andre « le Goliath » | +6 cœurs, +6 armure, -15 % dégâts subis, Ténacité 30 % |
+| Gardien runique (A) | Barrières de mana des tanks | Renvoie 30 % des dégâts de mêlée, Ténacité 20 % |
+| Ninja (A) | Assassins de rang S | 25 % d'esquive, +20 % vitesse, +30 % dans le dos |
+| Assassin des ombres (A) | Kang Taeshik, Furtivité | Critiques ×2,5, +60 % dans le dos, invisible accroupi |
+| Archimage (A) | Choi Jong-In | Mana ×2, +60 % sorts, 20 % de critiques magiques |
+| Élémentaliste (A) | Monarque du Givre, Baran | Chaque coup enflamme et ralentit |
+| Croisé (A) | Armées des Souverains | Chaque coup soigne 1 cœur, aura de soin |
+| Chevalier sacré (A) | Les Souverains | +60 % contre les morts-vivants |
+| Maître d'armes (A) | Liu Zhigang | +25 % vit. d'attaque, critiques ×2 |
+| Lame-vent (A) | Cha Hae-In | +20 % vitesse, 12 % d'esquive |
+| Tireur d'élite (A) | Archers d'élite | +70 % flèches, +50 % contre une cible intacte |
+| Chasseur (A) | Rakan, Monarque des Crocs | +45 % flèches, chaque coup ralentit |
+| Chevalier runique (A) | Baran, le Roi-Démon | +30 % sorts, 4 mana par coup |
+| Démoniste (A) | Démons du Château des démons | Les sorts soignent de 25 % des dégâts |
+| Saint (A) | Min Byung-Gu | Soins ×2,5, aura de soin puissante |
+| Druide (A) | Tusk, l'ombre chamane | Régénération, chaque coup empoisonne |
+| Chronomancien (A) | L'Architecte | Sorts -50 % de mana, 10 % de critiques magiques |
+| Mage de bataille (A) | Esil Radiru | Sorts et mêlée, 2 mana par coup |
+| Grand maître (A) | Baek Yoonho | +10 dégâts à mains nues, enchaînement +10 % par coup |
+| Moine de fer (A) | Iron, l'ombre au bouclier | +6 armure, Ténacité 20 % |
+| Seigneur liche (A) | Yogumunt, Monarque de la Transfiguration | 30 % des monstres tués deviennent des ombres (5 max, 2 min) |
+| **Monarque des Ombres (S)** | **Sung Jinwoo** | 50 % des monstres tués deviennent des ombres permanentes (8 max), Ténacité 30 %, régénération |
+
+Passifs : **Ténacité** (dégâts subis réduits sous 30 % de vie), **attaque dans le dos**, **critiques magiques** (×1,5), **premier coup** (bonus contre une cible à pleine vie), **enchaînement** (Moine), **frénésie** (Force et Vitesse après une élimination), soin ou mana par élimination, **aura** qui soigne les joueurs proches, esquive, renvoi de dégâts, exécution, bonus contre les morts-vivants, invisibilité accroupi, brûlure/ralentissement/poison à chaque coup, vol de vie des sorts.
 
 **Soldats de l'ombre** : les monstres tués par vous ou par vos ombres peuvent se relever pour vous servir. Ils vous suivent, attaquent ce que vous combattez (ou ce qui vous attaque) et l'XP de leurs victimes vous revient. Nécromancien : 15 %, 3 max, 1 min ; Seigneur liche : 30 %, 5 max, 2 min ; **Monarque des Ombres** : 50 %, 8 max, permanents et bien plus forts.
+- **Extraction d'ombre (« Lève-toi ! »)** : les cadavres des monstres tués dans la dernière minute (12 blocs) se relèvent. Un cadavre peut résister : 3 essais au plus, les monstres forts et les boss résistent plus (le Monarque réussit toujours sur les monstres faibles).
+- **Rangs des ombres** selon le monstre d'origine : Soldat, Élite, Chevalier, Chevalier d'élite, Commandant (boss), Maréchal (boss très puissant). Plus le rang est haut, plus l'ombre est grande et forte (jusqu'à ×2,5).
 
-### Aptitudes de classe (touches R, C, V, B, N)
-Chaque classe a ses propres aptitudes actives, débloquées en montant de niveau : **3 aptitudes** pour la première classe (niveaux **20, 30 et 40**), puis **2 de plus** avec l'Éveil (niveaux **50 et 75**). La classe éveillée garde celles de sa première classe ; le Monarque des Ombres a ses 5 aptitudes propres.
-
+### Aptitudes de classe (touches R, C, V, B, N, G)
+Chaque classe a ses propres aptitudes actives, débloquées en montant de niveau, sur 6 emplacements : niveaux **20, 30, 40, 50, 75 et 100**.
+- **Première classe** : 5 aptitudes (20, 30, 40, 50, 75).
+- **Classe éveillée** : garde les 3 premières aptitudes de sa première classe, remplace celles des niveaux 50 et 75 par les siennes, et gagne une **aptitude ultime** propre au niveau 100 (★). Le Monarque des Ombres a ses 6 aptitudes propres.
 - Barre d'aptitudes en bas à droite de l'écran : icône, touche, recharge, niveau requis (cadenas).
 - Onglet **Aptitudes** du menu K : description, coût en mana et recharge de chaque aptitude.
-- Les aptitudes deviennent plus fortes avec le niveau, et avec la puissance des sorts (aptitudes magiques) ou la Force (les autres).
-- 45 aptitudes en tout, par exemple : Tourbillon, Ruée, Séisme, Exécution, Danse des lames, Provocation, Parade, Pas de l'ombre, Bombe fumigène, Pluie de flèches, Tir perçant, Meute de loups, Boule de feu, Nova de givre, Chaîne d'éclairs, Météore, Arrêt du temps, Rembobinage, Drain de vie, Jugement, Sanctuaire, Invocation des ombres, « Lève-toi ! », Domaine du Monarque…
+- Les aptitudes deviennent plus fortes avec le niveau, et avec la puissance des sorts (aptitudes magiques) ou la Force (les autres). Les aptitudes physiques coûtent au plus 20 mana (le mana de base).
+
+| Classe | 20 | 30 | 40 | 50 | 75 | 100 (ultime) |
+|---|---|---|---|---|---|---|
+| Berserker | Tourbillon | Cri de guerre | Frénésie sanglante | Soif de sang (peur) | Fracas | — |
+| Seigneur de guerre | ↑ | ↑ | ↑ | Soif de sang | Furie | Cataclysme |
+| Bourreau | ↑ | ↑ | ↑ | Exécution | Moisson | Sentence de mort |
+| Gardien | Provocation | Coup de bouclier | Rempart | Fracas | Peau de fer | — |
+| Forteresse | ↑ | ↑ | ↑ | Bastion | Séisme | Goliath (géant 15 s) |
+| Gardien runique | ↑ | ↑ | ↑ | Bouclier de mana | Glyphe de garde | Égide runique |
+| Assassin | Mutilation | Pas de l'ombre | Lame empoisonnée | Furtivité | Ruée des dagues | — |
+| Ninja | ↑ | ↑ | ↑ | Bombe fumigène | Tempête de shurikens | Mille entailles |
+| Assassin des ombres | ↑ | ↑ | ↑ | Ruée des dagues | Danse des lames | Assassinat |
+| Mage | Boule de feu | Nova de givre | Chaîne d'éclairs | Lance de flammes | Météore | — |
+| Archimage | ↑ | ↑ | ↑ | Lance de flammes | Barrage arcanique | Pluie de flammes |
+| Élémentaliste | ↑ | ↑ | ↑ | Météore | Pics de glace | Flammes blanches |
+| Paladin | Châtiment | Aura de soin | Ruée | Jugement | Bouclier divin | — |
+| Croisé | ↑ | ↑ | ↑ | Étendard sacré | Tourbillon | Croisade |
+| Chevalier sacré | ↑ | ↑ | ↑ | Bouclier divin | Sanctuaire | Lumière des Souverains |
+| Duelliste | Ruée | Parade | Rafale de coups | Danse de l'épée | Danse des lames | — |
+| Maître d'armes | ↑ | ↑ | ↑ | Danse des lames | Onde tranchante | Fendre-ciel |
+| Lame-vent | ↑ | ↑ | ↑ | Danse de l'épée | Tornade | Danse de la tempête |
+| Rôdeur | Tir multiple | Piège | Tir perçant | Tir de repli | Pluie de flèches | — |
+| Tireur d'élite | ↑ | ↑ | ↑ | Œil de lynx | Flèche explosive | Flèche céleste |
+| Chasseur | ↑ | ↑ | ↑ | Meute | Marque du chasseur | Hurlement de Rakan |
+| Lame-sort | Lame runique | Ruée | Boule de feu | Taille arcanique | Bouclier de mana | — |
+| Chevalier runique | ↑ | ↑ | ↑ | Taille arcanique | Chaîne d'éclairs | Lame du Roi-Démon |
+| Démoniste | ↑ | ↑ | ↑ | Drain de vie | Malédiction | Pacte démoniaque |
+| Clerc | Aura de soin | Châtiment | Bouclier de mana | Purification | Sanctuaire | — |
+| Saint | ↑ | ↑ | ↑ | Purification | Sanctuaire | Grâce salvatrice |
+| Druide | ↑ | ↑ | ↑ | Meute | Piège | Bosquet sacré |
+| Arcaniste | Clignement | Barrage arcanique | Bouclier de mana | Puits de gravité | Chaîne d'éclairs | — |
+| Chronomancien | ↑ | ↑ | ↑ | Arrêt du temps | Rembobinage | Effondrement temporel |
+| Mage de bataille | ↑ | ↑ | ↑ | Lame runique | Météore | Avatar arcanique |
+| Moine | Rafale de coups | Ruée | Peau de fer | Paume du dragon | Tornade | — |
+| Grand maître | ↑ | ↑ | ↑ | Paume du dragon | Séisme | Forme bestiale |
+| Moine de fer | ↑ | ↑ | ↑ | Provocation | Rempart | Corps adamantin |
+| Nécromancien | Invocation des ombres | Drain de vie | Malédiction | Explosion d'ombre | Moisson d'âmes | — |
+| Seigneur liche | ↑ | ↑ | ↑ | Nova de givre | Lève-toi ! | Peste de Yogumunt |
+| **Monarque des Ombres** | Ruée des dagues | Échange d'ombre | Lève-toi ! (extraction) | Autorité du Souverain | Peur du dragon | Domaine du Monarque |
+
+(↑ = aptitude gardée de la première classe.) Quelques mécaniques : **peur** (Soif de sang, Peur du dragon : les monstres fuient et ne peuvent plus cibler personne), **Furtivité** (premier coup ×2), **Autorité du Souverain** (télékinésie : soulève puis écrase, accroupi pour repousser), **Échange d'ombre** (apparaître à la place d'une ombre visée), **Domaine du Monarque** (+50 % de dégâts des ombres), transformations temporaires (**Goliath**, **Forme bestiale**), **Marque du chasseur** (+30 % de dégâts), **Grâce salvatrice** (survivre à un coup mortel).
 
 ### Portes et donjons (style Solo Leveling)
 Des **Portes** s'ouvrent près des joueurs dans l'Overworld (toutes les 5 minutes, 40 % de chance ; un message indique la distance et la direction). Elles sont classées de **1 à 7 étoiles** : plus il y a d'étoiles, plus la porte est rare et dangereuse. Une porte reste ouverte un jour Minecraft.

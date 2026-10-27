@@ -133,6 +133,10 @@ public class DungeonGameTests {
 
     @GameTest(template = EMPTY, timeoutTicks = 200)
     public static void trollRegenerates(GameTestHelper helper) {
+        // A troll is taller than the test area: free the blocks above, or it suffocates in the ground of the test world
+        for (BlockPos pos : BlockPos.betweenClosed(0, 3, 0, 2, 5, 2)) {
+            helper.setBlock(pos, Blocks.AIR);
+        }
         FantasyMobs.Troll troll = helper.spawn(ModEntities.TROLL.get(), new BlockPos(1, 1, 1));
         troll.setNoAi(true);
         troll.setHealth(troll.getMaxHealth() / 2);

@@ -14,6 +14,7 @@ import com.firerideur.arcanequest.stats.PlayerClass;
 import com.firerideur.arcanequest.stats.PlayerStats;
 import com.firerideur.arcanequest.stats.Stat;
 import com.firerideur.arcanequest.stats.StatEffects;
+import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Tooltip;
@@ -154,7 +155,8 @@ public class CharacterScreen extends AbstractContainerScreen<CharacterMenu> {
                 Component label = offer.displayNameWithRank();
                 if (!button.getMessage().getString().equals(label.getString())) {
                     button.setMessage(label);
-                    button.setTooltip(Tooltip.create(offer.description()));
+                    button.setTooltip(Tooltip.create(offer.description().copy().append("\n\n")
+                            .append(offer.lore().copy().withStyle(ChatFormatting.ITALIC, ChatFormatting.GRAY))));
                 }
             }
         }
@@ -205,6 +207,8 @@ public class CharacterScreen extends AbstractContainerScreen<CharacterMenu> {
         renderTooltip(g, mouseX, mouseY);
         if (tab == Tab.ABILITIES) {
             renderAbilityTooltip(g, mouseX, mouseY);
+        } else if (tab == Tab.SKILLS) {
+            renderClassTooltip(g, mouseX, mouseY);
         }
     }
 
@@ -351,7 +355,7 @@ public class CharacterScreen extends AbstractContainerScreen<CharacterMenu> {
                 Component awakening = Component.translatable("screen.arcanequest.awakening_at", PlayerClass.AWAKENING_LEVEL);
                 g.drawString(font, awakening, x + w - 10 - font.width(awakening), classY, UiKit.TEXT_DIM, false);
             }
-            g.drawWordWrap(font, playerClass.description(), x + 10, classY + 11, w - 20, UiKit.TEXT_DIM);
+            drawFitted(g, playerClass.description(), x + 10, classY + 11, w - 20, y + SKILLS_H - 4 - (classY + 11));
         }
         if (minecraft.player != null) {
             Component mana = Component.translatable("hud.arcanequest.mana", (int) stats.getMana(),
@@ -360,7 +364,20 @@ public class CharacterScreen extends AbstractContainerScreen<CharacterMenu> {
         }
     }
 
-    private static final int ABILITY_ROW_Y = 24, ABILITY_ROW_H = 25;
+    /** Wrapped text, shrunk to 3/4 when it would not fit in {@code height}. */
+    private void drawFitted(GuiGraphics g, Component text, int x, int y, int width, int height) {
+        if (font.split(text, width).size() * font.lineHeight <= height) {
+            g.drawWordWrap(font, text, x, y, width, UiKit.TEXT_DIM);
+            return;
+        }
+        float scale = 0.75F;
+        g.pose().pushPose();
+        g.pose().scale(scale, scale, 1.0F);
+        g.drawWordWrap(font, text, (int) (x / scale), (int) (y / scale), (int) (width / scale), UiKit.TEXT_DIM);
+        g.pose().popPose();
+    }
+
+    private static final int ABILITY_ROW_Y = 24, ABILITY_ROW_H = 21;
 
     private void renderAbilities(GuiGraphics g) {
         int x = leftPos + CharacterMenu.INVENTORY_X;
@@ -389,13 +406,20 @@ public class CharacterScreen extends AbstractContainerScreen<CharacterMenu> {
                     g.pose().popPose();
                 }
             }
-            Component name = skill != null ? skill.displayName() : Component.translatable("screen.arcanequest.ability_awakening");
+            boolean ultimate = slot == ClassSkills.ULTIMATE_SLOT;
+            Component name = skill != null ? skill.displayName()
+                    : Component.translatable(ultimate ? "screen.arcanequest.ability_ultimate" : "screen.arcanequest.ability_awakening");
             g.drawString(font, name, x + 34, rowY, unlocked ? UiKit.GOLD_LIGHT : UiKit.TEXT_DIM, false);
+            if (ultimate && skill != null) {
+                Component tag = Component.translatable("screen.arcanequest.ability_ultimate_tag");
+                g.drawString(font, tag, x + 38 + font.width(name), rowY, unlocked ? 0xFFFF5555 : UiKit.TEXT_DIM, false);
+            }
             Component state = unlocked
                     ? Component.literal("[" + ClientSetup.SKILL_KEYS[slot].getTranslatedKeyMessage().getString() + "]")
                     : Component.translatable("screen.arcanequest.ability_level", ClassSkills.UNLOCK_LEVELS[slot]);
             g.drawString(font, state, x + w - 10 - font.width(state), rowY, unlocked ? 0xFF7CFC00 : UiKit.TEXT_DIM, false);
-            Component description = skill != null ? skill.description() : Component.translatable("screen.arcanequest.ability_awakening.desc");
+            Component description = skill != null ? skill.description()
+                    : Component.translatable(ultimate ? "screen.arcanequest.ability_ultimate.desc" : "screen.arcanequest.ability_awakening.desc");
             // Description on one small line; the tooltip shows all of it
             var lines = font.split(description, (int) ((w - 46) / 0.75F));
             if (!lines.isEmpty()) {
@@ -405,6 +429,25 @@ public class CharacterScreen extends AbstractContainerScreen<CharacterMenu> {
                 g.pose().popPose();
             }
         }
+    }
+
+    /** The current class (description and inspiration) when hovering its line. */
+    private void renderClassTooltip(GuiGraphics g, int mouseX, int mouseY) {
+        PlayerStats stats = ClientStats.get();
+        PlayerClass playerClass = stats.getPlayerClass();
+        int x = leftPos + CharacterMenu.INVENTORY_X;
+        int w = CharacterMenu.EQUIPMENT_X + CharacterMenu.EQUIPMENT_W - CharacterMenu.INVENTORY_X;
+        if (playerClass == PlayerClass.NONE || PlayerClass.canChoose(stats) || mouseX < x || mouseX >= x + w
+                || mouseY < topPos + CLASS_Y || mouseY >= topPos + SKILLS_H) {
+            return;
+        }
+        List<Component> lines = new ArrayList<>();
+        lines.add(playerClass.displayNameWithRank());
+        font.getSplitter().splitLines(playerClass.description(), 240, Style.EMPTY)
+                .forEach(line -> lines.add(Component.literal(line.getString()).withColor(UiKit.TEXT)));
+        font.getSplitter().splitLines(playerClass.lore(), 240, Style.EMPTY)
+                .forEach(line -> lines.add(Component.literal(line.getString()).withStyle(ChatFormatting.ITALIC).withColor(UiKit.TEXT_DIM)));
+        g.renderComponentTooltip(font, lines, mouseX, mouseY);
     }
 
     private void renderAbilityTooltip(GuiGraphics g, int mouseX, int mouseY) {
@@ -417,7 +460,11 @@ public class CharacterScreen extends AbstractContainerScreen<CharacterMenu> {
         }
         Skill skill = skills.get(slot);
         List<Component> lines = new ArrayList<>();
-        lines.add(skill.displayName().copy().withColor(UiKit.GOLD_LIGHT));
+        MutableComponent title = skill.displayName().copy().withColor(UiKit.GOLD_LIGHT);
+        if (slot == ClassSkills.ULTIMATE_SLOT) {
+            title.append(Component.literal(" ")).append(Component.translatable("screen.arcanequest.ability_ultimate_tag").withColor(0xFFFF5555));
+        }
+        lines.add(title);
         font.getSplitter().splitLines(skill.description(), 220, Style.EMPTY)
                 .forEach(line -> lines.add(Component.literal(line.getString()).withColor(UiKit.TEXT)));
         lines.add(Component.translatable("screen.arcanequest.ability_cost", (int) skill.manaCost(), skill.cooldownTicks() / 20)

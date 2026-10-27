@@ -12,6 +12,7 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.level.GameType;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.gametest.GameTestHolder;
 
@@ -124,6 +125,28 @@ public class StatsGameTests {
         helper.assertTrue(copied.getLevel() == 10, "level lost on death: " + copied.getLevel());
         helper.assertTrue(copied.getPlayerClass() == PlayerClass.MAGE, "class lost on death");
         helper.assertTrue(copied.get(Stat.STRENGTH) == 1, "stats lost on death");
+        helper.succeed();
+    }
+
+    @GameTest(template = EMPTY)
+    public static void tenacityProtectsWhenLow(GameTestHelper helper) {
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        player.setGameMode(GameType.SURVIVAL);
+        PlayerStats stats = StatsCapability.get(player).orElseThrow();
+        stats.setPlayerClass(PlayerClass.GUARDIAN);
+        StatEffects.apply(player, stats);
+        // Out of world damage ignores armor and spawn protection: only Tenacity changes it
+        player.setHealth(player.getMaxHealth());
+        player.hurt(player.damageSources().fellOutOfWorld(), 4.0F);
+        float healthy = player.getMaxHealth() - player.getHealth();
+        player.invulnerableTime = 0;
+        player.setHealth(player.getMaxHealth() * 0.2F);
+        float before = player.getHealth();
+        player.hurt(player.damageSources().fellOutOfWorld(), 4.0F);
+        float low = before - player.getHealth();
+        float expected = 4.0F * (1 - PlayerClass.GUARDIAN.bonuses().tenacity());
+        helper.assertTrue(Math.abs(healthy - 4.0F) < 0.01F, "full health: no reduction, lost " + healthy);
+        helper.assertTrue(Math.abs(low - expected) < 0.01F, "below 30% health: Tenacity, expected " + expected + ", lost " + low);
         helper.succeed();
     }
 }

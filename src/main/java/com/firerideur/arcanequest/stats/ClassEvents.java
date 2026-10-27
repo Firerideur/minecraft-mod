@@ -4,6 +4,7 @@ import com.firerideur.arcanequest.boss.ArcaneBoss;
 import com.firerideur.arcanequest.magic.Mana;
 import com.firerideur.arcanequest.magic.SpellProjectile;
 import com.firerideur.arcanequest.network.ModNetwork;
+import com.firerideur.arcanequest.shadow.Corpses;
 import com.firerideur.arcanequest.shadow.ShadowSoldier;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
@@ -11,22 +12,41 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.tags.EntityTypeTags;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.CriticalHitEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 /** Class passives that aren't plain attributes (driven by {@link PlayerClass.Bonuses}), and mana regeneration. */
 public final class ClassEvents {
     /** Execute bonus applies to targets below this part of their health. */
     public static final float EXECUTE_THRESHOLD = 0.3F;
+    /** Tenacity reduces the damage taken below this part of max health. */
+    public static final float TENACITY_THRESHOLD = 0.3F;
+    public static final float SPELL_CRIT_DAMAGE = 1.5F;
+    /** Combo stacks of the Monk line, lost after {@link #COMBO_WINDOW} ticks without hitting. */
+    public static final int MAX_COMBO = 5;
+    private static final int COMBO_WINDOW = 40;
+    private static final double AURA_RADIUS = 8.0;
+
+    private record Combo(long lastHit, int stacks) {}
+
+    private static final Map<UUID, Combo> COMBOS = new HashMap<>();
     /** Sync mana to the client at most this often while it regenerates. */
     private static final int MANA_SYNC_INTERVAL = 10;
 
@@ -66,6 +86,24 @@ public final class ClassEvents {
                 stats.setMana(Math.min(Mana.max(serverPlayer, stats), stats.getMana() + bonus.manaOnHit()));
                 ModNetwork.sync(serverPlayer);
             }
+            if (bonus.combo() > 0) {
+                amount *= 1 + bonus.combo() * combo(player);
+            }
+            if (bonus.backstab() > 1 && isBehind(player, target)) {
+                amount *= bonus.backstab();
+                if (player.level() instanceof ServerLevel level) {
+                    level.sendParticles(ParticleTypes.DAMAGE_INDICATOR, target.getX(), target.getY(0.7), target.getZ(), 3, 0.2, 0.2, 0.2, 0.1);
+                }
+            }
+        }
+        if (bonus.firstStrike() > 1 && target.getHealth() >= target.getMaxHealth()) {
+            amount *= bonus.firstStrike();
+        }
+        if (bonus.spellCrit() > 0 && isMagic(event.getSource()) && player.getRandom().nextFloat() < bonus.spellCrit()) {
+            amount *= SPELL_CRIT_DAMAGE;
+            if (player.level() instanceof ServerLevel level) {
+                level.sendParticles(ParticleTypes.ENCHANTED_HIT, target.getX(), target.getY(0.6), target.getZ(), 12, 0.3, 0.4, 0.3, 0.2);
+            }
         }
         if (target.getHealth() < target.getMaxHealth() * EXECUTE_THRESHOLD) {
             amount *= bonus.execute();
@@ -88,9 +126,33 @@ public final class ClassEvents {
         event.setAmount(amount);
     }
 
+    /** Hits in a row (Monk line): returns the stacks before this hit, then counts it. */
+    private static int combo(Player player) {
+        long now = player.level().getGameTime();
+        Combo combo = COMBOS.get(player.getUUID());
+        int stacks = combo != null && now - combo.lastHit <= COMBO_WINDOW ? combo.stacks : 0;
+        COMBOS.put(player.getUUID(), new Combo(now, Math.min(MAX_COMBO, stacks + 1)));
+        return stacks;
+    }
+
+    /** True when {@code attacker} is in the back half of {@code target}. */
+    public static boolean isBehind(LivingEntity attacker, LivingEntity target) {
+        Vec3 facing = Vec3.directionFromRotation(0, target.getYHeadRot());
+        Vec3 toAttacker = attacker.position().subtract(target.position()).multiply(1, 0, 1);
+        return toAttacker.lengthSqr() > 1.0E-4 && facing.dot(toAttacker.normalize()) < -0.2;
+    }
+
+    public static boolean isMagic(DamageSource source) {
+        return source.getDirectEntity() instanceof SpellProjectile || source.is(DamageTypes.MAGIC)
+                || source.is(DamageTypes.INDIRECT_MAGIC);
+    }
+
     private static void onPlayerHurt(LivingHurtEvent event, Player victim) {
         PlayerClass.Bonuses bonus = classOf(victim).bonuses();
         event.setAmount(event.getAmount() * bonus.damageTaken());
+        if (bonus.tenacity() > 0 && victim.getHealth() < victim.getMaxHealth() * TENACITY_THRESHOLD) {
+            event.setAmount(event.getAmount() * (1 - bonus.tenacity()));
+        }
         if (bonus.reflect() > 0 && event.getSource().getDirectEntity() instanceof LivingEntity attacker && attacker != victim) {
             attacker.hurt(victim.damageSources().thorns(victim), event.getAmount() * bonus.reflect());
         }
@@ -140,8 +202,35 @@ public final class ClassEvents {
                 stats.markBossKill(boss.getBossId());
                 ModNetwork.sync(player);
             }
-            ShadowSoldier.tryRaise(player, stats, event.getEntity());
+            if (event.getSource().getEntity() == player) {
+                onKillPassives(player, stats);
+            }
+            ShadowSoldier raised = ShadowSoldier.tryRaise(player, stats, event.getEntity());
+            if (raised == null) {
+                // Shadow Extraction (Arise) can still raise it for a while
+                Corpses.add(player, event.getEntity());
+            }
         });
+    }
+
+    private static void onKillPassives(ServerPlayer player, PlayerStats stats) {
+        PlayerClass.Bonuses bonus = stats.getPlayerClass().bonuses();
+        if (bonus.killFrenzy() > 0) {
+            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, bonus.killFrenzy(), 0));
+            player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, bonus.killFrenzy(), 0));
+        }
+        if (bonus.healOnKill() > 0) {
+            player.heal(bonus.healOnKill());
+        }
+        if (bonus.manaOnKill() > 0) {
+            stats.setMana(Math.min(Mana.max(player, stats), stats.getMana() + bonus.manaOnKill()));
+            ModNetwork.sync(player);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onLogout(PlayerEvent.PlayerLoggedOutEvent event) {
+        COMBOS.remove(event.getEntity().getUUID());
     }
 
     @SubscribeEvent
@@ -153,6 +242,13 @@ public final class ClassEvents {
             PlayerClass.Bonuses bonus = stats.getPlayerClass().bonuses();
             if (bonus.regen() > 0 && player.tickCount % bonus.regen() == 0 && player.getHealth() < player.getMaxHealth()) {
                 player.heal(1.0F);
+            }
+            if (bonus.aura() > 0 && player.tickCount % bonus.aura() == 0) {
+                for (Player ally : player.level().getEntitiesOfClass(Player.class, player.getBoundingBox().inflate(AURA_RADIUS),
+                        p -> p != player && p.isAlive() && p.getHealth() < p.getMaxHealth())) {
+                    ally.heal(1.0F);
+                    player.serverLevel().sendParticles(ParticleTypes.HAPPY_VILLAGER, ally.getX(), ally.getY(1.0), ally.getZ(), 3, 0.3, 0.3, 0.3, 0);
+                }
             }
             if (bonus.sneakInvisible() && player.isCrouching()) {
                 player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 10, 0, true, false, true));

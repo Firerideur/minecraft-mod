@@ -20,85 +20,88 @@ import java.util.List;
 public enum PlayerClass {
     NONE("none", 0xAAAAAA, Rank.NONE, affinity(0, 0, 0, 0), new Bonuses()),
 
+    // Balance: a first class is worth about 4 "bonus units", an awakening about 7, the hidden class about 9
+    // (1 unit ~ +10% damage, +2 hearts, +4 armor or one on-hit/on-kill passive).
+
     // ---------------------------------------------------------------- first classes (level 20)
     BERSERKER("berserker", 0xD83A3A, Rank.C, affinity(1, 0, 0, 0),
-            new Bonuses().melee(0.15).attackSpeed(0.10).rage(1.3F)),
+            new Bonuses().melee(0.15).attackSpeed(0.10).rage(1.3F).killFrenzy(60)),
     GUARDIAN("guardian", 0x7C9CC0, Rank.C, affinity(0, 1, 0, 0),
-            new Bonuses().health(8).armor(4).toughness(2).knockback(0.3)),
+            new Bonuses().health(8).armor(4).toughness(2).knockback(0.3).tenacity(0.2F)),
     ASSASSIN("assassin", 0x50B0E0, Rank.C, affinity(0, 0, 1, 0),
-            new Bonuses().attackSpeed(0.10).speed(0.10).crit(2.0F)),
+            new Bonuses().attackSpeed(0.10).speed(0.10).crit(2.0F).backstab(1.3F)),
     MAGE("mage", 0xB070E0, Rank.C, affinity(0, 0, 0, 1),
-            new Bonuses().mana(1.5F).spellPower(1.3F)),
+            new Bonuses().mana(1.5F).spellPower(1.3F).spellCrit(0.10F).manaOnKill(3)),
     PALADIN("paladin", 0xF0C040, Rank.B, affinity(1, 1, 0, 0),
-            new Bonuses().health(4).armor(2).melee(0.10).healOnHit(1)),
+            new Bonuses().health(4).armor(2).melee(0.10).healOnHit(1).undead(1.2F)),
     DUELIST("duelist", 0xE88A30, Rank.B, affinity(1, 0, 1, 0),
-            new Bonuses().melee(0.10).attackSpeed(0.15).crit(1.75F)),
+            new Bonuses().melee(0.10).attackSpeed(0.15).crit(1.75F).dodge(0.05F)),
     RANGER("ranger", 0x50C050, Rank.B, affinity(0, 1, 1, 0),
-            new Bonuses().health(2).speed(0.10).arrows(1.35F)),
+            new Bonuses().health(2).speed(0.10).arrows(1.35F).firstStrike(1.2F)),
     SPELLBLADE("spellblade", 0x8A60F0, Rank.B, affinity(1, 0, 0, 1),
             new Bonuses().melee(0.10).spellPower(1.15F).manaOnHit(2)),
     CLERIC("cleric", 0xF4EEA0, Rank.B, affinity(0, 1, 0, 1),
-            new Bonuses().health(4).spellPower(1.1F).heals(1.5F).regen(80)),
+            new Bonuses().health(4).spellPower(1.1F).heals(1.5F).regen(80).aura(120)),
     ARCANIST("arcanist", 0x40D0D0, Rank.B, affinity(0, 0, 1, 1),
-            new Bonuses().speed(0.10).spellPower(1.1F).manaCost(0.7F)),
+            new Bonuses().speed(0.10).spellPower(1.1F).manaCost(0.7F).spellCrit(0.08F)),
     MONK("monk", 0xE0B080, Rank.B, affinity(0.7F, 0.7F, 1, 0),
-            new Bonuses().unarmed(5).attackSpeed(0.10).speed(0.05)),
+            new Bonuses().unarmed(5).attackSpeed(0.10).speed(0.05).combo(0.06F)),
     NECROMANCER("necromancer", 0x6A4C9C, Rank.B, affinity(0.4F, 0.4F, 0.4F, 1),
-            new Bonuses().spellPower(1.1F).shadows(0.15F, 3, 1200, 1.0F)),
+            new Bonuses().spellPower(1.1F).manaOnKill(3).shadows(0.15F, 3, 1200, 1.0F)),
 
     // ---------------------------------------------------------------- awakened classes (level 50)
     WARLORD("warlord", 0xB01818, Rank.A, from("berserker"),
-            new Bonuses().health(4).melee(0.25).attackSpeed(0.15).rage(1.5F)),
+            new Bonuses().health(4).melee(0.25).attackSpeed(0.15).rage(1.5F).killFrenzy(100).tenacity(0.15F)),
     EXECUTIONER("executioner", 0x8C1F2A, Rank.A, from("berserker"),
-            new Bonuses().melee(0.20).attackSpeed(0.10).execute(1.6F)),
+            new Bonuses().melee(0.20).attackSpeed(0.10).execute(1.6F).healOnKill(4)),
     FORTRESS("fortress", 0x5A7090, Rank.A, from("guardian"),
-            new Bonuses().health(12).armor(6).toughness(4).knockback(0.5).damageTaken(0.85F)),
+            new Bonuses().health(12).armor(6).toughness(4).knockback(0.5).damageTaken(0.85F).tenacity(0.3F)),
     RUNE_GUARDIAN("rune_guardian", 0x4FA0D0, Rank.A, from("guardian"),
-            new Bonuses().health(10).armor(5).toughness(2).knockback(0.4).reflect(0.3F)),
+            new Bonuses().health(10).armor(5).toughness(2).knockback(0.4).reflect(0.3F).tenacity(0.2F).mana(1.25F)),
     NINJA("ninja", 0x3A3A4A, Rank.A, from("assassin"),
-            new Bonuses().attackSpeed(0.15).speed(0.20).crit(2.0F).dodge(0.25F)),
+            new Bonuses().attackSpeed(0.15).speed(0.20).crit(2.0F).dodge(0.25F).backstab(1.3F)),
     SHADOW_ASSASSIN("shadow_assassin", 0x2A6A9A, Rank.A, from("assassin"),
-            new Bonuses().attackSpeed(0.15).speed(0.10).crit(2.5F).invisibleWhenSneaking()),
+            new Bonuses().attackSpeed(0.15).speed(0.10).crit(2.5F).invisibleWhenSneaking().backstab(1.6F)),
     ARCHMAGE("archmage", 0x9A40F0, Rank.A, from("mage"),
-            new Bonuses().mana(2.0F).spellPower(1.6F)),
+            new Bonuses().mana(2.0F).spellPower(1.6F).spellCrit(0.20F).manaOnKill(6)),
     ELEMENTALIST("elementalist", 0xF06030, Rank.A, from("mage"),
-            new Bonuses().mana(1.5F).spellPower(1.4F).ignite(3).slow(40)),
+            new Bonuses().mana(1.5F).spellPower(1.4F).ignite(3).slow(40).spellCrit(0.10F)),
     CRUSADER("crusader", 0xF8D860, Rank.A, from("paladin"),
-            new Bonuses().health(8).armor(4).melee(0.15).healOnHit(2)),
+            new Bonuses().health(8).armor(4).melee(0.15).healOnHit(2).aura(100)),
     HOLY_KNIGHT("holy_knight", 0xFFF2B0, Rank.A, from("paladin"),
             new Bonuses().health(6).armor(3).melee(0.15).healOnHit(1).undead(1.6F)),
     WEAPON_MASTER("weapon_master", 0xD07020, Rank.A, from("duelist"),
-            new Bonuses().melee(0.20).attackSpeed(0.25).crit(2.0F)),
+            new Bonuses().melee(0.20).attackSpeed(0.25).crit(2.0F).dodge(0.05F)),
     WINDBLADE("windblade", 0x90E0D0, Rank.A, from("duelist"),
-            new Bonuses().melee(0.15).attackSpeed(0.20).speed(0.20).crit(1.75F).dodge(0.10F)),
+            new Bonuses().melee(0.15).attackSpeed(0.20).speed(0.20).crit(1.75F).dodge(0.12F)),
     SNIPER("sniper", 0x309030, Rank.A, from("ranger"),
-            new Bonuses().health(2).speed(0.10).arrows(1.7F)),
+            new Bonuses().health(2).speed(0.10).arrows(1.7F).firstStrike(1.5F)),
     HUNTER("hunter", 0x70A040, Rank.A, from("ranger"),
-            new Bonuses().health(4).speed(0.15).arrows(1.45F).slow(40)),
+            new Bonuses().health(4).speed(0.15).arrows(1.45F).slow(40).firstStrike(1.2F)),
     RUNE_KNIGHT("rune_knight", 0x6070F0, Rank.A, from("spellblade"),
             new Bonuses().armor(2).melee(0.20).spellPower(1.3F).manaOnHit(4)),
     WARLOCK("warlock", 0x7A2A8A, Rank.A, from("spellblade"),
-            new Bonuses().melee(0.10).spellPower(1.35F).spellLifesteal(0.25F)),
+            new Bonuses().melee(0.10).spellPower(1.35F).spellLifesteal(0.25F).manaOnKill(4)),
     SAINT("saint", 0xFFFFE0, Rank.A, from("cleric"),
-            new Bonuses().health(6).spellPower(1.2F).heals(2.5F).regen(40)),
+            new Bonuses().health(6).spellPower(1.2F).heals(2.5F).regen(40).aura(60)),
     DRUID("druid", 0x40A050, Rank.A, from("cleric"),
             new Bonuses().health(8).spellPower(1.15F).heals(1.75F).regen(60).poison(60)),
     CHRONOMANCER("chronomancer", 0x30B0B0, Rank.A, from("arcanist"),
-            new Bonuses().speed(0.15).spellPower(1.2F).manaCost(0.5F)),
+            new Bonuses().speed(0.15).spellPower(1.2F).manaCost(0.5F).spellCrit(0.10F)),
     BATTLEMAGE("battlemage", 0x5090E0, Rank.A, from("arcanist"),
-            new Bonuses().speed(0.15).melee(0.10).attackSpeed(0.10).spellPower(1.3F).manaCost(0.75F)),
+            new Bonuses().speed(0.15).melee(0.10).attackSpeed(0.10).spellPower(1.3F).manaCost(0.75F).manaOnHit(2)),
     GRANDMASTER("grandmaster", 0xF0C090, Rank.A, from("monk"),
-            new Bonuses().unarmed(10).attackSpeed(0.20).speed(0.10)),
+            new Bonuses().unarmed(10).attackSpeed(0.20).speed(0.10).combo(0.10F)),
     IRON_MONK("iron_monk", 0xA09080, Rank.A, from("monk"),
-            new Bonuses().unarmed(7).health(6).armor(6).knockback(0.3)),
+            new Bonuses().unarmed(7).health(6).armor(6).knockback(0.3).combo(0.05F).tenacity(0.2F)),
     LICH_LORD("lich_lord", 0x50D0A0, Rank.A, from("necromancer"),
-            new Bonuses().mana(1.5F).spellPower(1.25F).shadows(0.30F, 5, 2400, 1.2F)),
+            new Bonuses().mana(1.5F).spellPower(1.25F).manaOnKill(5).shadows(0.30F, 5, 2400, 1.2F)),
 
     // ---------------------------------------------------------------- hidden class
-    /** Only after defeating the Skeleton King: permanent shadow army. */
+    /** Only after defeating the Skeleton King: permanent shadow army, Tenacity and Will to Recover like Sung Jinwoo. */
     SHADOW_MONARCH("shadow_monarch", 0x4040FF, Rank.S, from("necromancer", "assassin"),
-            new Bonuses().health(6).melee(0.15).speed(0.10).spellPower(1.2F).shadows(0.5F, 8, 0, 1.6F)
-                    .requiresBoss(BossKills.SKELETON_KING));
+            new Bonuses().health(6).melee(0.15).speed(0.10).spellPower(1.2F).tenacity(0.3F).regen(60)
+                    .shadows(0.5F, 8, 0, 1.6F).requiresBoss(BossKills.SKELETON_KING));
 
     public static final int UNLOCK_LEVEL = 20;
     public static final int AWAKENING_LEVEL = 50;
@@ -180,6 +183,11 @@ public enum PlayerClass {
 
     public Component description() {
         return Component.translatable("class.arcanequest." + key + ".desc");
+    }
+
+    /** Role and Solo Leveling inspiration of the class. */
+    public Component lore() {
+        return Component.translatable("class.arcanequest." + key + ".lore");
     }
 
     /**
@@ -299,8 +307,9 @@ public enum PlayerClass {
     public static final class Bonuses {
         private double health, armor, toughness, knockback, melee, attackSpeed, speed;
         private float spellPower = 1, mana = 1, manaCost = 1, heals = 1, arrows = 1, crit, rage = 1, execute = 1,
-                undead = 1, damageTaken = 1, dodge, reflect, spellLifesteal, healOnHit, manaOnHit, unarmed;
-        private int regen, ignite, slow, poison;
+                undead = 1, damageTaken = 1, dodge, reflect, spellLifesteal, healOnHit, manaOnHit, unarmed,
+                tenacity, backstab = 1, spellCrit, firstStrike = 1, combo, healOnKill, manaOnKill;
+        private int regen, ignite, slow, poison, killFrenzy, aura;
         private boolean sneakInvisible;
         private float shadowChance, shadowPower = 1;
         private int shadowMax, shadowLifetime;
@@ -333,6 +342,15 @@ public enum PlayerClass {
         Bonuses ignite(int seconds) { ignite = seconds; return this; }
         Bonuses slow(int ticks) { slow = ticks; return this; }
         Bonuses poison(int ticks) { poison = ticks; return this; }
+        Bonuses tenacity(float v) { tenacity = v; return this; }
+        Bonuses backstab(float v) { backstab = v; return this; }
+        Bonuses spellCrit(float v) { spellCrit = v; return this; }
+        Bonuses firstStrike(float v) { firstStrike = v; return this; }
+        Bonuses combo(float v) { combo = v; return this; }
+        Bonuses healOnKill(float v) { healOnKill = v; return this; }
+        Bonuses manaOnKill(float v) { manaOnKill = v; return this; }
+        Bonuses killFrenzy(int ticks) { killFrenzy = ticks; return this; }
+        Bonuses aura(int ticks) { aura = ticks; return this; }
         Bonuses invisibleWhenSneaking() { sneakInvisible = true; return this; }
         Bonuses requiresBoss(int boss) { requiredBoss = boss; return this; }
 
@@ -393,6 +411,22 @@ public enum PlayerClass {
         /** Ticks of poison put by hits. */
         public int poison() { return poison; }
         public boolean sneakInvisible() { return sneakInvisible; }
+        /** Part of the damage avoided below {@link ClassEvents#TENACITY_THRESHOLD} of max health (Sung Jinwoo's Tenacity). */
+        public float tenacity() { return tenacity; }
+        /** Melee damage multiplier when hitting a target from behind. */
+        public float backstab() { return backstab; }
+        /** Chance for magic damage to crit (x{@link ClassEvents#SPELL_CRIT_DAMAGE}). */
+        public float spellCrit() { return spellCrit; }
+        /** Damage multiplier against targets at full health. */
+        public float firstStrike() { return firstStrike; }
+        /** Melee damage bonus per consecutive hit, up to {@link ClassEvents#MAX_COMBO} stacks. */
+        public float combo() { return combo; }
+        public float healOnKill() { return healOnKill; }
+        public float manaOnKill() { return manaOnKill; }
+        /** Ticks of Strength and Speed after each kill, 0 = none. */
+        public int killFrenzy() { return killFrenzy; }
+        /** Heals nearby players by 1 every this many ticks, 0 = no aura. */
+        public int aura() { return aura; }
         public float shadowChance() { return shadowChance; }
         public int shadowMax() { return shadowMax; }
         public int shadowLifetime() { return shadowLifetime; }
