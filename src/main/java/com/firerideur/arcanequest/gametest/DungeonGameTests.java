@@ -3,6 +3,7 @@ package com.firerideur.arcanequest.gametest;
 import com.firerideur.arcanequest.ArcaneQuest;
 import com.firerideur.arcanequest.dungeon.DungeonData;
 import com.firerideur.arcanequest.dungeon.DungeonGenerator;
+import com.firerideur.arcanequest.dungeon.BeastMobs;
 import com.firerideur.arcanequest.dungeon.DungeonMob;
 import com.firerideur.arcanequest.dungeon.DungeonTheme;
 import com.firerideur.arcanequest.dungeon.FantasyMobs;
@@ -82,7 +83,10 @@ public class DungeonGameTests {
                 ModEntities.STEELFANG_WOLF.get(), ModEntities.ICE_ELF.get(), ModEntities.ANT_SOLDIER.get(),
                 ModEntities.HIGH_ORC.get(), ModEntities.DEMON_KNIGHT.get(), ModEntities.TROLL.get(), ModEntities.MINOTAUR.get(),
                 ModEntities.GARGOYLE.get(), ModEntities.LICH.get(), ModEntities.NAGA.get(), ModEntities.MIMIC.get(),
-                ModEntities.TREANT.get(), ModEntities.BASILISK.get());
+                ModEntities.TREANT.get(), ModEntities.BASILISK.get(), ModEntities.GIANT_SPIDER.get(), ModEntities.MANTIS.get(),
+                ModEntities.BEETLE.get(), ModEntities.GIANT_WASP.get(), ModEntities.WEREWOLF.get(), ModEntities.RATMAN.get(),
+                ModEntities.LIZARDMAN.get(), ModEntities.GHOUL.get(), ModEntities.IMP.get(), ModEntities.SUCCUBUS.get(),
+                ModEntities.GREATER_DEMON.get());
         for (EntityType<? extends DungeonMob> type : types) {
             DungeonMob mob = helper.spawn(type, new BlockPos(1, 1, 1));
             helper.assertTrue(mob.isAlive() && mob.getMaxHealth() > 0, type + " should spawn");
@@ -105,7 +109,9 @@ public class DungeonGameTests {
         for (int stars = 1; stars <= Gates.MAX_STARS; stars++) {
             helper.assertTrue(!DungeonTheme.forStars(stars).isEmpty(), "no theme for " + stars + " stars");
         }
-        helper.assertTrue(DungeonTheme.forStars(2).size() == 2 && DungeonTheme.forStars(6).size() == 2, "ranks 2, 4, 5, 6 have two themes");
+        for (int stars = 2; stars <= Gates.MAX_STARS; stars++) {
+            helper.assertTrue(DungeonTheme.forStars(stars).size() >= 2, stars + " stars should have several themes");
+        }
         for (DungeonTheme theme : DungeonTheme.values()) {
             helper.assertTrue(theme.inhabitants().contains(theme.boss.get()), theme + " should list its boss");
         }
@@ -125,16 +131,16 @@ public class DungeonGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = EMPTY, timeoutTicks = 100)
+    @GameTest(template = EMPTY, timeoutTicks = 200)
     public static void trollRegenerates(GameTestHelper helper) {
         FantasyMobs.Troll troll = helper.spawn(ModEntities.TROLL.get(), new BlockPos(1, 1, 1));
         troll.setNoAi(true);
         troll.setHealth(troll.getMaxHealth() / 2);
         float hurt = troll.getHealth();
-        helper.runAfterDelay(45, () -> {
+        // Entities may only start ticking a little after the test begins: wait for the heal
+        helper.succeedWhen(() -> {
             helper.assertTrue(troll.getHealth() > hurt, "a troll should heal over time");
             troll.discard();
-            helper.succeed();
         });
     }
 
@@ -143,6 +149,35 @@ public class DungeonGameTests {
         FantasyMobs.Mimic mimic = helper.spawn(ModEntities.MIMIC.get(), new BlockPos(1, 1, 1));
         helper.assertTrue(mimic.isDormant() && !mimic.isPushable(), "a mimic waits, still, like a chest");
         mimic.discard();
+        helper.succeed();
+    }
+
+    @GameTest(template = EMPTY)
+    public static void beetleShellProtectsTheFront(GameTestHelper helper) {
+        var player = helper.makeMockServerPlayerInLevel();
+        BeastMobs.Beetle front = helper.spawn(ModEntities.BEETLE.get(), new BlockPos(1, 1, 1));
+        front.setNoAi(true);
+        front.setYRot(0);
+        // Facing south (+z): the player stands in front, then behind
+        player.moveTo(front.getX(), front.getY(), front.getZ() + 2);
+        float before = front.getHealth();
+        front.hurt(player.damageSources().playerAttack(player), 10.0F);
+        float frontLoss = before - front.getHealth();
+        front.invulnerableTime = 0;
+        player.moveTo(front.getX(), front.getY(), front.getZ() - 2);
+        before = front.getHealth();
+        front.hurt(player.damageSources().playerAttack(player), 10.0F);
+        float backLoss = before - front.getHealth();
+        helper.assertTrue(frontLoss < backLoss, "hits from the front should do less (" + frontLoss + " vs " + backLoss + ")");
+        front.discard();
+        helper.succeed();
+    }
+
+    @GameTest(template = EMPTY)
+    public static void ghoulsAreUndead(GameTestHelper helper) {
+        BeastMobs.Ghoul ghoul = helper.spawn(ModEntities.GHOUL.get(), new BlockPos(1, 1, 1));
+        helper.assertTrue(ghoul.getType().is(net.minecraft.tags.EntityTypeTags.UNDEAD), "ghouls should be undead (holy damage)");
+        ghoul.discard();
         helper.succeed();
     }
 }

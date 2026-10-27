@@ -23,6 +23,17 @@ public final class DungeonRenderers {
     public static final ModelLayerLocation MIMIC = layer("mimic");
     public static final ModelLayerLocation TREANT = layer("treant");
     public static final ModelLayerLocation BASILISK = layer("basilisk");
+    public static final ModelLayerLocation GIANT_SPIDER = layer("giant_spider");
+    public static final ModelLayerLocation MANTIS = layer("mantis");
+    public static final ModelLayerLocation BEETLE = layer("beetle");
+    public static final ModelLayerLocation GIANT_WASP = layer("giant_wasp");
+    public static final ModelLayerLocation WEREWOLF = layer("werewolf");
+    public static final ModelLayerLocation RATMAN = layer("ratman");
+    public static final ModelLayerLocation LIZARDMAN = layer("lizardman");
+    public static final ModelLayerLocation GHOUL = layer("ghoul");
+    public static final ModelLayerLocation IMP = layer("imp");
+    public static final ModelLayerLocation SUCCUBUS = layer("succubus");
+    public static final ModelLayerLocation GREATER_DEMON = layer("greater_demon");
 
     private DungeonRenderers() {}
 
@@ -46,6 +57,17 @@ public final class DungeonRenderers {
         event.registerLayerDefinition(MIMIC, MobGeometry::mimic);
         event.registerLayerDefinition(TREANT, MobGeometry::treant);
         event.registerLayerDefinition(BASILISK, MobGeometry::basilisk);
+        event.registerLayerDefinition(GIANT_SPIDER, MobGeometry::giantSpider);
+        event.registerLayerDefinition(MANTIS, MobGeometry::mantis);
+        event.registerLayerDefinition(BEETLE, MobGeometry::beetle);
+        event.registerLayerDefinition(GIANT_WASP, MobGeometry::giantWasp);
+        event.registerLayerDefinition(WEREWOLF, MobGeometry::werewolf);
+        event.registerLayerDefinition(RATMAN, MobGeometry::ratman);
+        event.registerLayerDefinition(LIZARDMAN, MobGeometry::lizardman);
+        event.registerLayerDefinition(GHOUL, MobGeometry::ghoul);
+        event.registerLayerDefinition(IMP, MobGeometry::imp);
+        event.registerLayerDefinition(SUCCUBUS, MobGeometry::succubus);
+        event.registerLayerDefinition(GREATER_DEMON, MobGeometry::greaterDemon);
     }
 
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
@@ -80,5 +102,27 @@ public final class DungeonRenderers {
                 new BipedMobModel<>(c.bakeLayer(TREANT), Style.MELEE), "treant", 0.8F, 1.4F));
         event.registerEntityRenderer(ModEntities.BASILISK.get(), c -> new DungeonMobRenderer<>(c,
                 new QuadMobModel<>(c.bakeLayer(BASILISK)), "basilisk", 0.8F, 1.0F));
+        event.registerEntityRenderer(ModEntities.GIANT_SPIDER.get(), c -> new DungeonMobRenderer<>(c,
+                new QuadMobModel<>(c.bakeLayer(GIANT_SPIDER), true), "giant_spider", 0.9F, 1.0F));
+        event.registerEntityRenderer(ModEntities.MANTIS.get(), c -> new DungeonMobRenderer<>(c,
+                new QuadMobModel<>(c.bakeLayer(MANTIS)), "mantis", 0.6F, 1.0F));
+        event.registerEntityRenderer(ModEntities.BEETLE.get(), c -> new DungeonMobRenderer<>(c,
+                new QuadMobModel<>(c.bakeLayer(BEETLE)), "beetle", 0.8F, 1.0F));
+        event.registerEntityRenderer(ModEntities.GIANT_WASP.get(), c -> new DungeonMobRenderer<>(c,
+                new QuadMobModel<>(c.bakeLayer(GIANT_WASP)), "giant_wasp", 0.5F, 1.0F));
+        event.registerEntityRenderer(ModEntities.WEREWOLF.get(), c -> new DungeonMobRenderer<>(c,
+                new BipedMobModel<>(c.bakeLayer(WEREWOLF), Style.MELEE), "werewolf", 0.6F, 1.1F));
+        event.registerEntityRenderer(ModEntities.RATMAN.get(), c -> new DungeonMobRenderer<>(c,
+                new BipedMobModel<>(c.bakeLayer(RATMAN), Style.MELEE), "ratman", 0.4F, 1.0F));
+        event.registerEntityRenderer(ModEntities.LIZARDMAN.get(), c -> new DungeonMobRenderer<>(c,
+                new BipedMobModel<>(c.bakeLayer(LIZARDMAN), Style.MELEE), "lizardman", 0.5F, 1.0F));
+        event.registerEntityRenderer(ModEntities.GHOUL.get(), c -> new DungeonMobRenderer<>(c,
+                new BipedMobModel<>(c.bakeLayer(GHOUL), Style.MELEE), "ghoul", 0.5F, 1.05F));
+        event.registerEntityRenderer(ModEntities.IMP.get(), c -> new DungeonMobRenderer<>(c,
+                new BipedMobModel<>(c.bakeLayer(IMP), Style.CASTER), "imp", 0.3F, 0.85F));
+        event.registerEntityRenderer(ModEntities.SUCCUBUS.get(), c -> new DungeonMobRenderer<>(c,
+                new BipedMobModel<>(c.bakeLayer(SUCCUBUS), Style.MELEE), "succubus", 0.5F, 1.0F));
+        event.registerEntityRenderer(ModEntities.GREATER_DEMON.get(), c -> new DungeonMobRenderer<>(c,
+                new BipedMobModel<>(c.bakeLayer(GREATER_DEMON), Style.MELEE), "greater_demon", 1.2F, 1.7F));
     }
 }

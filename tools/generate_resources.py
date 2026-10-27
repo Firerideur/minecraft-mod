@@ -181,7 +181,8 @@ def generate_textures_and_models():
         item_model(weapon, "item/handheld")
     for egg in ("skeleton_king", "corrupted_archmage", "adamantite_golem", "goblin", "goblin_shaman", "steelfang_wolf",
                 "ice_elf", "ant_soldier", "high_orc", "demon_knight", "troll", "minotaur", "gargoyle", "lich", "naga",
-                "mimic", "treant", "basilisk"):
+                "mimic", "treant", "basilisk", "giant_spider", "mantis", "beetle", "giant_wasp", "werewolf", "ratman",
+                "lizardman", "ghoul", "imp", "succubus", "greater_demon"):
         write_json(ASSETS / "models" / "item" / f"{egg}_spawn_egg.json", {"parent": "minecraft:item/template_spawn_egg"})
 
 
@@ -199,6 +200,12 @@ def generate_dimension():
         "generator": {"type": "minecraft:flat", "settings": {
             "biome": "minecraft:the_void", "layers": [], "lakes": False, "features": False, "structure_overrides": []}},
     })
+
+
+def generate_entity_tags():
+    """Undead monsters take extra damage from holy skills and Smite."""
+    write_json(DATA / "minecraft" / "tags" / "entity_type" / "undead.json",
+               {"replace": False, "values": ["arcanequest:lich", "arcanequest:ghoul"]})
 
 
 def generate_loot():
@@ -434,4 +441,5 @@ if __name__ == "__main__":
     generate_tags()
     generate_worldgen()
     generate_dimension()
+    generate_entity_tags()
     print("Resources generated in", ROOT)

@@ -55,18 +55,20 @@ Chaque classe a ses propres aptitudes actives, débloquées en montant de niveau
 ### Portes et donjons (style Solo Leveling)
 Des **Portes** s'ouvrent près des joueurs dans l'Overworld (toutes les 5 minutes, 40 % de chance ; un message indique la distance et la direction). Elles sont classées de **1 à 7 étoiles** : plus il y a d'étoiles, plus la porte est rare et dangereuse. Une porte reste ouverte un jour Minecraft.
 
-| Étoiles | Rareté | Donjons possibles (au hasard) | Monstres (niveau) | Maître de la porte |
-|---|---|---|---|---|
-| ★ | 35 % | Grotte des gobelins | Gobelins, chamans (4-9) | Gobelin |
-| ★★ | 25 % | Tanière des crocs-d'acier / Forêt maudite | Gobelins, chamans, loups / tréants (16-21) | Loup croc-d'acier / Tréant |
-| ★★★ | 17 % | Forteresse de glace | Elfes des glaces, loups, trolls (28-33) | Elfe des glaces |
-| ★★★★ | 11 % | Fourmilière géante / Temple englouti | Fourmis soldats, loups / nagas, basilics (40-45) | Fourmi soldat / Naga |
-| ★★★★★ | 7 % | Camp des orcs / Labyrinthe du Minotaure | Orcs, gobelins, trolls / minotaures, trolls, basilics (52-57) | Orc supérieur / Minotaure |
-| ★★★★★★ | 3,5 % | Citadelle noire / Cathédrale des gargouilles | Orcs, chevaliers démons / gargouilles, liches (64-69) | Chevalier démon / Liche |
-| ★★★★★★★ | 1,5 % | Abysse démoniaque | Chevaliers démons, fourmis, orcs, liches, minotaures (76-81) | Chevalier démon |
+| Étoiles | Rareté | Donjons possibles (au hasard) | Maîtres de la porte |
+|---|---|---|---|
+| ★ | 35 % | Grotte des gobelins | Gobelin |
+| ★★ | 25 % | Tanière des crocs-d'acier, Forêt maudite, Repaire des hommes-bêtes | Loup croc-d'acier, Tréant, Loup-garou |
+| ★★★ | 17 % | Forteresse de glace, Nid des araignées, Crypte des goules | Elfe des glaces, Araignée géante, Goule |
+| ★★★★ | 11 % | Fourmilière géante, Temple englouti, Jungle des insectes géants | Fourmi soldat, Naga, Mante géante |
+| ★★★★★ | 7 % | Camp des orcs, Labyrinthe du Minotaure | Orc supérieur, Minotaure |
+| ★★★★★★ | 3,5 % | Citadelle noire, Cathédrale des gargouilles | Chevalier démon, Liche |
+| ★★★★★★★ | 1,5 % | Abysse démoniaque, Trône infernal | Chevalier démon, Démon majeur |
+
+Niveau des monstres : 4-9 (★), 16-21 (★★), 28-33 (★★★), 40-45 (★★★★), 52-57 (★★★★★), 64-69 (★★★★★★), 76-81 (★★★★★★★).
 
 - **Entrer** : marcher dans la porte. Le donjon (salles + couloirs, plus grand avec les étoiles) est dans une dimension à part.
-- **Monstres inédits** (15, modèles et textures propres) :
+- **Monstres inédits** (26, modèles et textures propres) :
   - Gobelin (rapide, en groupe), Chaman gobelin (sorts), Loup croc-d'acier (bondit), Elfe des glaces (flèches qui ralentissent), Fourmi soldat (morsure empoisonnée), Orc supérieur (coups qui projettent), Chevalier démon (lame enflammée) ;
   - **Troll des cavernes** : se régénère sans arrêt… sauf s'il brûle (feu, aptitudes de feu) ;
   - **Minotaure** : baisse les cornes et charge de loin ;
@@ -76,6 +78,17 @@ Des **Portes** s'ouvrent près des joueurs dans l'Overworld (toutes les 5 minute
   - **Mimique** : 30 % des coffres des salles sont des mimiques… elle mord, mais lâche du butin ;
   - **Tréant** : arbre vivant très résistant, ses racines immobilisent ;
   - **Basilic** : morsure empoisonnée, et son regard pétrifie si vous le regardez — détournez les yeux !
+  - **Araignée géante** : grimpe aux murs, tisse des toiles qui immobilisent, morsure empoisonnée ;
+  - **Mante géante** : frappe deux fois avec ses faux ;
+  - **Scarabée blindé** : sa carapace bloque la plupart des coups de face (attaquez-le de dos), sa corne vous projette en l'air ;
+  - **Guêpe géante** : vole, son dard empoisonne ;
+  - **Loup-garou** : bondit, et entre en frénésie (plus rapide et plus fort) quand il est blessé ;
+  - **Homme-rat** : en meute, dague empoisonnée ;
+  - **Homme-lézard** : lance et bouclier (bloque souvent les coups de face) ;
+  - **Goule** : mort-vivant rapide, sa morsure affame et affaiblit, et la soigne ;
+  - **Diablotin** : petit démon qui lance des boules de feu ;
+  - **Succube** : vous charme et vous attire à elle, ses coups volent votre vie ;
+  - **Démon majeur** : aura brûlante, salves de boules de feu, lame enflammée.
 - Les monstres des portes donnent **+50 % d'XP**, le maître de la porte ×3.
 - **Nettoyer la porte** : vaincre le maître dans la dernière salle → bonus d'**XP** pour tous les joueurs du donjon (400 × étoiles², soit 400 pour ★ et 19 600 pour ★★★★★★★), un **coffre au trésor** (diamants, mithril, arcanite, adamantite, une arme forgée du rang de la porte, et plus rare à haut rang) et une sortie. Des coffres plus petits se trouvent aussi dans certaines salles.
 - **Sortir** : la sortie est dans la première salle (et dans la salle du boss une fois nettoyée).

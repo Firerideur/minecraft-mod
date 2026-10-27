@@ -815,6 +815,513 @@ BASILISK_COLORS = {"head": LIZARD, "jaw": mul(LIZARD, 0.9), "crest": (190, 40, 4
                    "spike": (190, 40, 40), "tail": LIZARD, "tail_end": mul(LIZARD, 0.9), "leg": mul(LIZARD, 0.85)}
 
 
+# ===========================================================================
+# Spiders, insects, beastmen, ghouls and demons
+# ===========================================================================
+def legs_sideways(count_per_side, x, y, zs, length, drop, prefix="leg"):
+    """Long legs sticking out sideways and bending to the ground (spiders)."""
+    import math
+    parts = []
+    angle = math.asin(min(0.95, drop / length))
+    i = 0
+    for z in zs:
+        for sign in (-1, 1):
+            px = x * sign
+            o = (px - length, y - 1, z - 1) if sign < 0 else (px, y - 1, z - 1)
+            parts.append(Part(f"{prefix}{i}", (px, y, z), [Cube("leg", o, (length, 2, 2), sign > 0)],
+                              rot=(0, 0, -angle if sign < 0 else angle)))
+            i += 1
+    return parts
+
+
+# --------------------------------------------------------------------------- giant spider
+SPIDER = (54, 44, 40)
+
+
+def spider_parts():
+    legs = legs_sideways(4, 4, 16, (-4, -1.5, 1, 3.5), 14, 8)
+    head = Part("head", (0, 15, -5), [
+        Cube("head", (-4, 12, -12), (8, 6, 7)),
+        Cube("fang", (-2.5, 17, -12.5), (1, 3, 1)),
+        Cube("fang", (1.5, 17, -12.5), (1, 3, 1), True),
+    ])
+    abdomen = Part("tail", (0, 14, 3), [Cube("abdomen", (-6, 9, 3), (12, 10, 14))], rot=(0.2, 0, 0))
+    body = Part("body", (0, 15, 0), [Cube("thorax", (-4, 13, -5), (8, 6, 8))], [head, abdomen] + legs)
+    return Part("base", (0, 0, 0), [], [body])
+
+
+def spider_details(tex, f):
+    if tex == "head" and f.name == "north":
+        for x, y in ((1, 1), (2, 1), (5, 1), (6, 1), (2, 2), (5, 2), (3, 0), (4, 0)):
+            f.put(x, y, (200, 20, 30), rgba((255, 40, 40), 230))
+    if tex == "abdomen":
+        for y in range(f.h):
+            for x in range(f.w):
+                if f.n(x, y, 3) > 0.75:
+                    f.put(x, y, mul(SPIDER, 1.4))
+        if f.name == "up":
+            for y, w in ((3, 1), (4, 2), (5, 3), (6, 2), (7, 1), (8, 2), (9, 3), (10, 2)):
+                for x in range(f.w // 2 - w, f.w // 2 + w):
+                    f.put(x, y, (170, 20, 24), rgba((200, 20, 30), 90))
+    if tex == "leg" and f.side:
+        for x in range(f.w):
+            if x % 4 == 3:
+                f.put(x, 0, mul(SPIDER, 1.5))
+                f.put(x, 1, mul(SPIDER, 1.5))
+    if tex == "fang":
+        f.fill(lambda x, y: (30, 26, 24))
+
+
+SPIDER_COLORS = {"head": SPIDER, "fang": (30, 26, 24), "abdomen": mul(SPIDER, 0.9), "thorax": SPIDER,
+                 "leg": mul(SPIDER, 0.8)}
+
+
+# --------------------------------------------------------------------------- mantis
+MANTIS = (110, 180, 70)
+
+
+def mantis_parts():
+    legs = []
+    for i, (x, z) in enumerate(((-2, 0), (2, 0), (-2, 5), (2, 5))):
+        legs.append(Part(f"leg{i}", (x, 14, z), [Cube("leg", (x - 0.5, 14, z - 0.5), (1, 11, 1), x > 0)],
+                         rot=(0, 0, 0.5 if x < 0 else -0.5)))
+    claws = []
+    for side, sign in (("right", -1), ("left", 1)):
+        x = 2 * sign
+        o1 = (x - 0.5 + sign * 0.5, 6, -9)
+        claws.append(Part(f"{side}_claw", (x, 6, -3), [
+            Cube("claw_arm", (x - 0.5 + 0.5 * sign - 0.5, 6, -9), (1, 2, 6), sign > 0),
+            Cube("claw_blade", (x - 0.5 + 0.5 * sign - 0.5, 8, -9), (1, 6, 1), sign > 0),
+        ]))
+    head = Part("head", (0, 4, -2), [
+        Cube("head", (-3, 0, -5), (6, 4, 4)),
+        Cube("eye", (-3.5, 0.5, -4), (1, 2, 2)),
+        Cube("eye", (2.5, 0.5, -4), (1, 2, 2), True),
+        Cube("antenna", (-1.5, -3, -4), (1, 3, 1)),
+        Cube("antenna", (0.5, -3, -4), (1, 3, 1), True),
+    ])
+    abdomen = Part("tail", (0, 14, 1), [Cube("abdomen", (-3, 12, 1), (6, 5, 12))], rot=(-0.15, 0, 0))
+    body = Part("body", (0, 14, 0), [Cube("thorax", (-2, 4, -3), (4, 11, 4))], [head, abdomen] + claws + legs)
+    return Part("base", (0, 0, 0), [], [body])
+
+
+def mantis_details(tex, f):
+    if tex == "eye":
+        f.fill(lambda x, y: (200, 255, 120))
+        for y in range(f.h):
+            for x in range(f.w):
+                f.glow[y][x] = rgba((180, 255, 100), 200)
+    if tex == "claw_blade" and f.side:
+        for y in range(f.h):
+            f.put(0, y, (230, 240, 200) if y % 2 else mul(MANTIS, 0.6))
+    if tex in ("abdomen", "thorax") and f.side:
+        stripes(f, 3, mul(MANTIS, 0.75))
+
+
+MANTIS_COLORS = {"head": MANTIS, "eye": (200, 255, 120), "antenna": mul(MANTIS, 0.8), "thorax": MANTIS,
+                 "abdomen": mul(MANTIS, 1.1), "claw_arm": MANTIS, "claw_blade": mul(MANTIS, 0.9), "leg": mul(MANTIS, 0.8)}
+
+
+# --------------------------------------------------------------------------- armored beetle
+BEETLE = (34, 40, 70)
+
+
+def beetle_parts():
+    legs = []
+    i = 0
+    for z in (-3, 1, 5):
+        for sign in (-1, 1):
+            x = 5 * sign
+            legs.append(Part(f"leg{i}", (x, 16, z), [Cube("leg", (x - 0.5, 16, z - 0.5), (1, 9, 1), sign > 0)],
+                             rot=(0, 0, 0.6 * -sign)))
+            i += 1
+    head = Part("head", (0, 14, -6), [
+        Cube("head", (-3, 12, -10), (6, 5, 4)),
+        Cube("mandible", (-3, 16, -12), (1, 1, 3)),
+        Cube("mandible", (2, 16, -12), (1, 1, 3), True),
+    ], [Part("horn", (0, 12, -10), [Cube("horn", (-1, 5, -11), (2, 7, 2))], rot=(-0.5, 0, 0))])
+    body = Part("body", (0, 14, 0), [Cube("shell", (-6, 9, -6), (12, 9, 14))], [head] + legs)
+    return Part("base", (0, 0, 0), [], [body])
+
+
+def beetle_details(tex, f):
+    if tex == "shell":
+        f.fill(lambda x, y: mix(BEETLE, (40, 120, 90), 0.5 * f.n(x, y, 2) + 0.2 * (y / max(1, f.h))))
+        if f.name == "up":
+            for y in range(f.h):
+                f.put(f.w // 2, y, (14, 16, 30))
+                f.put(f.w // 2 - 1, y, (14, 16, 30))
+    if tex == "head" and f.name == "north":
+        eyes(f, 1, (0, 5), (255, 160, 40), 200)
+    if tex == "horn":
+        f.fill(lambda x, y: mix((20, 20, 26), (90, 90, 100), 1 - y / max(1, f.h - 1)))
+
+
+BEETLE_COLORS = {"shell": BEETLE, "head": mul(BEETLE, 0.8), "mandible": (20, 20, 26), "horn": (20, 20, 26),
+                 "leg": mul(BEETLE, 0.7)}
+
+
+# --------------------------------------------------------------------------- giant wasp
+WASP_YELLOW = (240, 190, 40)
+WASP_BLACK = (30, 26, 22)
+
+
+def wasp_parts():
+    legs = []
+    for i, (x, z) in enumerate(((-2, -2), (2, -2), (-2, 0), (2, 0), (-2, 2), (2, 2))):
+        legs.append(Part(f"leg{i}", (x, 15, z), [Cube("leg", (x - 0.5, 15, z - 0.5), (1, 5, 1), x > 0)]))
+    head = Part("head", (0, 12, -3), [Cube("head", (-2.5, 9, -7), (5, 5, 4)),
+                                      Cube("mandible", (-1.5, 13, -8), (3, 1, 1))])
+    abdomen = Part("tail", (0, 12, 2), [Cube("abdomen", (-3, 10, 2), (6, 6, 9)),
+                                        Cube("stinger", (-0.5, 12.5, 11), (1, 1, 3))], rot=(0.3, 0, 0))
+    wings = [Part("right_wing", (-1, 10, -1), [Cube("wing", (-10, 9.5, -2), (9, 1, 5))], rot=(0, 0, 0.2)),
+             Part("left_wing", (1, 10, -1), [Cube("wing", (1, 9.5, -2), (9, 1, 5), True)], rot=(0, 0, -0.2))]
+    body = Part("body", (0, 12, 0), [Cube("thorax", (-2.5, 10, -3), (5, 5, 5))], [head, abdomen] + wings + legs)
+    return Part("base", (0, 0, 0), [], [body])
+
+
+def wasp_details(tex, f):
+    if tex == "abdomen" and f.side:
+        f.fill(lambda x, y: WASP_YELLOW if (y // 2) % 2 == 0 else WASP_BLACK)
+    if tex == "head" and f.name == "north":
+        for x in (0, 1, 3, 4):
+            f.put(x, 1, (200, 30, 20), rgba((255, 40, 30), 220))
+    if tex == "wing":
+        f.fill(lambda x, y: (220, 230, 240, 150) if not f.border(x, y) else (150, 150, 160, 200))
+    if tex == "stinger":
+        f.fill(lambda x, y: (20, 20, 20))
+
+
+WASP_COLORS = {"head": WASP_BLACK, "mandible": (60, 40, 20), "thorax": WASP_BLACK, "abdomen": WASP_YELLOW,
+               "stinger": (20, 20, 20), "wing": (220, 230, 240), "leg": WASP_BLACK}
+
+
+# --------------------------------------------------------------------------- werewolf
+WEREWOLF = (78, 66, 58)
+
+
+def werewolf_parts():
+    root, a = biped((7, 7, 7), (10, 12, 6), (4, 14, 4), (4, 11, 4))
+    head = find(root, "head")
+    ht = a["head_top"]
+    head.cubes += [
+        Cube("snout", (-2, ht + 3, -6.5), (4, 3, 3)),
+        Cube("ear", (-3, ht - 2, -1), (2, 3, 1)),
+        Cube("ear", (1, ht - 2, -1), (2, 3, 1), True),
+    ]
+    body = find(root, "body")
+    body.cubes.append(Cube("mane", (-5.5, a["body_top"] - 1, -3.5), (11, 6, 8)))
+    body.children.append(Part("tail", (0, a["leg_top"] - 2, 3), [Cube("tail", (-1, a["leg_top"] - 3, 3), (2, 2, 9))],
+                              rot=(-0.7, 0, 0)))
+    return root
+
+
+def werewolf_details(tex, f):
+    if tex == "head" and f.name == "north":
+        eyes(f, 3, (1, 5), (255, 220, 40), 240)
+    if tex == "snout" and f.name == "north":
+        f.put(1, 0, (20, 16, 14))
+        f.put(2, 0, (20, 16, 14))
+        for x in range(f.w):
+            f.put(x, f.h - 1, (240, 236, 220) if x % 2 == 0 else (60, 20, 20))
+    if tex == "arm" and f.side:
+        for x in range(f.w):
+            f.put(x, f.h - 1, (230, 226, 210) if x % 2 == 0 else WEREWOLF)
+    if tex in ("body", "mane", "arm", "leg") and f.side:
+        for y in range(f.h):
+            for x in range(f.w):
+                if f.n(x, y, 13) > 0.78:
+                    f.put(x, y, mul(WEREWOLF, 1.35))
+
+
+WEREWOLF_COLORS = {"head": WEREWOLF, "snout": mul(WEREWOLF, 1.1), "ear": mul(WEREWOLF, 0.9), "body": WEREWOLF,
+                   "mane": mul(WEREWOLF, 0.75), "tail": WEREWOLF, "arm": WEREWOLF, "leg": mul(WEREWOLF, 0.9)}
+
+
+# --------------------------------------------------------------------------- rat man
+RAT = (110, 98, 86)
+RAGS = (86, 70, 50)
+
+
+def ratman_parts():
+    root, a = biped((6, 6, 6), (6, 8, 4), (2, 8, 2), (2, 7, 2))
+    head = find(root, "head")
+    ht = a["head_top"]
+    head.cubes += [
+        Cube("snout", (-1.5, ht + 3, -5), (3, 2, 2)),
+        Cube("ear", (-3.5, ht - 1, 0), (2, 2, 1)),
+        Cube("ear", (1.5, ht - 1, 0), (2, 2, 1), True),
+    ]
+    body = find(root, "body")
+    body.children.append(Part("tail", (0, a["leg_top"] - 1, 2), [Cube("tail", (-0.5, a["leg_top"] - 1, 2), (1, 1, 11))],
+                              rot=(-0.3, 0, 0)))
+    right = find(root, "right_arm")
+    hx, hy = -a["arm_x"], a["hand_y"]
+    right.children.append(Part("dagger", (hx, hy, 0), [Cube("dagger", (hx - 0.5, hy - 0.5, -5), (1, 1, 4))]))
+    return root
+
+
+def ratman_details(tex, f):
+    if tex == "head" and f.name == "north":
+        eyes(f, 2, (1, 4), (255, 40, 40), 220)
+    if tex == "snout" and f.name == "north":
+        f.put(1, 0, (230, 140, 150))
+    if tex in ("ear", "tail"):
+        f.fill(lambda x, y: (220, 150, 150))
+    if tex == "body" and f.side:
+        for y in range(f.h):
+            for x in range(f.w):
+                f.put(x, y, mix(RAGS, (60, 50, 36), f.n(x, y)))
+    if tex == "dagger":
+        f.fill(lambda x, y: (150, 110, 80) if f.n(x, y) > 0.5 else (120, 120, 126))
+
+
+RATMAN_COLORS = {"head": RAT, "snout": mul(RAT, 1.1), "ear": (220, 150, 150), "tail": (220, 150, 150), "body": RAGS,
+                 "arm": RAT, "leg": mul(RAT, 0.85), "dagger": (130, 130, 136)}
+
+
+# --------------------------------------------------------------------------- lizardman
+LIZARD_GREEN = (70, 130, 60)
+
+
+def lizardman_parts():
+    root, a = biped((6, 6, 8), (8, 12, 5), (3, 12, 3), (3, 12, 3))
+    head = find(root, "head")
+    ht = a["head_top"]
+    head.cubes.append(Cube("crest", (-0.5, ht - 2, -2), (1, 2, 6)))
+    body = find(root, "body")
+    lt = a["leg_top"]
+    body.children.append(Part("tail", (0, lt - 1, 2.5), [Cube("tail", (-1.5, lt - 2, 2.5), (3, 3, 10))], [
+        Part("tail2", (0, lt - 0.5, 12.5), [Cube("tail_end", (-1, lt - 1, 12.5), (2, 2, 7))])], rot=(-0.35, 0, 0)))
+    right = find(root, "right_arm")
+    hx, hy = -a["arm_x"], a["hand_y"]
+    right.children.append(Part("spear", (hx, hy, 0), [Cube("spear", (hx - 0.5, hy - 0.5, -17), (1, 1, 19)),
+                                                      Cube("spear_tip", (hx - 1, hy - 1, -20), (2, 2, 3))]))
+    left = find(root, "left_arm")
+    ax = a["arm_x"]
+    left.cubes.append(Cube("shield", (ax + 1.5, a["body_top"] + 2, -4), (1, 9, 8)))
+    return root
+
+
+def lizardman_details(tex, f):
+    if tex == "head" and f.name in ("north", "east", "west"):
+        eyes(f, 2, (1, f.w - 2) if f.name == "north" else (2,), (255, 200, 40), 220)
+    if tex in ("body", "arm", "leg", "head", "tail", "tail_end") and f.side:
+        for y in range(f.h):
+            for x in range(f.w):
+                if (x + 2 * y) % 4 == 0:
+                    f.put(x, y, mul(f.get(x, y), 0.8))
+    if tex == "body" and f.name == "north":
+        for y in range(f.h):
+            for x in range(2, f.w - 2):
+                f.put(x, y, (200, 190, 120) if y % 2 else (180, 170, 100))
+    if tex == "crest":
+        f.fill(lambda x, y: (210, 70, 40))
+    if tex == "shield":
+        f.fill(lambda x, y: (120, 84, 50) if not f.border(x, y) else (180, 140, 60))
+        if f.name in ("east",):
+            f.put(f.w // 2, f.h // 2, (200, 60, 40))
+    if tex == "spear_tip":
+        material((190, 150, 70), grain=0.05, gradient=0.4)(f)
+
+
+LIZARDMAN_COLORS = {"head": LIZARD_GREEN, "crest": (210, 70, 40), "body": LIZARD_GREEN, "arm": LIZARD_GREEN,
+                    "leg": mul(LIZARD_GREEN, 0.85), "tail": LIZARD_GREEN, "tail_end": mul(LIZARD_GREEN, 0.9),
+                    "spear": WOOD, "spear_tip": (190, 150, 70), "shield": (120, 84, 50)}
+
+
+# --------------------------------------------------------------------------- ghoul
+GHOUL = (150, 158, 138)
+
+
+def ghoul_parts():
+    root, a = biped((7, 7, 7), (7, 11, 4), (3, 15, 3), (3, 11, 3))
+    head = find(root, "head")
+    ht = a["head_top"]
+    head.cubes.append(Cube("jaw", (-3, ht + 7, -3.5), (6, 2, 5)))
+    body = find(root, "body")
+    body.cubes.append(Cube("rags", (-4, a["leg_top"] - 3, -2.5), (8, 6, 5)))
+    return root
+
+
+def ghoul_details(tex, f):
+    if tex == "head" and f.name == "north":
+        for x, y in ((1, 2), (2, 2), (4, 2), (5, 2), (1, 3), (5, 3)):
+            f.put(x, y, (20, 18, 16))
+        eyes(f, 3, (2, 4), (230, 255, 230), 240)
+        for x in range(1, 6):
+            f.put(x, 5, (90, 20, 20))
+            f.put(x, 6, (240, 236, 220) if x % 2 else (90, 20, 20))
+    if tex == "jaw" and f.name == "north":
+        for x in range(f.w):
+            f.put(x, 0, (240, 236, 220) if x % 2 == 0 else (90, 20, 20))
+    if tex == "body" and f.name == "north":
+        for y in range(1, f.h - 2, 2):
+            for x in range(1, f.w - 1):
+                f.put(x, y, mul(GHOUL, 0.7))
+    if tex == "arm" and f.side:
+        for x in range(f.w):
+            f.put(x, f.h - 1, (40, 36, 30))
+            f.put(x, f.h - 2, (40, 36, 30) if x % 2 else GHOUL)
+    if tex == "rags":
+        f.fill(lambda x, y: mix((70, 60, 50), (50, 44, 36), f.n(x, y)) if not (y == f.h - 1 and x % 2) else CLEAR)
+
+
+GHOUL_COLORS = {"head": GHOUL, "jaw": mul(GHOUL, 0.9), "body": mul(GHOUL, 0.95), "rags": (70, 60, 50), "arm": GHOUL,
+                "leg": mul(GHOUL, 0.9)}
+
+
+# --------------------------------------------------------------------------- imp
+IMP = (190, 50, 40)
+
+
+def imp_parts():
+    root, a = biped((6, 6, 6), (5, 6, 3), (2, 6, 2), (2, 6, 2))
+    head = find(root, "head")
+    ht = a["head_top"]
+    head.cubes += [Cube("horn", (-3, ht - 2, -1), (1, 2, 1)), Cube("horn", (2, ht - 2, -1), (1, 2, 1), True)]
+    body = find(root, "body")
+    bt = a["body_top"]
+    body.children += [
+        Part("right_wing", (-1, bt + 1, 1.5), [Cube("wing", (-7, bt - 1, 1.5), (6, 6, 1))], rot=(0, 0.5, 0)),
+        Part("left_wing", (1, bt + 1, 1.5), [Cube("wing", (1, bt - 1, 1.5), (6, 6, 1), True)], rot=(0, -0.5, 0)),
+        Part("tail", (0, a["leg_top"] - 1, 1.5), [Cube("tail", (-0.5, a["leg_top"] - 1, 1.5), (1, 1, 7))], rot=(-0.4, 0, 0)),
+    ]
+    return root
+
+
+def imp_details(tex, f):
+    if tex == "head" and f.name == "north":
+        eyes(f, 2, (1, 4), (255, 230, 60), 255)
+        for x in range(1, 5):
+            f.put(x, 4, (60, 10, 10) if x % 2 else (240, 230, 210))
+    if tex == "horn":
+        f.fill(lambda x, y: (30, 24, 24))
+    if tex == "wing" and f.side:
+        f.fill(lambda x, y: mix((90, 20, 20), (140, 40, 30), y / max(1, f.h - 1)) if y < f.h - (x % 3) else CLEAR)
+
+
+IMP_COLORS = {"head": IMP, "horn": (30, 24, 24), "body": IMP, "arm": IMP, "leg": mul(IMP, 0.85), "wing": (110, 26, 24),
+              "tail": IMP}
+
+
+# --------------------------------------------------------------------------- succubus
+SUCCUBUS_SKIN = (176, 110, 150)
+LEATHER_DARK = (46, 20, 38)
+
+
+def succubus_parts():
+    root, a = biped((6, 7, 6), (6, 12, 3), (2, 12, 2), (2, 12, 2))
+    head = find(root, "head")
+    ht = a["head_top"]
+    head.cubes.append(Cube("hair", (-3.5, ht - 0.5, 0.5), (7, 11, 3)))
+    head.children += [
+        Part("right_horn", (-2.5, ht + 1, 0), [Cube("horn", (-3.5, ht - 2, -1), (2, 3, 2))], rot=(-0.4, 0, -0.3)),
+        Part("left_horn", (2.5, ht + 1, 0), [Cube("horn", (1.5, ht - 2, -1), (2, 3, 2), True)], rot=(-0.4, 0, 0.3)),
+    ]
+    body = find(root, "body")
+    bt = a["body_top"]
+    body.children += [
+        Part("right_wing", (-1, bt + 1, 1.5), [Cube("wing", (-11, bt - 3, 1.5), (10, 13, 1))], rot=(0, 0.5, 0)),
+        Part("left_wing", (1, bt + 1, 1.5), [Cube("wing", (1, bt - 3, 1.5), (10, 13, 1), True)], rot=(0, -0.5, 0)),
+        Part("tail", (0, a["leg_top"] - 1, 1.5), [Cube("tail", (-0.5, a["leg_top"] - 1, 1.5), (1, 1, 10)),
+                                                    Cube("tail_tip", (-1, a["leg_top"] - 1.5, 11.5), (2, 2, 1))],
+             rot=(-0.3, 0, 0)),
+    ]
+    return root
+
+
+def succubus_details(tex, f):
+    if tex == "head" and f.name == "north":
+        eyes(f, 3, (1, 4), (255, 80, 200), 255)
+        f.put(2, 5, (150, 30, 70))
+        f.put(3, 5, (150, 30, 70))
+    if tex == "body" and f.side:
+        for y in range(f.h):
+            for x in range(f.w):
+                if y < 4 or y > 7:
+                    f.put(x, y, LEATHER_DARK if y > 7 or f.name != "north" or y > 1 else f.get(x, y))
+    if tex == "leg" and f.side:
+        for y in range(4, f.h):
+            for x in range(f.w):
+                f.put(x, y, LEATHER_DARK)
+    if tex == "wing" and f.side:
+        f.fill(lambda x, y: mix((60, 20, 50), (110, 30, 80), y / max(1, f.h - 1)) if y < f.h - (x % 4) else CLEAR)
+        for x in range(0, f.w, 3):
+            for y in range(f.h - 3):
+                f.put(x, y, (30, 10, 26))
+    if tex in ("horn",):
+        f.fill(lambda x, y: (30, 20, 30))
+    if tex == "hair":
+        f.fill(lambda x, y: mix((20, 12, 24), (60, 30, 70), f.n(x, y)))
+
+
+SUCCUBUS_COLORS = {"head": SUCCUBUS_SKIN, "hair": (20, 12, 24), "horn": (30, 20, 30), "body": SUCCUBUS_SKIN,
+                   "arm": SUCCUBUS_SKIN, "leg": SUCCUBUS_SKIN, "wing": (90, 26, 70), "tail": SUCCUBUS_SKIN,
+                   "tail_tip": (60, 20, 50)}
+
+
+# --------------------------------------------------------------------------- greater demon
+DEMON_SKIN = (88, 24, 20)
+
+
+def greater_demon_parts():
+    root, a = biped((8, 8, 8), (14, 14, 8), (6, 16, 6), (6, 12, 6))
+    head = find(root, "head")
+    ht = a["head_top"]
+    head.children += [
+        Part("right_horn", (-3.5, ht + 2, 0), [Cube("big_horn", (-5, ht - 6, -1.5), (3, 8, 3))], rot=(-0.3, 0, -0.5)),
+        Part("left_horn", (3.5, ht + 2, 0), [Cube("big_horn", (2, ht - 6, -1.5), (3, 8, 3), True)], rot=(-0.3, 0, 0.5)),
+    ]
+    head.cubes.append(Cube("jaw", (-3.5, ht + 6, -4.5), (7, 3, 2)))
+    body = find(root, "body")
+    bt = a["body_top"]
+    body.children += [
+        Part("right_wing", (-2, bt + 2, 4), [Cube("big_wing", (-20, bt - 6, 4), (18, 22, 1))], rot=(0, 0.45, 0)),
+        Part("left_wing", (2, bt + 2, 4), [Cube("big_wing", (2, bt - 6, 4), (18, 22, 1), True)], rot=(0, -0.45, 0)),
+        Part("tail", (0, a["leg_top"] - 2, 4), [Cube("demon_tail", (-1.5, a["leg_top"] - 3, 4), (3, 3, 14))], rot=(-0.5, 0, 0)),
+    ]
+    right = find(root, "right_arm")
+    hx, hy = -a["arm_x"], a["hand_y"]
+    right.children.append(Part("sword", (hx, hy, 0), [
+        Cube("flame_grip", (hx - 1, hy - 1, -3), (2, 2, 4)),
+        Cube("flame_blade", (hx - 1, hy - 1.5, -24), (2, 3, 21)),
+    ]))
+    return root
+
+
+def greater_demon_details(tex, f):
+    if tex in ("body", "arm", "leg", "head"):
+        for i in range(2):
+            x = int(f.n(i, 4, 9) * f.w)
+            for y in range(f.h):
+                if f.n(x, y, 17) > 0.3:
+                    f.put(x, y, mix(EMBER, (255, 220, 120), 0.3), rgba(EMBER, 200))
+                x = max(0, min(f.w - 1, x + (1 if f.n(y, i, 2) > 0.6 else -1 if f.n(y, i, 2) < 0.3 else 0)))
+    if tex == "head" and f.name == "north":
+        eyes(f, 3, (1, 2, 5, 6), (255, 200, 60), 255)
+    if tex == "jaw" and f.name == "north":
+        for x in range(f.w):
+            f.put(x, 0, (240, 230, 200) if x % 2 == 0 else (40, 10, 10))
+    if tex == "big_horn":
+        f.fill(lambda x, y: mix((20, 18, 18), (130, 120, 110), 1 - y / max(1, f.h - 1)))
+    if tex == "big_wing" and f.side:
+        f.fill(lambda x, y: mix((40, 10, 10), (90, 20, 16), y / max(1, f.h - 1)) if y < f.h - (x % 5) else CLEAR)
+        for x in range(0, f.w, 4):
+            for y in range(f.h - 4):
+                f.put(x, y, (20, 6, 6))
+    if tex == "flame_blade":
+        f.fill(lambda x, y: mix((255, 120, 30), (255, 230, 120), f.n(x, y)))
+        for y in range(f.h):
+            for x in range(f.w):
+                f.glow[y][x] = rgba((255, 140, 40), 230)
+
+
+GREATER_DEMON_COLORS = {"head": DEMON_SKIN, "big_horn": (20, 18, 18), "jaw": mul(DEMON_SKIN, 0.8), "body": DEMON_SKIN,
+                        "arm": DEMON_SKIN, "leg": mul(DEMON_SKIN, 0.85), "big_wing": (60, 14, 12),
+                        "demon_tail": DEMON_SKIN, "flame_grip": (30, 20, 20), "flame_blade": (255, 140, 40)}
+
+
 MOBS = {
     "goblin": ("goblin", lambda: goblin_parts(False), painter(GOBLIN_COLORS, goblin_details(False))),
     "goblin_shaman": ("goblinShaman", lambda: goblin_parts(True), painter(SHAMAN_COLORS, goblin_details(True))),
@@ -831,6 +1338,17 @@ MOBS = {
     "mimic": ("mimic", mimic_parts, painter(MIMIC_COLORS, mimic_details)),
     "treant": ("treant", treant_parts, painter(TREANT_COLORS, treant_details)),
     "basilisk": ("basilisk", basilisk_parts, painter(BASILISK_COLORS, basilisk_details)),
+    "giant_spider": ("giantSpider", spider_parts, painter(SPIDER_COLORS, spider_details)),
+    "mantis": ("mantis", mantis_parts, painter(MANTIS_COLORS, mantis_details)),
+    "beetle": ("beetle", beetle_parts, painter(BEETLE_COLORS, beetle_details)),
+    "giant_wasp": ("giantWasp", wasp_parts, painter(WASP_COLORS, wasp_details)),
+    "werewolf": ("werewolf", werewolf_parts, painter(WEREWOLF_COLORS, werewolf_details)),
+    "ratman": ("ratman", ratman_parts, painter(RATMAN_COLORS, ratman_details)),
+    "lizardman": ("lizardman", lizardman_parts, painter(LIZARDMAN_COLORS, lizardman_details)),
+    "ghoul": ("ghoul", ghoul_parts, painter(GHOUL_COLORS, ghoul_details)),
+    "imp": ("imp", imp_parts, painter(IMP_COLORS, imp_details)),
+    "succubus": ("succubus", succubus_parts, painter(SUCCUBUS_COLORS, succubus_details)),
+    "greater_demon": ("greaterDemon", greater_demon_parts, painter(GREATER_DEMON_COLORS, greater_demon_details)),
 }
 
 

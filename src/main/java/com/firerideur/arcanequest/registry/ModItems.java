@@ -138,6 +138,28 @@ public final class ModItems {
             () -> new ForgeSpawnEggItem(ModEntities.TREANT, 0x5C422A, 0x3E7A34, new Item.Properties()));
     public static final RegistryObject<Item> BASILISK_SPAWN_EGG = register("basilisk_spawn_egg",
             () -> new ForgeSpawnEggItem(ModEntities.BASILISK, 0x345C34, 0xBE2828, new Item.Properties()));
+    public static final RegistryObject<Item> GIANT_SPIDER_SPAWN_EGG = register("giant_spider_spawn_egg",
+            () -> new ForgeSpawnEggItem(ModEntities.GIANT_SPIDER, 0x36302A, 0xC81E28, new Item.Properties()));
+    public static final RegistryObject<Item> MANTIS_SPAWN_EGG = register("mantis_spawn_egg",
+            () -> new ForgeSpawnEggItem(ModEntities.MANTIS, 0x6EB446, 0xC8FF78, new Item.Properties()));
+    public static final RegistryObject<Item> BEETLE_SPAWN_EGG = register("beetle_spawn_egg",
+            () -> new ForgeSpawnEggItem(ModEntities.BEETLE, 0x222846, 0x287860, new Item.Properties()));
+    public static final RegistryObject<Item> GIANT_WASP_SPAWN_EGG = register("giant_wasp_spawn_egg",
+            () -> new ForgeSpawnEggItem(ModEntities.GIANT_WASP, 0xF0BE28, 0x1E1A16, new Item.Properties()));
+    public static final RegistryObject<Item> WEREWOLF_SPAWN_EGG = register("werewolf_spawn_egg",
+            () -> new ForgeSpawnEggItem(ModEntities.WEREWOLF, 0x4E423A, 0xFFDC28, new Item.Properties()));
+    public static final RegistryObject<Item> RATMAN_SPAWN_EGG = register("ratman_spawn_egg",
+            () -> new ForgeSpawnEggItem(ModEntities.RATMAN, 0x6E6256, 0xDC9696, new Item.Properties()));
+    public static final RegistryObject<Item> LIZARDMAN_SPAWN_EGG = register("lizardman_spawn_egg",
+            () -> new ForgeSpawnEggItem(ModEntities.LIZARDMAN, 0x46823C, 0xD24628, new Item.Properties()));
+    public static final RegistryObject<Item> GHOUL_SPAWN_EGG = register("ghoul_spawn_egg",
+            () -> new ForgeSpawnEggItem(ModEntities.GHOUL, 0x969E8A, 0x5A1414, new Item.Properties()));
+    public static final RegistryObject<Item> IMP_SPAWN_EGG = register("imp_spawn_egg",
+            () -> new ForgeSpawnEggItem(ModEntities.IMP, 0xBE3228, 0xFFE63C, new Item.Properties()));
+    public static final RegistryObject<Item> SUCCUBUS_SPAWN_EGG = register("succubus_spawn_egg",
+            () -> new ForgeSpawnEggItem(ModEntities.SUCCUBUS, 0xB06E96, 0x2E1426, new Item.Properties()));
+    public static final RegistryObject<Item> GREATER_DEMON_SPAWN_EGG = register("greater_demon_spawn_egg",
+            () -> new ForgeSpawnEggItem(ModEntities.GREATER_DEMON, 0x58181A, 0xFF8C28, new Item.Properties()));
 
     // Fusion Forge
     public static final RegistryObject<Item> FUSION_CATALYST = simple("fusion_catalyst");

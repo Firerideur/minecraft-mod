@@ -4,6 +4,7 @@ import com.firerideur.arcanequest.ArcaneQuest;
 import com.firerideur.arcanequest.boss.AdamantiteGolem;
 import com.firerideur.arcanequest.boss.CorruptedArchmage;
 import com.firerideur.arcanequest.boss.SkeletonKing;
+import com.firerideur.arcanequest.dungeon.BeastMobs;
 import com.firerideur.arcanequest.dungeon.DungeonMobs;
 import com.firerideur.arcanequest.dungeon.FantasyMobs;
 import com.firerideur.arcanequest.dungeon.GateEntity;
@@ -102,6 +103,51 @@ public final class ModEntities {
             () -> EntityType.Builder.of(FantasyMobs.Basilisk::new, MobCategory.MONSTER)
                     .sized(1.4F, 1.0F).clientTrackingRange(8).build("basilisk"));
 
+    // Spiders, insects, beastmen, ghouls and demons (behind the gates)
+    public static final RegistryObject<EntityType<BeastMobs.GiantSpider>> GIANT_SPIDER = ENTITIES.register("giant_spider",
+            () -> EntityType.Builder.of(BeastMobs.GiantSpider::new, MobCategory.MONSTER)
+                    .sized(1.6F, 0.9F).clientTrackingRange(8).build("giant_spider"));
+
+    public static final RegistryObject<EntityType<BeastMobs.Mantis>> MANTIS = ENTITIES.register("mantis",
+            () -> EntityType.Builder.of(BeastMobs.Mantis::new, MobCategory.MONSTER)
+                    .sized(0.9F, 1.6F).clientTrackingRange(8).build("mantis"));
+
+    public static final RegistryObject<EntityType<BeastMobs.Beetle>> BEETLE = ENTITIES.register("beetle",
+            () -> EntityType.Builder.of(BeastMobs.Beetle::new, MobCategory.MONSTER)
+                    .sized(1.3F, 1.0F).clientTrackingRange(8).build("beetle"));
+
+    public static final RegistryObject<EntityType<BeastMobs.GiantWasp>> GIANT_WASP = ENTITIES.register("giant_wasp",
+            () -> EntityType.Builder.of(BeastMobs.GiantWasp::new, MobCategory.MONSTER)
+                    .sized(0.9F, 0.8F).clientTrackingRange(8).build("giant_wasp"));
+
+    public static final RegistryObject<EntityType<BeastMobs.Werewolf>> WEREWOLF = ENTITIES.register("werewolf",
+            () -> EntityType.Builder.of(BeastMobs.Werewolf::new, MobCategory.MONSTER)
+                    .sized(0.8F, 2.3F).clientTrackingRange(8).build("werewolf"));
+
+    public static final RegistryObject<EntityType<BeastMobs.Ratman>> RATMAN = ENTITIES.register("ratman",
+            () -> EntityType.Builder.of(BeastMobs.Ratman::new, MobCategory.MONSTER)
+                    .sized(0.6F, 1.3F).clientTrackingRange(8).build("ratman"));
+
+    public static final RegistryObject<EntityType<BeastMobs.Lizardman>> LIZARDMAN = ENTITIES.register("lizardman",
+            () -> EntityType.Builder.of(BeastMobs.Lizardman::new, MobCategory.MONSTER)
+                    .sized(0.7F, 2.0F).clientTrackingRange(8).build("lizardman"));
+
+    public static final RegistryObject<EntityType<BeastMobs.Ghoul>> GHOUL = ENTITIES.register("ghoul",
+            () -> EntityType.Builder.of(BeastMobs.Ghoul::new, MobCategory.MONSTER)
+                    .sized(0.7F, 2.1F).clientTrackingRange(8).build("ghoul"));
+
+    public static final RegistryObject<EntityType<BeastMobs.Imp>> IMP = ENTITIES.register("imp",
+            () -> EntityType.Builder.of(BeastMobs.Imp::new, MobCategory.MONSTER)
+                    .sized(0.5F, 0.9F).fireImmune().clientTrackingRange(8).build("imp"));
+
+    public static final RegistryObject<EntityType<BeastMobs.Succubus>> SUCCUBUS = ENTITIES.register("succubus",
+            () -> EntityType.Builder.of(BeastMobs.Succubus::new, MobCategory.MONSTER)
+                    .sized(0.6F, 2.0F).fireImmune().clientTrackingRange(8).build("succubus"));
+
+    public static final RegistryObject<EntityType<BeastMobs.GreaterDemon>> GREATER_DEMON = ENTITIES.register("greater_demon",
+            () -> EntityType.Builder.of(BeastMobs.GreaterDemon::new, MobCategory.MONSTER)
+                    .sized(1.6F, 3.8F).fireImmune().clientTrackingRange(8).build("greater_demon"));
+
     public static final RegistryObject<EntityType<GateEntity>> GATE = ENTITIES.register("gate",
             () -> EntityType.Builder.<GateEntity>of(GateEntity::new, MobCategory.MISC)
                     .sized(2.0F, 3.2F).clientTrackingRange(10).updateInterval(20).build("gate"));
@@ -128,5 +174,16 @@ public final class ModEntities {
         event.put(MIMIC.get(), FantasyMobs.Mimic.createAttributes().build());
         event.put(TREANT.get(), FantasyMobs.Treant.createAttributes().build());
         event.put(BASILISK.get(), FantasyMobs.Basilisk.createAttributes().build());
+        event.put(GIANT_SPIDER.get(), BeastMobs.GiantSpider.createAttributes().build());
+        event.put(MANTIS.get(), BeastMobs.Mantis.createAttributes().build());
+        event.put(BEETLE.get(), BeastMobs.Beetle.createAttributes().build());
+        event.put(GIANT_WASP.get(), BeastMobs.GiantWasp.createAttributes().build());
+        event.put(WEREWOLF.get(), BeastMobs.Werewolf.createAttributes().build());
+        event.put(RATMAN.get(), BeastMobs.Ratman.createAttributes().build());
+        event.put(LIZARDMAN.get(), BeastMobs.Lizardman.createAttributes().build());
+        event.put(GHOUL.get(), BeastMobs.Ghoul.createAttributes().build());
+        event.put(IMP.get(), BeastMobs.Imp.createAttributes().build());
+        event.put(SUCCUBUS.get(), BeastMobs.Succubus.createAttributes().build());
+        event.put(GREATER_DEMON.get(), BeastMobs.GreaterDemon.createAttributes().build());
     }
 }
