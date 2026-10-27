@@ -1,6 +1,7 @@
 package com.firerideur.arcanequest.client;
 
 import com.firerideur.arcanequest.ArcaneQuest;
+import com.firerideur.arcanequest.client.boss.BossRenderers;
 import com.firerideur.arcanequest.network.ModNetwork;
 import com.firerideur.arcanequest.network.OpenCharacterMenuPacket;
 import com.firerideur.arcanequest.registry.ModEntities;
@@ -11,10 +12,7 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.MenuScreens;
-import net.minecraft.client.renderer.entity.EvokerRenderer;
-import net.minecraft.client.renderer.entity.IronGolemRenderer;
 import net.minecraft.client.renderer.entity.ThrownItemRenderer;
-import net.minecraft.client.renderer.entity.WitherSkeletonRenderer;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraftforge.client.event.AddGuiOverlayLayersEvent;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
@@ -42,6 +40,8 @@ public final class ClientSetup {
         modEventBus.addListener(ClientSetup::registerKeys);
         modEventBus.addListener(ClientSetup::registerOverlays);
         modEventBus.addListener(ClientSetup::registerRenderers);
+        modEventBus.addListener(BossRenderers::registerLayers);
+        modEventBus.addListener(BossRenderers::registerRenderers);
         modEventBus.addListener(ClientSetup::clientSetup);
         MinecraftForge.EVENT_BUS.addListener(ClientSetup::onClientTick);
         MinecraftForge.EVENT_BUS.addListener(ClientSetup::onLoggingOut);
@@ -62,9 +62,6 @@ public final class ClientSetup {
 
     private static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(ModEntities.SPELL_PROJECTILE.get(), ThrownItemRenderer::new);
-        event.registerEntityRenderer(ModEntities.SKELETON_KING.get(), WitherSkeletonRenderer::new);
-        event.registerEntityRenderer(ModEntities.CORRUPTED_ARCHMAGE.get(), EvokerRenderer::new);
-        event.registerEntityRenderer(ModEntities.ADAMANTITE_GOLEM.get(), IronGolemRenderer::new);
     }
 
     private static void clientSetup(FMLClientSetupEvent event) {

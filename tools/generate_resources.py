@@ -8,6 +8,7 @@ Translations (lang files) are written by hand and are not touched.
 import json
 from pathlib import Path
 
+import boss_models
 import textures
 
 MODID = "arcanequest"
@@ -157,6 +158,7 @@ BLOCKS = ("mithril_ore", "deepslate_mithril_ore", "mithril_block", "raw_mithril_
 
 def generate_textures_and_models():
     textures.generate(ASSETS)
+    boss_models.generate(ASSETS)
 
     for block in BLOCKS:
         block_assets(block)

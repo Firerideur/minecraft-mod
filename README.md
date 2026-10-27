@@ -8,7 +8,7 @@ Mod RPG pour **Minecraft 1.21.1** (Forge 52.1.20).
 - Tuer des monstres rapporte de l'XP. Plus le monstre est fort (vie, niveau, champion, boss), plus il en donne.
 - Niveau max : 100. Chaque niveau donne **3 points de stats**.
 - Touche **K** : fiche de personnage pour répartir les points et choisir sa classe.
-- En haut à gauche : niveau, barre d'XP et barre de mana.
+- En haut à gauche : médaillon avec le niveau, barres de vie, de mana et d'XP (valeurs affichées, traînée quand on perd de la vie).
 - Tout est conservé à la mort.
 
 | Stat | Effet par point |
@@ -60,9 +60,14 @@ Invoqués en utilisant leur objet sur un bloc.
 
 | Boss | Invocation | Niveau | Capacités | Butin |
 |------|-----------|--------|-----------|-------|
-| **Roi Squelette** (300 PV) | Crâne maudit | 30 | Salves de flèches de Wither, invoque des squelettes, enragé à 50 % | Lame du Roi Squelette (Wither), mithril, arcanite, crâne de wither squelette |
-| **Archimage corrompu** (260 PV) | Grimoire interdit | 45 | Crocs et vex, traits de feu, se téléporte, foudre quand enragé | Bâton de l'Archimage, arcanite, totem d'immortalité |
-| **Golem d'adamantite** (400 PV) | Cœur de golem | 60 | Coups dévastateurs, onde de choc qui projette en l'air, enragé à 50 % | Marteau d'adamantite (onde de choc), adamantite |
+| **Roi Squelette** (300 PV) | Crâne maudit | 30 | Tourbillon d'épée, éruption d'os, salves de flèches de Wither, invoque des squelettes | Lame du Roi Squelette (Wither), mithril, arcanite, crâne de wither squelette |
+| **Archimage corrompu** (260 PV) | Grimoire interdit | 45 | Météore, nova arcanique, traits de feu, crocs et vex, se téléporte, foudre quand enragé | Bâton de l'Archimage, arcanite, totem d'immortalité |
+| **Golem d'adamantite** (400 PV) | Cœur de golem | 60 | Frappe au sol avec onde de choc, charge, coups dévastateurs | Marteau d'adamantite (onde de choc), adamantite |
+
+Chaque boss a son propre modèle 3D, ses textures (avec parties lumineuses) et ses animations. Les attaques spéciales sont **annoncées** (on voit le boss se préparer) pour pouvoir les esquiver :
+- **Roi Squelette** (couronne, cape, épaulières) : lève son épée puis tourne sur lui-même en avançant (reculer) ; plante son épée et des mâchoires d'os jaillissent le long d'une ligne de feu d'âme (s'écarter de la ligne). Enragé : yeux rouges, 3 lignes.
+- **Archimage corrompu** (capuche, bâton, cristaux en orbite, flotte au-dessus du sol) : un cercle de feu marque le sol puis un météore s'écrase dessus (sortir du cercle, 3 météores enragé) ; les cristaux se resserrent puis une nova repousse tout autour (s'éloigner).
+- **Golem d'adamantite** (voûté, cristaux dans le dos, cœur en fusion) : lève les poings puis frappe le sol, une onde de choc avance au sol (sauter par-dessus) ; gratte le sol puis charge en ligne droite (s'écarter), et s'il percute un mur il est **étourdi** et prend +50 % de dégâts.
 
 ### Armes forgées
 5 types d'armes, chacun avec sa mécanique et son animation (1re et 3e personne) :
@@ -78,6 +83,23 @@ Invoqués en utilisant leur objet sur un bloc.
 8 matériaux : fer, acier, diamant, mithril, orichalque, adamantite, arcanium (chaque coup rend 2 mana), acier stellaire.
 
 **Forge d'armes** : plan (non consommé) + lingots (1 à 4 selon l'arme) + poignée (dague, katana, épée longue) ou hampe (lance, faux).
+
+### Marteaux de minage
+Marteaux qui cassent une zone d'un coup (accroupi : un seul bloc), plus lents qu'une pioche :
+
+| Matériau | Zone |
+|----------|------|
+| Fer, acier | 3×3 |
+| Diamant, mithril, orichalque | 5×5 |
+| Adamantite, arcanium | 7×7 |
+| Acier stellaire | 9×9 |
+
+Forge d'armes : plan de marteau + 5 lingots + hampe.
+
+### Interface
+- **K** : menu du personnage (inventaire, artisanat, compétences/stats, carte, paramètres).
+- **Carte** : onglet du menu avec position, biome, dimension, jour et monstres proches. **M** : affiche/masque la mini-carte.
+- Boussole en haut, plaque de la cible (niveau, nom, vie), barres de boss ornées (compactes pour les champions).
 
 ### Fusion de minerais
 **Forge de fusion** : deux ingrédients (dans n'importe quel ordre) + un catalyseur de fusion (4 fusions par catalyseur).
@@ -109,7 +131,7 @@ Prérequis : Java 21.
 python3 tools/generate_resources.py  # régénère textures, modèles, recettes, loots, tags, worldgen
 ```
 
-Les textures sont du pixel art original au style « PvP » (outils 32×32 sombres à reflets colorés), dessiné par `tools/textures.py`. Les traductions sont dans `src/main/resources/assets/arcanequest/lang/` (fr_fr, en_us).
+Les modèles et textures des boss sont décrits dans `tools/boss_models.py`, qui génère les textures et `BossGeometry.java`. Les textures sont du pixel art original au style « PvP » (outils 32×32 sombres à reflets colorés), dessiné par `tools/textures.py`. Les traductions sont dans `src/main/resources/assets/arcanequest/lang/` (fr_fr, en_us).
 
 ### Look « Rose Revamp »
 Si tu as le pack de textures Rose Revamp, `tools/build_rose_pack.py` crée à partir de ta copie un pack de ressources personnel qui donne aux objets du mod le même look :

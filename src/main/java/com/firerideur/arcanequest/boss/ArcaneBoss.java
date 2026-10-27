@@ -5,4 +5,7 @@ public interface ArcaneBoss {
     int getBossLevel();
 
     long getXpReward();
+
+    /** Shared boss state; the client reads the running attack from it to animate the model. */
+    BossCore getCore();
 }

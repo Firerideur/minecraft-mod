@@ -144,4 +144,22 @@ public class ContentGameTests {
                 || king.getItemBySlot(EquipmentSlot.MAINHAND).is(Items.NETHERITE_SWORD), "king weapon");
         helper.succeed();
     }
+
+    @GameTest(template = EMPTY)
+    public static void bossAttackIsSyncedAndEnds(GameTestHelper helper) {
+        AdamantiteGolem golem = helper.spawn(ModEntities.ADAMANTITE_GOLEM.get(), new BlockPos(1, 1, 1));
+        golem.setNoAi(true);
+        var core = golem.getCore();
+        helper.assertTrue(!core.ready(AdamantiteGolem.SLAM), "no attack right after spawn (gap between attacks)");
+        core.startAttack(AdamantiteGolem.SLAM, AdamantiteGolem.SLAM_LENGTH, 140);
+        helper.assertTrue(core.getAttack() == AdamantiteGolem.SLAM, "slam not started");
+        for (int i = 0; i <= AdamantiteGolem.SLAM_LENGTH; i++) {
+            core.tick();
+        }
+        helper.assertTrue(core.getAttack() == 0, "slam did not end");
+        helper.assertTrue(!core.ready(AdamantiteGolem.SLAM), "slam should be on cooldown");
+        golem.setHealth(golem.getMaxHealth() * 0.4F);
+        helper.assertTrue(core.tick() && core.isEnraged(), "phase 2 not reached / not synced");
+        helper.succeed();
+    }
 }
