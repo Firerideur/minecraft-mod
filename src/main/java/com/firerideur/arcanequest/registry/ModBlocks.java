@@ -48,6 +48,11 @@ public final class ModBlocks {
             () -> new WeaponForgeBlock(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).requiresCorrectToolForDrops()
                     .strength(4.0F, 1200.0F).sound(SoundType.ANVIL)));
 
+    /** Magic wall closing a dungeon's boss arena until its monsters are dead (no item: it can't be obtained). */
+    public static final RegistryObject<Block> DUNGEON_SEAL = BLOCKS.register("dungeon_seal",
+            () -> new Block(BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_PURPLE).strength(-1.0F, 3600000.0F)
+                    .noLootTable().lightLevel(state -> 12).sound(SoundType.AMETHYST).isValidSpawn((state, level, pos, type) -> false)));
+
     private ModBlocks() {}
 
     private static RegistryObject<Block> register(String name, Supplier<Block> block) {

@@ -190,7 +190,7 @@ def generate_dimension():
     """The dungeon dimension behind the gates: an empty, dark void where dungeons are built."""
     write_json(DATA / MODID / "dimension_type" / "dungeon.json", {
         "ultrawarm": False, "natural": False, "coordinate_scale": 1.0, "has_skylight": False, "has_ceiling": True,
-        "ambient_light": 0.05, "fixed_time": 18000, "monster_spawn_light_level": 0, "monster_spawn_block_light_limit": 0,
+        "ambient_light": 0.12, "fixed_time": 18000, "monster_spawn_light_level": 0, "monster_spawn_block_light_limit": 0,
         "piglin_safe": False, "bed_works": False, "respawn_anchor_works": False, "has_raids": False,
         "logical_height": 256, "min_y": 0, "height": 256, "infiniburn": "#minecraft:infiniburn_overworld",
         "effects": "minecraft:the_end",
@@ -288,6 +288,33 @@ def generate_tags():
     tag("item", "ingots", ["mithril_ingot", "adamantite_ingot"], namespace="c")
     tag("item", "gems", ["arcanite"], namespace="c")
     tag("entity_type", "bosses", ["skeleton_king", "corrupted_archmage", "adamantite_golem"], namespace="c")
+
+
+def generate_dungeon_seal():
+    """The magic wall closing a boss arena: violet runes swirling on a dark background (animated, 8 frames)."""
+    import math
+    from PIL import Image
+    frames = 8
+    image = Image.new("RGBA", (16, 16 * frames))
+    for f in range(frames):
+        phase = f / frames * 2 * math.pi
+        for y in range(16):
+            for x in range(16):
+                dx, dy = x - 7.5, y - 7.5
+                r = math.hypot(dx, dy)
+                a = math.atan2(dy, dx)
+                swirl = 0.5 + 0.5 * math.sin(a * 3 + r * 0.9 - phase)
+                ring = max(0.0, 1.0 - abs(r - 5.5) / 1.2)
+                rune = 1.0 if (x + y + f) % 7 == 0 and r < 7 else 0.0
+                glow = min(1.0, 0.25 + 0.45 * swirl + 0.6 * ring + 0.5 * rune)
+                image.putpixel((x, y + 16 * f), (int(60 + 170 * glow), int(20 + 60 * glow * glow), int(110 + 145 * glow), 255))
+    out = ASSETS / "textures" / "block"
+    out.mkdir(parents=True, exist_ok=True)
+    image.save(out / "dungeon_seal.png")
+    write_json(out / "dungeon_seal.png.mcmeta", {"animation": {"frametime": 3, "interpolate": True}})
+    write_json(ASSETS / "models" / "block" / "dungeon_seal.json",
+               {"parent": "minecraft:block/cube_all", "textures": {"all": f"{MODID}:block/dungeon_seal"}})
+    write_json(ASSETS / "blockstates" / "dungeon_seal.json", {"variants": {"": {"model": f"{MODID}:block/dungeon_seal"}}})
 
 
 def generate_worldgen():
@@ -504,6 +531,7 @@ def generate_forging():
 if __name__ == "__main__":
     generate_forging()
     generate_textures_and_models()
+    generate_dungeon_seal()
     generate_loot()
     generate_recipes()
     generate_tags()

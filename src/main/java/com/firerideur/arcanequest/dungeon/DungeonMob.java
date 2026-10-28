@@ -41,6 +41,8 @@ public abstract class DungeonMob extends Monster {
     /** Dungeon this mob belongs to, -1 if it was summoned elsewhere. */
     private int dungeonId = -1;
     private boolean gateBoss;
+    /** Counts toward the dungeon's kill objective (not mimics hidden as chests, nor the boss's guards). */
+    private boolean required;
     private ServerBossEvent bossEvent;
 
     protected DungeonMob(EntityType<? extends Monster> type, Level level) {
@@ -135,6 +137,14 @@ public abstract class DungeonMob extends Monster {
         return dungeonId;
     }
 
+    public boolean isRequired() {
+        return required;
+    }
+
+    public void setRequired(boolean required) {
+        this.required = required;
+    }
+
     public boolean isGateBoss() {
         return gateBoss;
     }
@@ -161,6 +171,8 @@ public abstract class DungeonMob extends Monster {
     private void createBossEvent() {
         if (bossEvent == null) {
             bossEvent = new ServerBossEvent(getDisplayName(), BossEvent.BossBarColor.RED, BossEvent.BossBarOverlay.NOTCHED_6);
+            // A gate boss waits behind its seal (see customServerAiStep)
+            bossEvent.setVisible(dungeonId < 0);
         }
     }
 
@@ -169,6 +181,10 @@ public abstract class DungeonMob extends Monster {
         super.customServerAiStep();
         if (bossEvent != null) {
             bossEvent.setProgress(getHealth() / getMaxHealth());
+            if (tickCount % 20 == 0 && level() instanceof ServerLevel level) {
+                // Hidden behind its seal: the bar shows once the arena opens
+                bossEvent.setVisible(!Gates.isSealed(level, dungeonId));
+            }
         }
     }
 
@@ -191,8 +207,12 @@ public abstract class DungeonMob extends Monster {
     @Override
     public void die(DamageSource source) {
         super.die(source);
-        if (gateBoss && level() instanceof ServerLevel level && dungeonId >= 0) {
-            Gates.onBossDefeated(level, dungeonId, blockPosition());
+        if (level() instanceof ServerLevel level && dungeonId >= 0) {
+            if (gateBoss) {
+                Gates.onBossDefeated(level, dungeonId, blockPosition());
+            } else if (required) {
+                Gates.onMonsterKilled(level, dungeonId);
+            }
         }
     }
 
@@ -206,6 +226,7 @@ public abstract class DungeonMob extends Monster {
         super.addAdditionalSaveData(tag);
         tag.putInt("Dungeon", dungeonId);
         tag.putBoolean("GateBoss", gateBoss);
+        tag.putBoolean("Required", required);
         tag.putBoolean("Dormant", isDormant());
     }
 
@@ -214,6 +235,7 @@ public abstract class DungeonMob extends Monster {
         super.readAdditionalSaveData(tag);
         dungeonId = tag.contains("Dungeon") ? tag.getInt("Dungeon") : -1;
         gateBoss = tag.getBoolean("GateBoss");
+        required = tag.getBoolean("Required");
         setDormant(tag.getBoolean("Dormant"));
         if (gateBoss) {
             createBossEvent();

@@ -5,18 +5,26 @@ import com.firerideur.arcanequest.registry.ModEntities;
 import com.firerideur.arcanequest.stats.StatsEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
+import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
+import net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.BossEvent;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -25,6 +33,13 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * Gates, Solo Leveling style: they open near players from time to time, ranked from 1 to 7 stars
@@ -40,6 +55,13 @@ public final class Gates {
     private static final int SPAWN_INTERVAL = 6000;
     private static final float SPAWN_CHANCE = 0.4F;
     private static final String RETURN_TAG = "arcanequest_gate_return";
+    /** When this many monsters are left, they glow through walls so the last ones can be found. */
+    private static final int REVEAL_BELOW = 3;
+
+    /** The objective bar of each dungeon someone is in (rebuilt as needed, not saved). */
+    private static final Map<Integer, ServerBossEvent> OBJECTIVES = new HashMap<>();
+    /** Players who already saw the boss's title, per dungeon. */
+    private static final Map<Integer, Set<UUID>> MET_BOSS = new HashMap<>();
 
     private Gates() {}
 
@@ -87,6 +109,11 @@ public final class Gates {
         return gate;
     }
 
+    public static boolean isSealed(ServerLevel level, int dungeonId) {
+        DungeonData.Dungeon dungeon = DungeonData.get(level.getServer()).get(dungeonId);
+        return dungeon != null && dungeon.sealed;
+    }
+
     public static boolean isCleared(ServerLevel level, int dungeonId) {
         DungeonData.Dungeon dungeon = DungeonData.get(level.getServer()).get(dungeonId);
         return dungeon != null && dungeon.cleared;
@@ -124,6 +151,135 @@ public final class Gates {
                 .append(theme.displayName().copy().withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)));
         player.sendSystemMessage(Component.translatable("message.arcanequest.gate_entered", recommendedLevel(dungeon.stars))
                 .withStyle(ChatFormatting.GRAY));
+        title(player, theme.displayName().copy().withStyle(ChatFormatting.GOLD),
+                Component.translatable("dungeon.arcanequest.enter_subtitle", stars(dungeon.stars)));
+    }
+
+    /** A big title in the middle of the screen, like the system messages of Solo Leveling. */
+    private static void title(ServerPlayer player, Component title, Component subtitle) {
+        player.connection.send(new ClientboundSetTitlesAnimationPacket(10, 60, 20));
+        player.connection.send(new ClientboundSetSubtitleTextPacket(subtitle));
+        player.connection.send(new ClientboundSetTitleTextPacket(title));
+    }
+
+    /** A monster of the dungeon died: when the last one falls, the seal of the boss arena breaks. */
+    static void onMonsterKilled(ServerLevel level, int dungeonId) {
+        DungeonData data = DungeonData.get(level.getServer());
+        DungeonData.Dungeon dungeon = data.get(dungeonId);
+        if (dungeon == null || dungeon.cleared) {
+            return;
+        }
+        dungeon.killed++;
+        data.setDirty();
+        List<ServerPlayer> inside = playersIn(level, dungeon);
+        int left = dungeon.required - dungeon.killed;
+        if (left == REVEAL_BELOW) {
+            for (ServerPlayer player : inside) {
+                player.displayClientMessage(Component.translatable("message.arcanequest.monsters_left", left)
+                        .withStyle(ChatFormatting.LIGHT_PURPLE), true);
+            }
+        }
+        if (left <= 0 && dungeon.sealed) {
+            DungeonGenerator.breakSeal(level, dungeon);
+            Vec3 middle = Vec3.atCenterOf(dungeon.sealMin).add(Vec3.atCenterOf(dungeon.sealMax)).scale(0.5);
+            level.sendParticles(ParticleTypes.REVERSE_PORTAL, middle.x, middle.y, middle.z, 200, 3, 4, 3, 0.1);
+            level.playSound(null, BlockPos.containing(middle), SoundEvents.WITHER_SPAWN, SoundSource.HOSTILE, 1.0F, 0.7F);
+            for (ServerPlayer player : inside) {
+                player.sendSystemMessage(Component.translatable("message.arcanequest.seal_broken")
+                        .withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.BOLD));
+                level.playSound(null, player.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.0F, 0.6F);
+            }
+        }
+    }
+
+    private static AABB area(DungeonData.Dungeon dungeon) {
+        return new AABB(dungeon.origin()).inflate(DungeonData.SPACING / 2.0, 64, DungeonData.SPACING / 2.0);
+    }
+
+    private static List<ServerPlayer> playersIn(ServerLevel level, DungeonData.Dungeon dungeon) {
+        return level.getEntitiesOfClass(ServerPlayer.class, area(dungeon));
+    }
+
+    /**
+     * Twice a second in the dungeon dimension: the objective bar of each player's dungeon, the boss's title when a
+     * player steps into the arena, and the last monsters revealed.
+     */
+    @SubscribeEvent
+    public static void onServerTick(TickEvent.ServerTickEvent.Post event) {
+        if (event.getServer().getTickCount() % 10 != 0) {
+            return;
+        }
+        ServerLevel level = event.getServer().getLevel(DUNGEON);
+        DungeonData data = DungeonData.get(event.getServer());
+        Map<ServerPlayer, Integer> where = new HashMap<>();
+        if (level != null) {
+            for (ServerPlayer player : level.players()) {
+                DungeonData.Dungeon dungeon = data.at(player.getX());
+                if (dungeon != null) {
+                    where.put(player, dungeon.id);
+                    ServerBossEvent bar = OBJECTIVES.computeIfAbsent(dungeon.id, id -> new ServerBossEvent(Component.empty(),
+                            BossEvent.BossBarColor.PURPLE, BossEvent.BossBarOverlay.NOTCHED_10));
+                    updateObjective(bar, dungeon);
+                    bar.addPlayer(player);
+                    meetBoss(level, player, dungeon);
+                }
+            }
+            if (event.getServer().getTickCount() % 100 == 0) {
+                revealLastMonsters(level, data, where);
+            }
+        }
+        // Players who left a dungeon lose its bar
+        OBJECTIVES.entrySet().removeIf(entry -> {
+            for (ServerPlayer player : List.copyOf(entry.getValue().getPlayers())) {
+                if (!entry.getKey().equals(where.get(player))) {
+                    entry.getValue().removePlayer(player);
+                }
+            }
+            return entry.getValue().getPlayers().isEmpty();
+        });
+    }
+
+    private static void updateObjective(ServerBossEvent bar, DungeonData.Dungeon dungeon) {
+        if (dungeon.cleared) {
+            bar.setName(Component.translatable("dungeon.arcanequest.objective_done").withStyle(ChatFormatting.GREEN));
+            bar.setColor(BossEvent.BossBarColor.GREEN);
+            bar.setProgress(1.0F);
+        } else if (dungeon.sealed) {
+            bar.setName(Component.translatable("dungeon.arcanequest.objective", Math.min(dungeon.killed, dungeon.required), dungeon.required));
+            bar.setColor(BossEvent.BossBarColor.PURPLE);
+            bar.setProgress(dungeon.required == 0 ? 1.0F : Mth.clamp(dungeon.killed / (float) dungeon.required, 0, 1));
+        } else {
+            bar.setName(Component.translatable("dungeon.arcanequest.objective_boss").withStyle(ChatFormatting.RED));
+            bar.setColor(BossEvent.BossBarColor.RED);
+            bar.setProgress(1.0F);
+        }
+    }
+
+    /** The boss's name as a title the first time a player comes into its arena. */
+    private static void meetBoss(ServerLevel level, ServerPlayer player, DungeonData.Dungeon dungeon) {
+        if (dungeon.cleared || dungeon.sealed || dungeon.arenaRadius == 0
+                || player.blockPosition().distSqr(dungeon.bossRoom) > (double) dungeon.arenaRadius * dungeon.arenaRadius
+                || !MET_BOSS.computeIfAbsent(dungeon.id, id -> new HashSet<>()).add(player.getUUID())) {
+            return;
+        }
+        level.getEntitiesOfClass(DungeonMob.class, new AABB(dungeon.bossRoom).inflate(dungeon.arenaRadius + 8))
+                .stream().filter(DungeonMob::isGateBoss).findFirst().ifPresent(boss -> {
+                    title(player, boss.getDisplayName(), Component.translatable("dungeon.arcanequest.boss_subtitle", stars(dungeon.stars)));
+                    level.playSound(null, player.blockPosition(), SoundEvents.ENDER_DRAGON_GROWL, SoundSource.HOSTILE, 0.8F, 0.8F);
+                });
+    }
+
+    /** When only a few monsters are left, they glow so players can find them. */
+    private static void revealLastMonsters(ServerLevel level, DungeonData data, Map<ServerPlayer, Integer> where) {
+        for (int id : Set.copyOf(where.values())) {
+            DungeonData.Dungeon dungeon = data.get(id);
+            if (dungeon == null || !dungeon.sealed || dungeon.required - dungeon.killed > REVEAL_BELOW) {
+                continue;
+            }
+            for (DungeonMob mob : level.getEntitiesOfClass(DungeonMob.class, area(dungeon), DungeonMob::isRequired)) {
+                mob.addEffect(new MobEffectInstance(MobEffects.GLOWING, 120, 0, false, false));
+            }
+        }
     }
 
     /** Back to where the player entered (or the world spawn). */
@@ -156,12 +312,17 @@ public final class Gates {
         dungeon.cleared = true;
         data.setDirty();
         long xp = Rewards.clearXp(dungeon.stars);
-        AABB area = new AABB(dungeon.origin()).inflate(DungeonData.SPACING / 2.0, 64, DungeonData.SPACING / 2.0);
-        for (ServerPlayer player : level.getEntitiesOfClass(ServerPlayer.class, area)) {
+        if (dungeon.sealed) {
+            DungeonGenerator.breakSeal(level, dungeon);
+        }
+        MET_BOSS.remove(dungeonId);
+        for (ServerPlayer player : playersIn(level, dungeon)) {
             player.sendSystemMessage(Component.translatable("message.arcanequest.gate_clear", stars(dungeon.stars), xp)
                     .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
             StatsEvents.addXp(player, xp);
             level.playSound(null, player.blockPosition(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.0F, 1.0F);
+            title(player, Component.translatable("dungeon.arcanequest.cleared_title").withStyle(ChatFormatting.GOLD),
+                    Component.translatable("dungeon.arcanequest.cleared_subtitle", xp));
         }
         BlockPos room = dungeon.bossRoom;
         DungeonGenerator.chest(level, room.offset(0, 1, 0), Rewards.bossLoot(dungeon.stars, level.random));

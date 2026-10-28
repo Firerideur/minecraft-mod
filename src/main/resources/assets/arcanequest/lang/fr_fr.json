@@ -574,7 +574,7 @@
   "dungeon.arcanequest.black_citadel": "Citadelle noire",
   "dungeon.arcanequest.demon_abyss": "Abysse démoniaque",
   "message.arcanequest.gate_opened": "Une Porte %s s'est ouverte à %s blocs (%s) ! Niveau conseillé : %s",
-  "message.arcanequest.gate_entered": "Niveau des monstres : ~%s. Battez le maître de la porte pour la nettoyer. La sortie est derrière vous.",
+  "message.arcanequest.gate_entered": "Niveau des monstres : ~%s. Éliminez tous les monstres pour briser le sceau de l'arène, puis battez le maître de la porte. La sortie est derrière vous.",
   "message.arcanequest.gate_clear": "Porte %s nettoyée ! +%s XP. Le trésor du donjon est apparu.",
   "message.arcanequest.gate_cleared": "Cette porte a déjà été nettoyée.",
   "command.arcanequest.gate_opened": "Porte %s ouverte",
@@ -639,5 +639,15 @@
   "command.arcanequest.cave_here": "Grottes ici (%2$s) : %1$s",
   "command.arcanequest.cave_nearest": "%s : %s blocs (%s), vers X %s Z %s",
   "command.arcanequest.cave_not_found": "Aucune %s trouvée à proximité",
-  "command.arcanequest.cave_teleported": "%s : téléporté en %s %s %s"
+  "command.arcanequest.cave_teleported": "%s : téléporté en %s %s %s",
+  "block.arcanequest.dungeon_seal": "Sceau du donjon",
+  "dungeon.arcanequest.objective": "Monstres éliminés : %s / %s",
+  "dungeon.arcanequest.objective_boss": "Le sceau est brisé : terrassez le boss !",
+  "dungeon.arcanequest.objective_done": "Donjon nettoyé : la sortie est ouverte",
+  "dungeon.arcanequest.enter_subtitle": "%s · Éliminez tous les monstres pour briser le sceau",
+  "dungeon.arcanequest.boss_subtitle": "Boss du donjon %s",
+  "dungeon.arcanequest.cleared_title": "Donjon nettoyé",
+  "dungeon.arcanequest.cleared_subtitle": "+%s XP · le trésor et la sortie vous attendent",
+  "message.arcanequest.seal_broken": "Le sceau du boss se brise ! L'arène est ouverte.",
+  "message.arcanequest.monsters_left": "Plus que %s monstres : ils sont révélés !"
 }

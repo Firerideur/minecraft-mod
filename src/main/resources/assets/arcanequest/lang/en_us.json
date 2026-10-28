@@ -574,7 +574,7 @@
   "dungeon.arcanequest.black_citadel": "Black Citadel",
   "dungeon.arcanequest.demon_abyss": "Demon Abyss",
   "message.arcanequest.gate_opened": "A %s Gate opened %s blocks away (%s)! Recommended level: %s",
-  "message.arcanequest.gate_entered": "Monster level: ~%s. Defeat the gate master to clear it. The exit is behind you.",
+  "message.arcanequest.gate_entered": "Monster level: ~%s. Slay every monster to break the arena's seal, then defeat the gate master. The way out is behind you.",
   "message.arcanequest.gate_clear": "%s Gate cleared! +%s XP. The dungeon's treasure appeared.",
   "message.arcanequest.gate_cleared": "This gate has already been cleared.",
   "command.arcanequest.gate_opened": "%s Gate opened",
@@ -639,5 +639,15 @@
   "command.arcanequest.cave_here": "Caves here (%2$s): %1$s",
   "command.arcanequest.cave_nearest": "%s: %s blocks (%s), around X %s Z %s",
   "command.arcanequest.cave_not_found": "No %s found nearby",
-  "command.arcanequest.cave_teleported": "%s: teleported to %s %s %s"
+  "command.arcanequest.cave_teleported": "%s: teleported to %s %s %s",
+  "block.arcanequest.dungeon_seal": "Dungeon Seal",
+  "dungeon.arcanequest.objective": "Monsters slain: %s / %s",
+  "dungeon.arcanequest.objective_boss": "The seal is broken: slay the boss!",
+  "dungeon.arcanequest.objective_done": "Dungeon cleared: the way out is open",
+  "dungeon.arcanequest.enter_subtitle": "%s · Slay every monster to break the seal",
+  "dungeon.arcanequest.boss_subtitle": "Dungeon boss %s",
+  "dungeon.arcanequest.cleared_title": "Dungeon cleared",
+  "dungeon.arcanequest.cleared_subtitle": "+%s XP · the treasure and the way out await",
+  "message.arcanequest.seal_broken": "The boss's seal shatters! The arena is open.",
+  "message.arcanequest.monsters_left": "Only %s monsters left: they are revealed!"
 }

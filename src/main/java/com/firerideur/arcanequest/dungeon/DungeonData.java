@@ -29,6 +29,15 @@ public class DungeonData extends SavedData {
         public boolean cleared;
         public BlockPos entry = BlockPos.ZERO;
         public BlockPos bossRoom = BlockPos.ZERO;
+        /** Monsters that must die before the boss arena opens, and how many already did. */
+        public int required;
+        public int killed;
+        /** The seal closing the boss arena (a box of seal blocks), and whether it still stands. */
+        public boolean sealed;
+        public BlockPos sealMin = BlockPos.ZERO;
+        public BlockPos sealMax = BlockPos.ZERO;
+        /** Radius of the boss arena around {@link #bossRoom}. */
+        public int arenaRadius;
 
         Dungeon(int id, int stars, String theme) {
             this.id = id;
@@ -64,6 +73,11 @@ public class DungeonData extends SavedData {
         return dungeons.get(id);
     }
 
+    /** The dungeon whose area contains {@code x} in the dungeon dimension (they are {@link #SPACING} apart). */
+    public Dungeon at(double x) {
+        return dungeons.get((int) Math.round(x / SPACING));
+    }
+
     private static DungeonData load(CompoundTag tag, HolderLookup.Provider registries) {
         DungeonData data = new DungeonData();
         data.nextId = tag.getInt("NextId");
@@ -75,6 +89,12 @@ public class DungeonData extends SavedData {
             dungeon.cleared = d.getBoolean("Cleared");
             dungeon.entry = NbtUtils.readBlockPos(d, "Entry").orElse(BlockPos.ZERO);
             dungeon.bossRoom = NbtUtils.readBlockPos(d, "BossRoom").orElse(BlockPos.ZERO);
+            dungeon.required = d.getInt("Required");
+            dungeon.killed = d.getInt("Killed");
+            dungeon.sealed = d.getBoolean("Sealed");
+            dungeon.sealMin = NbtUtils.readBlockPos(d, "SealMin").orElse(BlockPos.ZERO);
+            dungeon.sealMax = NbtUtils.readBlockPos(d, "SealMax").orElse(BlockPos.ZERO);
+            dungeon.arenaRadius = d.getInt("ArenaRadius");
             data.dungeons.put(dungeon.id, dungeon);
         }
         return data;
@@ -93,6 +113,12 @@ public class DungeonData extends SavedData {
             d.putBoolean("Cleared", dungeon.cleared);
             d.put("Entry", NbtUtils.writeBlockPos(dungeon.entry));
             d.put("BossRoom", NbtUtils.writeBlockPos(dungeon.bossRoom));
+            d.putInt("Required", dungeon.required);
+            d.putInt("Killed", dungeon.killed);
+            d.putBoolean("Sealed", dungeon.sealed);
+            d.put("SealMin", NbtUtils.writeBlockPos(dungeon.sealMin));
+            d.put("SealMax", NbtUtils.writeBlockPos(dungeon.sealMax));
+            d.putInt("ArenaRadius", dungeon.arenaRadius);
             list.add(d);
         }
         tag.put("Dungeons", list);

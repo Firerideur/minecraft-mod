@@ -10,6 +10,7 @@ import com.firerideur.arcanequest.dungeon.FantasyMobs;
 import com.firerideur.arcanequest.dungeon.GateEntity;
 import com.firerideur.arcanequest.dungeon.Gates;
 import com.firerideur.arcanequest.mobs.MobLevels;
+import com.firerideur.arcanequest.registry.ModBlocks;
 import com.firerideur.arcanequest.registry.ModEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
@@ -71,6 +72,37 @@ public class DungeonGameTests {
         helper.runAfterDelay(5, () -> {
             helper.assertTrue(dungeon.cleared, "killing the boss should clear the dungeon");
             helper.assertTrue(dungeonLevel.getBlockState(dungeon.bossRoom.above()).is(Blocks.CHEST), "a treasure chest should appear");
+            dungeonLevel.getEntitiesOfClass(DungeonMob.class, area).forEach(DungeonMob::discard);
+            dungeonLevel.getEntitiesOfClass(GateEntity.class, area).forEach(GateEntity::discard);
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = EMPTY, timeoutTicks = 300)
+    public static void sealBreaksWhenEveryMonsterIsDead(GameTestHelper helper) {
+        ServerLevel dimension = helper.getLevel().getServer().getLevel(Gates.DUNGEON);
+        ServerLevel dungeonLevel = dimension != null ? dimension : helper.getLevel();
+        DungeonData.Dungeon dungeon = DungeonData.get(helper.getLevel().getServer()).create(2, DungeonTheme.WOLF_DEN);
+        DungeonGenerator.generate(dungeonLevel, dungeon, RandomSource.create(11));
+        helper.assertTrue(dungeon.sealed, "the boss arena should start sealed");
+        helper.assertTrue(BlockPos.betweenClosedStream(dungeon.sealMin, dungeon.sealMax)
+                .anyMatch(pos -> dungeonLevel.getBlockState(pos).is(ModBlocks.DUNGEON_SEAL.get())), "seal blocks expected");
+
+        AABB area = new AABB(dungeon.origin()).inflate(DungeonData.SPACING / 2.0, 64, DungeonData.SPACING / 2.0);
+        List<DungeonMob> required = dungeonLevel.getEntitiesOfClass(DungeonMob.class, area, DungeonMob::isRequired);
+        helper.assertTrue(required.size() == dungeon.required && dungeon.required > 0,
+                "every required monster should be counted: " + required.size() + " vs " + dungeon.required);
+        helper.assertTrue(required.stream().noneMatch(DungeonMob::isGateBoss), "the boss isn't part of the objective");
+        // All but one: still sealed
+        for (int i = 1; i < required.size(); i++) {
+            required.get(i).kill();
+        }
+        helper.assertTrue(dungeon.sealed, "one monster left: the seal should hold");
+        required.get(0).kill();
+        helper.runAfterDelay(2, () -> {
+            helper.assertFalse(dungeon.sealed, "the seal should break when the last monster dies");
+            helper.assertTrue(BlockPos.betweenClosedStream(dungeon.sealMin, dungeon.sealMax)
+                    .noneMatch(pos -> dungeonLevel.getBlockState(pos).is(ModBlocks.DUNGEON_SEAL.get())), "no seal block should remain");
             dungeonLevel.getEntitiesOfClass(DungeonMob.class, area).forEach(DungeonMob::discard);
             dungeonLevel.getEntitiesOfClass(GateEntity.class, area).forEach(GateEntity::discard);
             helper.succeed();

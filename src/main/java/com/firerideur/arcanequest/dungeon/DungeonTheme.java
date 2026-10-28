@@ -1,5 +1,6 @@
 package com.firerideur.arcanequest.dungeon;
 
+import com.firerideur.arcanequest.dungeon.DungeonScenes.Scene;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.EntityType;
@@ -109,6 +110,99 @@ public enum DungeonTheme {
     /** A random inhabitant (the list repeats common ones). */
     public EntityType<? extends DungeonMob> randomMob(RandomSource random) {
         return mobs.get(random.nextInt(mobs.size())).get();
+    }
+
+    /** The scenes the zones of this dungeon are made of (an abandoned village, a war camp...). */
+    public List<DungeonScenes.Scene> scenes() {
+        return switch (this) {
+            case GOBLIN_CAVE -> List.of(Scene.CAMP, Scene.VILLAGE, Scene.RUINS);
+            case WOLF_DEN -> List.of(Scene.GROVE, Scene.VILLAGE, Scene.RUINS);
+            case BEAST_LAIR -> List.of(Scene.CAMP, Scene.NEST, Scene.VILLAGE);
+            case CURSED_FOREST -> List.of(Scene.GROVE, Scene.VILLAGE, Scene.CRYPT);
+            case ICE_FORTRESS -> List.of(Scene.ICE_SPIKES, Scene.RUINS, Scene.VILLAGE);
+            case SPIDER_NEST -> List.of(Scene.NEST, Scene.RUINS, Scene.VILLAGE);
+            case GHOUL_CRYPT -> List.of(Scene.CRYPT, Scene.RUINS, Scene.VILLAGE);
+            case ANT_NEST -> List.of(Scene.NEST, Scene.RUINS);
+            case INSECT_JUNGLE -> List.of(Scene.GROVE, Scene.NEST, Scene.RUINS);
+            case SUNKEN_TEMPLE -> List.of(Scene.SHRINE, Scene.RUINS);
+            case ORC_CAMP -> List.of(Scene.CAMP, Scene.VILLAGE, Scene.RUINS);
+            case LABYRINTH -> List.of(Scene.RUINS, Scene.SHRINE, Scene.CRYPT);
+            case BLACK_CITADEL -> List.of(Scene.RUINS, Scene.CAMP, Scene.CRYPT);
+            case GARGOYLE_CATHEDRAL -> List.of(Scene.SHRINE, Scene.CRYPT, Scene.RUINS);
+            case DEMON_ABYSS -> List.of(Scene.HELLSCAPE, Scene.RUINS);
+            case INFERNAL_THRONE -> List.of(Scene.HELLSCAPE, Scene.SHRINE);
+        };
+    }
+
+    /** Natural ground and rock of the landscape (the theme's own blocks are kept for what was built). */
+    record Terrain(Block ground, Block groundAccent, Block rock, Block rockAccent) {}
+
+    Terrain terrain() {
+        return switch (this) {
+            case GOBLIN_CAVE -> new Terrain(Blocks.COARSE_DIRT, Blocks.GRAVEL, Blocks.STONE, Blocks.ANDESITE);
+            case WOLF_DEN -> new Terrain(Blocks.GRASS_BLOCK, Blocks.PODZOL, Blocks.STONE, Blocks.MOSSY_COBBLESTONE);
+            case BEAST_LAIR -> new Terrain(Blocks.COARSE_DIRT, Blocks.ROOTED_DIRT, Blocks.STONE, Blocks.GRANITE);
+            case CURSED_FOREST -> new Terrain(Blocks.PODZOL, Blocks.MOSS_BLOCK, Blocks.TUFF, Blocks.MOSSY_COBBLESTONE);
+            case ICE_FORTRESS -> new Terrain(Blocks.SNOW_BLOCK, Blocks.PACKED_ICE, Blocks.PACKED_ICE, Blocks.SNOW_BLOCK);
+            case SPIDER_NEST -> new Terrain(Blocks.COARSE_DIRT, Blocks.GRAVEL, Blocks.TUFF, Blocks.DEEPSLATE);
+            case GHOUL_CRYPT -> new Terrain(Blocks.SOUL_SOIL, Blocks.COARSE_DIRT, Blocks.DEEPSLATE, Blocks.COBBLED_DEEPSLATE);
+            case ANT_NEST -> new Terrain(Blocks.PACKED_MUD, Blocks.ROOTED_DIRT, Blocks.DRIPSTONE_BLOCK, Blocks.PACKED_MUD);
+            case INSECT_JUNGLE -> new Terrain(Blocks.GRASS_BLOCK, Blocks.MOSS_BLOCK, Blocks.STONE, Blocks.MOSSY_COBBLESTONE);
+            case SUNKEN_TEMPLE -> new Terrain(Blocks.SAND, Blocks.CLAY, Blocks.STONE, Blocks.PRISMARINE);
+            case ORC_CAMP -> new Terrain(Blocks.COARSE_DIRT, Blocks.ROOTED_DIRT, Blocks.STONE, Blocks.GRANITE);
+            case LABYRINTH -> new Terrain(Blocks.GRAVEL, Blocks.COBBLESTONE, Blocks.STONE, Blocks.ANDESITE);
+            case BLACK_CITADEL -> new Terrain(Blocks.BLACKSTONE, Blocks.BASALT, Blocks.BLACKSTONE, Blocks.BASALT);
+            case GARGOYLE_CATHEDRAL -> new Terrain(Blocks.COBBLED_DEEPSLATE, Blocks.DEEPSLATE, Blocks.DEEPSLATE, Blocks.TUFF);
+            case DEMON_ABYSS -> new Terrain(Blocks.NETHERRACK, Blocks.SOUL_SOIL, Blocks.NETHERRACK, Blocks.BASALT);
+            case INFERNAL_THRONE -> new Terrain(Blocks.NETHERRACK, Blocks.CRIMSON_NYLIUM, Blocks.BLACKSTONE, Blocks.NETHERRACK);
+        };
+    }
+
+    /** Demon lands: lava instead of water. */
+    boolean hellish() {
+        return this == DEMON_ABYSS || this == INFERNAL_THRONE;
+    }
+
+    /** Under an open (dark) sky instead of a rock ceiling. */
+    public boolean open() {
+        return switch (this) {
+            case WOLF_DEN, CURSED_FOREST, ICE_FORTRESS, INSECT_JUNGLE, ORC_CAMP, DEMON_ABYSS, INFERNAL_THRONE -> true;
+            default -> false;
+        };
+    }
+
+    DungeonScenes.Wood wood() {
+        return switch (this) {
+            case ICE_FORTRESS, GOBLIN_CAVE, BEAST_LAIR, ORC_CAMP -> DungeonScenes.Wood.SPRUCE;
+            case WOLF_DEN, CURSED_FOREST, GHOUL_CRYPT, SPIDER_NEST, BLACK_CITADEL, GARGOYLE_CATHEDRAL -> DungeonScenes.Wood.DARK_OAK;
+            case INSECT_JUNGLE, ANT_NEST, SUNKEN_TEMPLE -> DungeonScenes.Wood.JUNGLE;
+            case DEMON_ABYSS, INFERNAL_THRONE -> DungeonScenes.Wood.CRIMSON;
+            default -> DungeonScenes.Wood.OAK;
+        };
+    }
+
+    Block leaves() {
+        return switch (this) {
+            case INSECT_JUNGLE -> Blocks.JUNGLE_LEAVES;
+            case WOLF_DEN, ICE_FORTRESS -> Blocks.SPRUCE_LEAVES;
+            default -> Blocks.DARK_OAK_LEAVES;
+        };
+    }
+
+    Block tentCloth() {
+        return switch (this) {
+            case ORC_CAMP, BLACK_CITADEL -> Blocks.RED_WOOL;
+            case BEAST_LAIR -> Blocks.BROWN_WOOL;
+            default -> Blocks.GREEN_WOOL;
+        };
+    }
+
+    /** Braziers of the boss arena: soul fire for the undead and the cold, normal fire otherwise. */
+    boolean soulFire() {
+        return switch (this) {
+            case GHOUL_CRYPT, GARGOYLE_CATHEDRAL, ICE_FORTRESS, CURSED_FOREST, SPIDER_NEST -> true;
+            default -> false;
+        };
     }
 
     public Component displayName() {

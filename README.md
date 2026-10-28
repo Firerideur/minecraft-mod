@@ -137,7 +137,15 @@ Des **Portes** s'ouvrent près des joueurs dans l'Overworld (toutes les 5 minute
 
 Niveau des monstres : 4-9 (★), 16-21 (★★), 28-33 (★★★), 40-45 (★★★★), 52-57 (★★★★★), 64-69 (★★★★★★), 76-81 (★★★★★★★).
 
-- **Entrer** : marcher dans la porte. Le donjon (salles + couloirs, plus grand avec les étoiles) est dans une dimension à part.
+- **Entrer** : marcher dans la porte. Le donjon est un **monde à part** : un paysage fermé par des falaises (sous une voûte de roche, ou à ciel ouvert sous un ciel noir), fait de zones reliées par des chemins, plus long avec les étoiles. Chaque zone raconte quelque chose :
+  - **Village abandonné** : maisons en ruine aux toits effondrés autour d'un puits, lanternes, foin, tonneaux ;
+  - **Ruines** : piliers brisés, arche encore debout, colonne effondrée, éboulis ;
+  - **Camp de guerre** : tentes, feu de camp et bancs, palissade de pieux ornée de crânes ;
+  - **Bosquet** : arbres sombres, rochers moussus, champignons, fougères ;
+  - **Cimetière** : rangées de tombes, fosses ouvertes, mausolée, lanternes des âmes ;
+  - **Nid** : monticules de terre, couvées d'œufs, toiles, ossements ;
+  - **Pics de glace**, **Temple** (allée de piliers, autel, bassins) et **Terres infernales** (lave, feu, pics de basalte).
+  Le décor dépend du donjon (camp et village pillé pour les gobelins, bosquet et village pour la forêt maudite, cimetière pour la crypte des goules…).
 - **Monstres inédits** (26, modèles et textures propres) :
   - Gobelin (rapide, en groupe), Chaman gobelin (sorts), Loup croc-d'acier (bondit), Elfe des glaces (flèches qui ralentissent), Fourmi soldat (morsure empoisonnée), Orc supérieur (coups qui projettent), Chevalier démon (lame enflammée) ;
   - **Troll des cavernes** : se régénère sans arrêt… sauf s'il brûle (feu, aptitudes de feu) ;
@@ -160,8 +168,10 @@ Niveau des monstres : 4-9 (★), 16-21 (★★), 28-33 (★★★), 40-45 (★�
   - **Succube** : vous charme et vous attire à elle, ses coups volent votre vie ;
   - **Démon majeur** : aura brûlante, salves de boules de feu, lame enflammée.
 - Les monstres des portes donnent **+50 % d'XP**, le maître de la porte ×3.
-- **Nettoyer la porte** : vaincre le maître dans la dernière salle → bonus d'**XP** pour tous les joueurs du donjon (400 × étoiles², soit 400 pour ★ et 19 600 pour ★★★★★★★), un **coffre au trésor** (diamants, mithril, arcanite, adamantite, une arme forgée du rang de la porte, et plus rare à haut rang) et une sortie. Des coffres plus petits se trouvent aussi dans certaines salles.
-- **Sortir** : la sortie est dans la première salle (et dans la salle du boss une fois nettoyée).
+- **Objectif** (barre en haut de l'écran) : **éliminer tous les monstres** du donjon (« Monstres éliminés : 12 / 30 »). Les mimiques cachées ne comptent pas. Quand il n'en reste que 3, ils **brillent à travers les murs** pour qu'on les trouve.
+- **Le sceau du boss** : un mur de runes violettes (incassable) ferme l'arène du maître de la porte. Il **se brise quand le dernier monstre tombe** ; en entrant dans l'arène, le nom du boss s'affiche en grand et sa barre de vie apparaît. L'arène est ronde, entourée de piliers et de braseros.
+- **Nettoyer la porte** : vaincre le maître dans l'arène → bonus d'**XP** pour tous les joueurs du donjon (400 × étoiles², soit 400 pour ★ et 19 600 pour ★★★★★★★), un **coffre au trésor** (diamants, mithril, arcanite, adamantite, une arme forgée du rang de la porte, et plus rare à haut rang) et une sortie. Des coffres plus petits se trouvent aussi dans certaines salles.
+- **Sortir** : la sortie est au point d'arrivée (et dans l'arène une fois le boss vaincu).
 - `/aq gate [étoiles]` ouvre une porte devant vous (pour tester).
 
 ### Grottes (style Better Caves)
