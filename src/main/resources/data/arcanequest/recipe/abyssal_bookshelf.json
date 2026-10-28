@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "PCP",
+    "CSC",
+    "PCP"
+  ],
+  "key": {
+    "P": {
+      "item": "minecraft:prismarine_bricks"
+    },
+    "C": {
+      "item": "minecraft:prismarine_crystals"
+    },
+    "S": {
+      "item": "minecraft:bookshelf"
+    }
+  },
+  "result": {
+    "id": "arcanequest:abyssal_bookshelf",
+    "count": 1
+  }
+}

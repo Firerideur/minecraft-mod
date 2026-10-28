@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    " A ",
+    "ASA",
+    " A "
+  ],
+  "key": {
+    "A": {
+      "item": "arcanequest:arcanite"
+    },
+    "S": {
+      "item": "minecraft:bookshelf"
+    }
+  },
+  "result": {
+    "id": "arcanequest:arcanite_bookshelf",
+    "count": 1
+  }
+}

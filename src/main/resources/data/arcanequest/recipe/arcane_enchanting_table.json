@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " A ",
+    "ATA",
+    "OOO"
+  ],
+  "key": {
+    "A": {
+      "item": "arcanequest:arcanite"
+    },
+    "T": {
+      "item": "minecraft:enchanting_table"
+    },
+    "O": {
+      "item": "minecraft:crying_obsidian"
+    }
+  },
+  "result": {
+    "id": "arcanequest:arcane_enchanting_table",
+    "count": 1
+  }
+}

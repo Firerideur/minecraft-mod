@@ -88,6 +88,7 @@ public final class ClientSetup {
             MenuScreens.register(ModMenus.FUSION_FORGE.get(), FusionForgeScreen::new);
             MenuScreens.register(ModMenus.WEAPON_FORGE.get(), WeaponForgeScreen::new);
             MenuScreens.register(ModMenus.CHARACTER.get(), CharacterScreen::new);
+            MenuScreens.register(ModMenus.ARCANE_ENCHANTING.get(), ArcaneEnchantingScreen::new);
         });
     }
 

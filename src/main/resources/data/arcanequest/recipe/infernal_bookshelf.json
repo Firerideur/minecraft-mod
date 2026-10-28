@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "NBN",
+    "BSB",
+    "NBN"
+  ],
+  "key": {
+    "N": {
+      "item": "minecraft:nether_bricks"
+    },
+    "B": {
+      "item": "minecraft:blaze_rod"
+    },
+    "S": {
+      "item": "minecraft:bookshelf"
+    }
+  },
+  "result": {
+    "id": "arcanequest:infernal_bookshelf",
+    "count": 1
+  }
+}

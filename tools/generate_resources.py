@@ -10,6 +10,7 @@ from pathlib import Path
 
 import boss_models
 import dungeon_mobs
+import enchanting
 import enchantments
 import textures
 
@@ -273,7 +274,7 @@ def generate_recipes():
 def generate_tags():
     ores = ["mithril_ore", "deepslate_mithril_ore", "arcanite_ore", "deepslate_arcanite_ore", "adamantite_ore"]
     blocks = ores + ["mithril_block", "raw_mithril_block", "arcanite_block", "adamantite_block", "raw_adamantite_block"]
-    tag("block", "mineable/pickaxe", blocks + ["fusion_forge", "weapon_forge"])
+    tag("block", "mineable/pickaxe", blocks + ["fusion_forge", "weapon_forge", "arcane_enchanting_table"])
     tag("block", "needs_iron_tool", ["mithril_ore", "deepslate_mithril_ore", "arcanite_ore", "deepslate_arcanite_ore",
                                      "mithril_block", "raw_mithril_block", "arcanite_block"])
     tag("block", "needs_diamond_tool", ["adamantite_ore", "adamantite_block", "raw_adamantite_block"])
@@ -337,12 +338,16 @@ def generate_effect_icons():
 
 
 def generate_enchantments():
-    """Enchantments (see enchantments.py); their names and descriptions are merged into the lang files."""
+    """Enchantments (enchantments.py) and the arcane enchanting table (enchanting.py); their texts are merged into the
+    lang files."""
     langs = {}
     for code in ("fr_fr", "en_us"):
         path = ASSETS / "lang" / f"{code}.json"
         langs[code] = (path, json.loads(path.read_text(encoding="utf-8")))
     enchantments.generate(write_json, DATA, langs["fr_fr"][1], langs["en_us"][1])
+    shelves = enchanting.generate(ASSETS, write_json, shaped, loot_self, {code: texts for code, (path, texts) in langs.items()})
+    tag("block", "mineable/axe", shelves)
+    tag("block", "enchantment_power_provider", shelves)
     for path, texts in langs.values():
         path.write_text(json.dumps(texts, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 

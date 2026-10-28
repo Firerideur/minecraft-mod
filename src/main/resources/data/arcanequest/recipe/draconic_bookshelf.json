@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "EDE",
+    "DSD",
+    "EDE"
+  ],
+  "key": {
+    "E": {
+      "item": "minecraft:end_stone_bricks"
+    },
+    "D": {
+      "item": "minecraft:dragon_breath"
+    },
+    "S": {
+      "item": "minecraft:bookshelf"
+    }
+  },
+  "result": {
+    "id": "arcanequest:draconic_bookshelf",
+    "count": 1
+  }
+}

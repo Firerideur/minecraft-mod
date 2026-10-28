@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "arcanequest:block/arcanite_bookshelf_top",
+    "side": "arcanequest:block/arcanite_bookshelf"
+  }
+}

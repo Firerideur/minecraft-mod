@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    " D ",
+    "DSD",
+    " D "
+  ],
+  "key": {
+    "D": {
+      "item": "minecraft:polished_deepslate"
+    },
+    "S": {
+      "item": "minecraft:bookshelf"
+    }
+  },
+  "result": {
+    "id": "arcanequest:reinforced_bookshelf",
+    "count": 1
+  }
+}

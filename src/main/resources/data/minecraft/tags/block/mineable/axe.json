@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    "arcanequest:reinforced_bookshelf",
+    "arcanequest:mithril_bookshelf",
+    "arcanequest:anchored_bookshelf",
+    "arcanequest:infernal_bookshelf",
+    "arcanequest:abyssal_bookshelf",
+    "arcanequest:arcanite_bookshelf",
+    "arcanequest:adamantite_bookshelf",
+    "arcanequest:draconic_bookshelf"
+  ]
+}

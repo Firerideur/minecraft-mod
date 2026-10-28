@@ -1,6 +1,9 @@
 package com.firerideur.arcanequest.registry;
 
 import com.firerideur.arcanequest.ArcaneQuest;
+import com.firerideur.arcanequest.enchant.ArcaneBookshelfBlock;
+import com.firerideur.arcanequest.enchant.ArcaneEnchanting;
+import com.firerideur.arcanequest.enchant.ArcaneEnchantingTableBlock;
 import com.firerideur.arcanequest.forge.WeaponForgeBlock;
 import com.firerideur.arcanequest.fusion.FusionForgeBlock;
 import net.minecraft.util.valueproviders.UniformInt;
@@ -48,6 +51,19 @@ public final class ModBlocks {
             () -> new WeaponForgeBlock(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).requiresCorrectToolForDrops()
                     .strength(4.0F, 1200.0F).sound(SoundType.ANVIL)));
 
+    // Arcane enchanting: the table and bookshelves with enchanting stats (power, max power, chaos, arcana)
+    public static final RegistryObject<Block> ARCANE_ENCHANTING_TABLE = register("arcane_enchanting_table",
+            () -> new ArcaneEnchantingTableBlock(BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_PURPLE)
+                    .requiresCorrectToolForDrops().strength(5.0F, 1200.0F).lightLevel(state -> 9).sound(SoundType.AMETHYST)));
+    public static final RegistryObject<Block> REINFORCED_BOOKSHELF = shelf("reinforced_bookshelf", 1.5F, 20, 3, 0, SoundType.DEEPSLATE_BRICKS);
+    public static final RegistryObject<Block> MITHRIL_BOOKSHELF = shelf("mithril_bookshelf", 2.0F, 25, 0, 4, SoundType.METAL);
+    public static final RegistryObject<Block> ANCHORED_BOOKSHELF = shelf("anchored_bookshelf", 1.0F, 30, -12, 0, SoundType.STONE);
+    public static final RegistryObject<Block> INFERNAL_BOOKSHELF = shelf("infernal_bookshelf", 2.5F, 30, 8, 0, SoundType.NETHER_BRICKS);
+    public static final RegistryObject<Block> ABYSSAL_BOOKSHELF = shelf("abyssal_bookshelf", 2.5F, 30, 0, 6, SoundType.STONE);
+    public static final RegistryObject<Block> ARCANITE_BOOKSHELF = shelf("arcanite_bookshelf", 3.0F, 35, 2, 8, SoundType.AMETHYST);
+    public static final RegistryObject<Block> ADAMANTITE_BOOKSHELF = shelf("adamantite_bookshelf", 4.0F, 40, 4, 4, SoundType.METAL);
+    public static final RegistryObject<Block> DRACONIC_BOOKSHELF = shelf("draconic_bookshelf", 5.0F, 50, 5, 12, SoundType.STONE);
+
     /** Magic wall closing a dungeon's boss arena until its monsters are dead (no item: it can't be obtained). */
     public static final RegistryObject<Block> DUNGEON_SEAL = BLOCKS.register("dungeon_seal",
             () -> new Block(BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_PURPLE).strength(-1.0F, 3600000.0F)
@@ -59,6 +75,11 @@ public final class ModBlocks {
         RegistryObject<Block> object = BLOCKS.register(name, block);
         ModItems.registerBlockItem(name, object);
         return object;
+    }
+
+    private static RegistryObject<Block> shelf(String name, float power, float maxPower, float chaos, float arcana, SoundType sound) {
+        return register(name, () -> new ArcaneBookshelfBlock(new ArcaneEnchanting.ShelfStats(power, maxPower, chaos, arcana),
+                BlockBehaviour.Properties.of().mapColor(MapColor.WOOD).strength(2.0F).sound(sound)));
     }
 
     private static BlockBehaviour.Properties oreProps(MapColor color, float strength, SoundType sound) {

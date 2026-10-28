@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/enchanting_table",
+  "textures": {
+    "particle": "arcanequest:block/arcane_enchanting_table_bottom",
+    "bottom": "arcanequest:block/arcane_enchanting_table_bottom",
+    "top": "arcanequest:block/arcane_enchanting_table_top",
+    "side": "arcanequest:block/arcane_enchanting_table_side"
+  }
+}
