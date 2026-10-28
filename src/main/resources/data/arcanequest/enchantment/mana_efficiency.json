@@ -1,0 +1,21 @@
+{
+  "description": {
+    "translate": "enchantment.arcanequest.mana_efficiency"
+  },
+  "supported_items": "#arcanequest:enchantable/staff",
+  "primary_items": "#arcanequest:enchantable/staff",
+  "weight": 3,
+  "max_level": 3,
+  "min_cost": {
+    "base": 5,
+    "per_level_above_first": 10
+  },
+  "max_cost": {
+    "base": 55,
+    "per_level_above_first": 10
+  },
+  "anvil_cost": 2,
+  "slots": [
+    "mainhand"
+  ]
+}

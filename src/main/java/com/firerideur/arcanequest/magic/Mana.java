@@ -1,5 +1,6 @@
 package com.firerideur.arcanequest.magic;
 
+import com.firerideur.arcanequest.enchant.ModEnchantments;
 import com.firerideur.arcanequest.registry.ModArmorMaterials;
 import com.firerideur.arcanequest.stats.PlayerStats;
 import com.firerideur.arcanequest.stats.Stat;
@@ -12,18 +13,22 @@ public final class Mana {
     public static final float BASE_MANA = 20.0F;
     public static final float MANA_PER_INTELLIGENCE = 5.0F;
     public static final float MANA_PER_ARCANITE_PIECE = 15.0F;
+    /** Per level of Arcane Mind on the helmet (it also regenerates mana 15% faster per level). */
+    public static final float MANA_PER_ARCANE_MIND = 10.0F;
 
     private Mana() {}
 
     public static float max(Player player, PlayerStats stats) {
         float max = BASE_MANA + MANA_PER_INTELLIGENCE * stats.get(Stat.INTELLIGENCE)
-                + MANA_PER_ARCANITE_PIECE * arcanitePieces(player);
+                + MANA_PER_ARCANITE_PIECE * arcanitePieces(player)
+                + MANA_PER_ARCANE_MIND * ModEnchantments.level(player, ModEnchantments.ARCANE_MIND);
         return max * stats.getPlayerClass().bonuses().mana();
     }
 
     /** Mana regenerated each tick: 1/s at base, +0.1/s per intelligence, +0.25/s per arcanite piece. */
     public static float regenPerTick(Player player, PlayerStats stats) {
-        float perSecond = 1.0F + 0.1F * stats.get(Stat.INTELLIGENCE) + 0.25F * arcanitePieces(player);
+        float perSecond = (1.0F + 0.1F * stats.get(Stat.INTELLIGENCE) + 0.25F * arcanitePieces(player))
+                * (1.0F + 0.15F * ModEnchantments.level(player, ModEnchantments.ARCANE_MIND));
         return perSecond * stats.getPlayerClass().bonuses().mana() / 20.0F;
     }
 

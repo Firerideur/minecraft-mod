@@ -41,7 +41,7 @@ public enum Skill {
 
     // ---------------------------------------------------------------- rogue skills
     MUTILATION("mutilation", () -> Items.SHEARS, 8, 10, false, SkillActions::mutilation),
-    SHADOW_STEP("shadow_step", () -> Items.ENDER_PEARL, 10, 15, false, SkillActions::shadowStep),
+    SHADOW_STEP("shadow_step", () -> Items.ENDER_PEARL, 10, 15, true, SkillActions::shadowStep),
     STEALTH("stealth", () -> Items.PHANTOM_MEMBRANE, 20, 15, false, SkillActions::stealth),
     DAGGER_RUSH("dagger_rush", () -> Items.POINTED_DRIPSTONE, 12, 15, false, SkillActions::daggerRush),
     SMOKE_BOMB("smoke_bomb", () -> Items.GUNPOWDER, 20, 15, false, SkillActions::smokeBomb),
@@ -94,6 +94,15 @@ public enum Skill {
     SHADOW_EXCHANGE("shadow_exchange", () -> Items.CHORUS_FRUIT, 10, 15, true, SkillActions::shadowExchange),
     RULERS_AUTHORITY("rulers_authority", () -> Items.SHULKER_SHELL, 12, 20, true, SkillActions::rulersAuthority),
     DRAGONS_FEAR("dragons_fear", () -> Items.DRAGON_HEAD, 40, 30, true, SkillActions::dragonsFear),
+
+    // ---------------------------------------------------------------- spells of the martial classes
+    // Every hunter in Solo Leveling wields some mana: each line has one spell among its first three skills,
+    // cheap enough (at most the base mana) for a class without Intelligence.
+    BLOOD_AURA("blood_aura", () -> Items.CRIMSON_ROOTS, 18, 15, true, SkillActions::bloodAura),
+    EARTH_SPIKES("earth_spikes", () -> Items.DRIPSTONE_BLOCK, 10, 12, true, SkillActions::earthSpikes),
+    WIND_GUARD("wind_guard", () -> Items.FEATHER, 16, 12, true, SkillActions::windGuard),
+    FROST_ARROW("frost_arrow", () -> Items.SNOWBALL, 8, 10, true, SkillActions::frostArrow),
+    MEDITATION("meditation", () -> Items.LILY_OF_THE_VALLEY, 25, 10, true, SkillActions::meditation),
 
     // ---------------------------------------------------------------- ultimates (level 100)
     CATACLYSM("cataclysm", () -> Items.HEAVY_CORE, 90, 20, false, SkillActions::cataclysm),

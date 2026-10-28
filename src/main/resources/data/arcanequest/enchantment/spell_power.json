@@ -1,0 +1,21 @@
+{
+  "description": {
+    "translate": "enchantment.arcanequest.spell_power"
+  },
+  "supported_items": "#arcanequest:enchantable/staff",
+  "primary_items": "#arcanequest:enchantable/staff",
+  "weight": 5,
+  "max_level": 5,
+  "min_cost": {
+    "base": 1,
+    "per_level_above_first": 10
+  },
+  "max_cost": {
+    "base": 51,
+    "per_level_above_first": 10
+  },
+  "anvil_cost": 1,
+  "slots": [
+    "mainhand"
+  ]
+}

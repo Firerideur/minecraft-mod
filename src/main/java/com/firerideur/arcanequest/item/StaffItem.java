@@ -1,5 +1,6 @@
 package com.firerideur.arcanequest.item;
 
+import com.firerideur.arcanequest.enchant.ModEnchantments;
 import com.firerideur.arcanequest.magic.Spell;
 import com.firerideur.arcanequest.magic.SpellCaster;
 import net.minecraft.ChatFormatting;
@@ -29,6 +30,12 @@ public class StaffItem extends Item {
         return spell;
     }
 
+    /** Staffs can be enchanted like a good tool (Spell Power, Mana Efficiency, Quick Cast...). */
+    @Override
+    public int getEnchantmentValue() {
+        return 15;
+    }
+
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
@@ -36,7 +43,8 @@ public class StaffItem extends Item {
             if (!SpellCaster.tryCast(serverPlayer, spell)) {
                 return InteractionResultHolder.fail(stack);
             }
-            player.getCooldowns().addCooldown(this, spell.cooldownTicks());
+            int quickCast = ModEnchantments.level(level, stack, ModEnchantments.QUICK_CAST);
+            player.getCooldowns().addCooldown(this, Math.round(spell.cooldownTicks() * (1.0F - 0.15F * quickCast)));
             stack.hurtAndBreak(1, player, LivingEntity.getSlotForHand(hand));
         }
         player.swing(hand);

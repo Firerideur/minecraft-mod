@@ -1,0 +1,33 @@
+{
+  "replace": false,
+  "values": [
+    "arcanequest:lifesteal",
+    "arcanequest:executioner",
+    "arcanequest:critical",
+    "arcanequest:giant_slayer",
+    "arcanequest:bleeding",
+    "arcanequest:thunderstrike",
+    "arcanequest:cleave",
+    "arcanequest:soul_harvest",
+    "arcanequest:frostbite",
+    "arcanequest:venom",
+    "arcanequest:vein_miner",
+    "arcanequest:timber",
+    "arcanequest:autosmelt",
+    "arcanequest:telekinesis",
+    "arcanequest:wisdom",
+    "arcanequest:vitality",
+    "arcanequest:swiftness",
+    "arcanequest:leaping",
+    "arcanequest:arcane_mind",
+    "arcanequest:rejuvenation",
+    "arcanequest:evasion",
+    "arcanequest:night_sight",
+    "arcanequest:blazing_thorns",
+    "arcanequest:explosive_arrows",
+    "arcanequest:sniper",
+    "arcanequest:spell_power",
+    "arcanequest:mana_efficiency",
+    "arcanequest:quick_cast"
+  ]
+}

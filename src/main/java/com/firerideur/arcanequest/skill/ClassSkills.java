@@ -32,12 +32,13 @@ public final class ClassSkills {
     private static final Map<PlayerClass, List<Skill>> OWN = new EnumMap<>(PlayerClass.class);
 
     static {
+        // Every line has a spell among its first three skills, so its awakenings keep some magic.
         // Fighter line: Bloodlust (fear) as Sung Jinwoo, Go Gunhee's fists, a headsman's axe
-        own(PlayerClass.BERSERKER, WHIRLWIND, WAR_CRY, BLOOD_FRENZY, BLOODLUST, GROUND_SLAM);
+        own(PlayerClass.BERSERKER, WHIRLWIND, WAR_CRY, BLOOD_AURA, BLOODLUST, GROUND_SLAM);
         own(PlayerClass.WARLORD, BLOODLUST, BERSERK, CATACLYSM);
         own(PlayerClass.EXECUTIONER, EXECUTE, REAPING_CLEAVE, DEATH_SENTENCE);
         // Tank line: Thomas Andre's Goliath, runic barriers
-        own(PlayerClass.GUARDIAN, TAUNT, SHIELD_BASH, SHIELD_WALL, GROUND_SLAM, IRON_SKIN);
+        own(PlayerClass.GUARDIAN, TAUNT, SHIELD_BASH, EARTH_SPIKES, SHIELD_WALL, IRON_SKIN);
         own(PlayerClass.FORTRESS, BULWARK, EARTHQUAKE, GOLIATH);
         own(PlayerClass.RUNE_GUARDIAN, MANA_SHIELD, RUNIC_WARD, AEGIS);
         // Assassin line: Sung Jinwoo's dagger skills before his Job Change
@@ -53,11 +54,11 @@ public final class ClassSkills {
         own(PlayerClass.CRUSADER, HOLY_BANNER, WHIRLWIND, CRUSADE);
         own(PlayerClass.HOLY_KNIGHT, DIVINE_SHIELD, SANCTUARY, RULERS_LIGHT);
         // Duelist line: Cha Hae-In's Sword Dance, Liu Zhigang's sword
-        own(PlayerClass.DUELIST, CHARGE, PARRY, FLURRY, SWORD_DANCE, BLADE_DANCE);
+        own(PlayerClass.DUELIST, CHARGE, PARRY, WIND_GUARD, SWORD_DANCE, FLURRY);
         own(PlayerClass.WEAPON_MASTER, BLADE_DANCE, SWORD_WAVE, HEAVEN_SPLITTER);
         own(PlayerClass.WINDBLADE, SWORD_DANCE, TORNADO, TEMPEST_DANCE);
         // Ranger line: Rakan, Monarch of Fangs, for the hunter
-        own(PlayerClass.RANGER, MULTISHOT, TRAP, PIERCING_SHOT, EVASIVE_SHOT, ARROW_RAIN);
+        own(PlayerClass.RANGER, MULTISHOT, TRAP, FROST_ARROW, PIERCING_SHOT, ARROW_RAIN);
         own(PlayerClass.SNIPER, DEADEYE, EXPLOSIVE_ARROW, HEAVENS_ARROW);
         own(PlayerClass.HUNTER, SUMMON_WOLVES, HUNTERS_MARK, RAKANS_HOWL);
         // Spellblade line: Baran's lightning daggers, demonic pacts
@@ -73,7 +74,7 @@ public final class ClassSkills {
         own(PlayerClass.CHRONOMANCER, TIME_STOP, REWIND, TEMPORAL_COLLAPSE);
         own(PlayerClass.BATTLEMAGE, RUNE_BLADE, METEOR_STRIKE, ARCANE_AVATAR);
         // Monk line: Baek Yoonho's beast form, the shadow Iron
-        own(PlayerClass.MONK, FLURRY, CHARGE, IRON_SKIN, PALM_STRIKE, TORNADO);
+        own(PlayerClass.MONK, FLURRY, CHARGE, MEDITATION, PALM_STRIKE, TORNADO);
         own(PlayerClass.GRANDMASTER, PALM_STRIKE, EARTHQUAKE, BEAST_FORM);
         own(PlayerClass.IRON_MONK, TAUNT, SHIELD_WALL, ADAMANTINE_BODY);
         // Necromancer line: the class Sung Jinwoo was offered at his Job Change, Yogumunt's plague

@@ -59,6 +59,7 @@ public final class ClientSetup {
         MinecraftForge.EVENT_BUS.addListener(ClientSetup::onClientTick);
         MinecraftForge.EVENT_BUS.addListener(ClientSetup::onLoggingOut);
         MinecraftForge.EVENT_BUS.addListener(BossBars::onBossBar);
+        MinecraftForge.EVENT_BUS.addListener(EnchantmentTooltips::onTooltip);
     }
 
     private static void registerKeys(RegisterKeyMappingsEvent event) {

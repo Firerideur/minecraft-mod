@@ -102,6 +102,25 @@ public class SkillGameTests {
     }
 
     @GameTest(template = EMPTY)
+    public static void everyClassHasMagic(GameTestHelper helper) {
+        // A spell among the first three skills: awakened classes keep it
+        for (PlayerClass playerClass : PlayerClass.values()) {
+            if (playerClass == PlayerClass.NONE) {
+                continue;
+            }
+            List<Skill> skills = ClassSkills.skillsOf(playerClass);
+            helper.assertTrue(skills.subList(0, ClassSkills.INHERITED).stream().anyMatch(Skill::isMagic),
+                    playerClass + " has no spell in its first skills");
+        }
+        // Spells of classes without Intelligence must fit in the base mana
+        for (Skill skill : List.of(Skill.BLOOD_AURA, Skill.EARTH_SPIKES, Skill.WIND_GUARD, Skill.FROST_ARROW, Skill.MEDITATION,
+                Skill.SHADOW_STEP)) {
+            helper.assertTrue(skill.manaCost() <= Mana.BASE_MANA, skill + " costs too much for a class without Intelligence");
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = EMPTY)
     public static void physicalSkillsFitWithoutIntelligence(GameTestHelper helper) {
         // Without Intelligence a player has the base mana: physical skills must stay usable
         for (Skill skill : Skill.values()) {

@@ -1,5 +1,6 @@
 package com.firerideur.arcanequest.stats;
 
+import com.firerideur.arcanequest.enchant.EnchantmentEvents;
 import com.firerideur.arcanequest.ArcaneQuest;
 import com.firerideur.arcanequest.command.ArcaneQuestCommand;
 import com.firerideur.arcanequest.mobs.MobLevels;
@@ -74,7 +75,7 @@ public final class StatsEvents {
             return;
         }
         if (event.getSource().getEntity() instanceof ServerPlayer player) {
-            addXp(player, MobLevels.xpForKill(victim));
+            addXp(player, Math.round(MobLevels.xpForKill(victim) * EnchantmentEvents.wisdomBonus(player)));
         } else if (event.getSource().getEntity() instanceof ShadowSoldier shadow && shadow.getOwner() instanceof ServerPlayer owner) {
             // Shadows fight for their master: the experience is theirs
             addXp(owner, MobLevels.xpForKill(victim));

@@ -1,5 +1,6 @@
 package com.firerideur.arcanequest.skill;
 
+import com.firerideur.arcanequest.enchant.EnchantmentEvents;
 import com.firerideur.arcanequest.network.ModNetwork;
 import com.firerideur.arcanequest.network.SkillCooldownPacket;
 import com.firerideur.arcanequest.shadow.Corpses;
@@ -20,6 +21,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
@@ -46,7 +48,7 @@ public final class SkillRuntime {
     /** Temporary effects some skills give, checked when the player hits or gets hit. */
     public enum Buff {
         LIFESTEAL, POISON_BLADE, RUNE_BLADE, PARRY, DEADEYE, BERSERK, DOMAIN, STEALTH, AEGIS, CRUSADE, TEMPEST, PACT,
-        GRACE, AVATAR, ADAMANT, PLAGUE
+        GRACE, AVATAR, ADAMANT, PLAGUE, WIND_GUARD
     }
 
     /** Shadows of a player under Monarch's Domain deal this much more damage (+50%, as in Solo Leveling). */
@@ -96,12 +98,15 @@ public final class SkillRuntime {
             return false;
         }
         boolean free = player.getAbilities().instabuild;
-        float cost = skill.manaCost() * stats.getPlayerClass().bonuses().manaCost();
+        float cost = skill.manaCost() * stats.getPlayerClass().bonuses().manaCost()
+                * (skill.isMagic() ? EnchantmentEvents.manaCostBonus(player) : 1.0F);
         if (!free && stats.getMana() < cost) {
             player.displayClientMessage(Component.translatable("message.arcanequest.no_mana").withStyle(ChatFormatting.BLUE), true);
             return false;
         }
-        SkillContext context = new SkillContext(player, stats, player.serverLevel(), skill, power(stats, skill));
+        // A staff's Spell Power also strengthens the spells of the class
+        float power = power(stats, skill) * (skill.isMagic() ? EnchantmentEvents.spellPowerBonus(player) : 1.0F);
+        SkillContext context = new SkillContext(player, stats, player.serverLevel(), skill, power);
         if (!skill.run(context)) {
             return false;
         }
@@ -320,6 +325,14 @@ public final class SkillRuntime {
             // Tempest Dance: half of the attacks miss
             event.setCanceled(true);
             player.serverLevel().sendParticles(ParticleTypes.CLOUD, player.getX(), player.getY(1.0), player.getZ(), 6, 0.3, 0.4, 0.3, 0.02);
+            return;
+        }
+        if (buff(player, Buff.WIND_GUARD) > 0 && event.getSource().getDirectEntity() instanceof Projectile projectile) {
+            // Wind Guard: arrows and spells are blown away
+            event.setCanceled(true);
+            projectile.setDeltaMovement(projectile.getDeltaMovement().scale(-0.6));
+            projectile.hurtMarked = true;
+            player.serverLevel().sendParticles(ParticleTypes.GUST, player.getX(), player.getY(1.0), player.getZ(), 1, 0, 0, 0, 0);
             return;
         }
         float parry = buff(player, Buff.PARRY);

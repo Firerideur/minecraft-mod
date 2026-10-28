@@ -1949,4 +1949,101 @@ final class SkillActions {
         sound(c, SoundEvents.ENDER_DRAGON_GROWL, 1.5F, 0.8F);
         return true;
     }
+
+    // ---------------------------------------------------------------- spells of the martial classes
+
+    /** Blood Aura: for 6 seconds, enemies close by bleed every second and the berserker drinks their blood. */
+    static boolean bloodAura(SkillContext c) {
+        ServerPlayer p = c.player();
+        for (int second = 0; second < 6; second++) {
+            SkillRuntime.later(second * 20, () -> {
+                if (!p.isAlive()) {
+                    return;
+                }
+                float drained = 0;
+                for (LivingEntity e : enemiesAround(c, p.position(), 5.0)) {
+                    float damage = 2.5F * c.power();
+                    if (hurt(c, e, damage, true)) {
+                        drained += damage;
+                    }
+                    c.level().sendParticles(new DustParticleOptions(new Vector3f(0.7F, 0.05F, 0.05F), 1.2F),
+                            e.getX(), e.getY(0.6), e.getZ(), 6, 0.3, 0.4, 0.3, 0);
+                }
+                p.heal(drained * 0.3F);
+                ring(c, p.position(), 5.0, new DustParticleOptions(new Vector3f(0.6F, 0.0F, 0.0F), 1.4F), 24);
+            });
+        }
+        sound(c, SoundEvents.WARDEN_HEARTBEAT, 2.0F, 0.8F);
+        return true;
+    }
+
+    /** Earth Spikes: rock spikes burst out of the ground in a line, throwing enemies up. */
+    static boolean earthSpikes(SkillContext c) {
+        ServerPlayer p = c.player();
+        Vec3 dir = flatLook(p);
+        for (int i = 1; i <= 10; i++) {
+            Vec3 at = p.position().add(dir.scale(i));
+            int step = i;
+            SkillRuntime.later(i, () -> {
+                c.level().sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, Blocks.DRIPSTONE_BLOCK.defaultBlockState()),
+                        at.x, at.y + 0.3, at.z, 12, 0.4, 0.5, 0.4, 0.1);
+                for (LivingEntity e : enemiesAround(c, at, 1.6)) {
+                    hurt(c, e, 6.0F * c.power(), true);
+                    e.setDeltaMovement(e.getDeltaMovement().add(0, 0.8, 0));
+                    e.hurtMarked = true;
+                    effect(e, MobEffects.MOVEMENT_SLOWDOWN, ticks(c, 60), 2);
+                }
+                if (step % 3 == 0) {
+                    sound(c, SoundEvents.POINTED_DRIPSTONE_LAND, 1.2F, 0.6F);
+                }
+            });
+        }
+        return true;
+    }
+
+    /** Wind Guard: a gust throws enemies back, then a wind barrier turns arrows and spells away and quickens the step. */
+    static boolean windGuard(SkillContext c) {
+        ServerPlayer p = c.player();
+        for (LivingEntity e : enemiesAround(c, p.position(), 4.0)) {
+            push(e, p.position(), 1.2, 0.3);
+        }
+        SkillRuntime.addBuff(p, Buff.WIND_GUARD, ticks(c, 160), c.power());
+        effect(p, MobEffects.MOVEMENT_SPEED, ticks(c, 160), 1);
+        c.level().sendParticles(ParticleTypes.GUST_EMITTER_SMALL, p.getX(), p.getY(0.5), p.getZ(), 1, 0, 0, 0, 0);
+        ring(c, p.position(), 2.0, ParticleTypes.CLOUD, 20);
+        sound(c, SoundEvents.BREEZE_WIND_CHARGE_BURST.value(), 1.2F, 1.0F);
+        return true;
+    }
+
+    /** Frost Arrow: an arrow of ice flies straight ahead and bursts on the first enemy, freezing everything around. */
+    static boolean frostArrow(SkillContext c) {
+        ServerPlayer p = c.player();
+        Vec3 from = p.getEyePosition();
+        Vec3 to = lookedAt(c, 32.0);
+        LivingEntity first = onLine(c, from, to, 1.0).stream().min(Comparator.comparingDouble(p::distanceToSqr)).orElse(null);
+        Vec3 impact = first == null ? to : first.getBoundingBox().getCenter();
+        line(c, from.add(p.getLookAngle()), impact, ParticleTypes.SNOWFLAKE);
+        for (LivingEntity e : enemiesAround(c, impact, 2.5)) {
+            hurt(c, e, (e == first ? 7.0F : 3.0F) * c.power(), true);
+            effect(e, MobEffects.MOVEMENT_SLOWDOWN, ticks(c, 80), 3);
+            e.setTicksFrozen(Math.max(e.getTicksFrozen(), 160));
+        }
+        c.level().sendParticles(ParticleTypes.ITEM_SNOWBALL, impact.x, impact.y, impact.z, 25, 0.6, 0.6, 0.6, 0.1);
+        sound(c, SoundEvents.ARROW_SHOOT, 1.0F, 1.6F);
+        sound(c, SoundEvents.GLASS_BREAK, 0.8F, 1.4F);
+        return true;
+    }
+
+    /** Meditation: the monk gathers their ki and heals quickly, harder to hurt for a moment. */
+    static boolean meditation(SkillContext c) {
+        ServerPlayer p = c.player();
+        effect(p, MobEffects.REGENERATION, ticks(c, 100), 2);
+        effect(p, MobEffects.DAMAGE_RESISTANCE, ticks(c, 100), 0);
+        p.heal(healAmount(c, 4.0F));
+        for (int i = 0; i < 5; i++) {
+            SkillRuntime.later(i * 20, () -> ring(c, p.position().add(0, 0.1, 0), 1.5, ParticleTypes.END_ROD, 16));
+        }
+        sound(c, SoundEvents.BEACON_POWER_SELECT, 1.0F, 1.6F);
+        return true;
+    }
 }

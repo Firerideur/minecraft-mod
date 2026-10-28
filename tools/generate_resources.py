@@ -10,6 +10,7 @@ from pathlib import Path
 
 import boss_models
 import dungeon_mobs
+import enchantments
 import textures
 
 MODID = "arcanequest"
@@ -317,6 +318,35 @@ def generate_dungeon_seal():
     write_json(ASSETS / "blockstates" / "dungeon_seal.json", {"variants": {"": {"model": f"{MODID}:block/dungeon_seal"}}})
 
 
+def generate_effect_icons():
+    """Icon of the Bleeding effect: a drop of blood."""
+    from PIL import Image
+    image = Image.new("RGBA", (18, 18), (0, 0, 0, 0))
+    for y in range(18):
+        for x in range(18):
+            dx, dy = x - 8.5, y - 10.5
+            # A drop: round bottom, pointed top
+            inside = dx * dx + dy * dy <= 20 if y >= 9 else abs(dx) <= (y - 2) * 0.62
+            if 2 <= y <= 15 and inside:
+                shade = 1.0 - 0.45 * (y / 17) + (0.35 if dx < -1 and dy < 0 else 0)
+                image.putpixel((x, y), (min(255, int(190 * shade)), int(18 * shade), int(22 * shade), 255))
+    image.putpixel((7, 11), (255, 140, 140, 255))
+    out = ASSETS / "textures" / "mob_effect"
+    out.mkdir(parents=True, exist_ok=True)
+    image.save(out / "bleeding.png")
+
+
+def generate_enchantments():
+    """Enchantments (see enchantments.py); their names and descriptions are merged into the lang files."""
+    langs = {}
+    for code in ("fr_fr", "en_us"):
+        path = ASSETS / "lang" / f"{code}.json"
+        langs[code] = (path, json.loads(path.read_text(encoding="utf-8")))
+    enchantments.generate(write_json, DATA, langs["fr_fr"][1], langs["en_us"][1])
+    for path, texts in langs.values():
+        path.write_text(json.dumps(texts, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
 def generate_worldgen():
     ore_feature("ore_mithril", 8, 8, -32, 56, "mithril_ore", "deepslate_mithril_ore")
     ore_feature("ore_arcanite", 5, 5, -64, 16, "arcanite_ore", "deepslate_arcanite_ore")
@@ -536,6 +566,8 @@ if __name__ == "__main__":
     generate_recipes()
     generate_tags()
     generate_worldgen()
+    generate_enchantments()
+    generate_effect_icons()
     generate_dimension()
     generate_entity_tags()
     print("Resources generated in", ROOT)

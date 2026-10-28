@@ -19,6 +19,9 @@ import com.firerideur.arcanequest.stats.StatsEvents;
 import com.firerideur.arcanequest.weapon.WeaponEvents;
 import com.mojang.logging.LogUtils;
 import net.minecraft.resources.ResourceLocation;
+import com.firerideur.arcanequest.enchant.EnchantmentEvents;
+import com.firerideur.arcanequest.enchant.ModEffects;
+import com.firerideur.arcanequest.enchant.ModLootModifiers;
 import com.firerideur.arcanequest.worldgen.ModWorldgen;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
@@ -48,6 +51,8 @@ public class ArcaneQuest {
         ModRecipes.TYPES.register(modEventBus);
         ModRecipes.SERIALIZERS.register(modEventBus);
         ModWorldgen.register(modEventBus);
+        ModEffects.EFFECTS.register(modEventBus);
+        ModLootModifiers.LOOT_MODIFIERS.register(modEventBus);
 
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(ModEntities::registerAttributes);
@@ -57,6 +62,7 @@ public class ArcaneQuest {
         MinecraftForge.EVENT_BUS.register(ClassEvents.class);
         MinecraftForge.EVENT_BUS.register(SkillRuntime.class);
         MinecraftForge.EVENT_BUS.register(Gates.class);
+        MinecraftForge.EVENT_BUS.register(EnchantmentEvents.class);
         MinecraftForge.EVENT_BUS.register(MobEvents.class);
         MinecraftForge.EVENT_BUS.register(WeaponEvents.class);
         MinecraftForge.EVENT_BUS.register(HammerItem.class);

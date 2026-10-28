@@ -1,5 +1,6 @@
 package com.firerideur.arcanequest.magic;
 
+import com.firerideur.arcanequest.enchant.EnchantmentEvents;
 import com.firerideur.arcanequest.network.ModNetwork;
 import com.firerideur.arcanequest.stats.PlayerStats;
 import com.firerideur.arcanequest.stats.StatsCapability;
@@ -38,7 +39,7 @@ public final class SpellCaster {
             return false;
         }
         boolean free = player.getAbilities().instabuild;
-        float cost = spell.manaCost() * stats.getPlayerClass().bonuses().manaCost();
+        float cost = spell.manaCost() * stats.getPlayerClass().bonuses().manaCost() * EnchantmentEvents.manaCostBonus(player);
         if (!free && stats.getMana() < cost) {
             player.displayClientMessage(Component.translatable("message.arcanequest.no_mana").withStyle(ChatFormatting.BLUE), true);
             return false;
@@ -47,7 +48,7 @@ public final class SpellCaster {
             stats.setMana(stats.getMana() - cost);
             ModNetwork.sync(player);
         }
-        float power = spell.basePower() * stats.spellPower();
+        float power = spell.basePower() * stats.spellPower() * EnchantmentEvents.spellPowerBonus(player);
         cast(player, spell, spell == Spell.HEAL ? power * stats.getPlayerClass().bonuses().heals() : power);
         return true;
     }

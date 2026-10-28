@@ -1,0 +1,45 @@
+{
+  "description": {
+    "translate": "enchantment.arcanequest.leaping"
+  },
+  "supported_items": "#minecraft:enchantable/foot_armor",
+  "primary_items": "#minecraft:enchantable/foot_armor",
+  "weight": 2,
+  "max_level": 2,
+  "min_cost": {
+    "base": 10,
+    "per_level_above_first": 15
+  },
+  "max_cost": {
+    "base": 60,
+    "per_level_above_first": 15
+  },
+  "anvil_cost": 4,
+  "slots": [
+    "feet"
+  ],
+  "effects": {
+    "minecraft:attributes": [
+      {
+        "id": "arcanequest:enchantment.leaping",
+        "attribute": "minecraft:generic.jump_strength",
+        "amount": {
+          "type": "minecraft:linear",
+          "base": 0.08,
+          "per_level_above_first": 0.08
+        },
+        "operation": "add_value"
+      },
+      {
+        "id": "arcanequest:enchantment.leaping_step",
+        "attribute": "minecraft:generic.step_height",
+        "amount": {
+          "type": "minecraft:linear",
+          "base": 0.5,
+          "per_level_above_first": 0.0
+        },
+        "operation": "add_value"
+      }
+    ]
+  }
+}
