@@ -219,7 +219,7 @@ public final class Gates {
         return null;
     }
 
-    static Component direction(double dx, double dz) {
+    public static Component direction(double dx, double dz) {
         String[] keys = {"s", "sw", "w", "nw", "n", "ne", "e", "se"};
         double angle = Math.toDegrees(Math.atan2(-dx, dz));
         int index = Math.floorMod(Math.round(angle / 45.0), 8);

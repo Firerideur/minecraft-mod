@@ -7,16 +7,20 @@ import com.firerideur.arcanequest.stats.PlayerStats;
 import com.firerideur.arcanequest.stats.StatEffects;
 import com.firerideur.arcanequest.stats.StatsCapability;
 import com.firerideur.arcanequest.stats.StatsEvents;
+import com.firerideur.arcanequest.worldgen.CaveDecoratorFeature;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.Locale;
 import java.util.function.Consumer;
 
 /**
@@ -54,6 +58,7 @@ public final class ArcaneQuestCommand {
                         .executes(ctx -> openGate(ctx.getSource(), 0))
                         .then(Commands.argument("stars", IntegerArgumentType.integer(1, Gates.MAX_STARS))
                                 .executes(ctx -> openGate(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "stars")))))
+                .then(caveCommand())
                 .then(Commands.literal("reset")
                         .executes(ctx -> reset(ctx.getSource(), ctx.getSource().getPlayerOrException()))
                         .then(Commands.argument("player", EntityArgument.player())
@@ -106,6 +111,56 @@ public final class ArcaneQuestCommand {
         modify(player, stats -> stats.setPlayerClass(playerClass));
         source.sendSuccess(() -> Component.translatable("command.arcanequest.class_set", player.getDisplayName(),
                 playerClass.displayName()), true);
+        return 1;
+    }
+
+    private static LiteralArgumentBuilder<CommandSourceStack> caveCommand() {
+        var tp = Commands.literal("tp");
+        for (CaveDecoratorFeature.Theme theme : CaveDecoratorFeature.Theme.values()) {
+            if (theme != CaveDecoratorFeature.Theme.PLAIN) {
+                tp.then(Commands.literal(theme.name().toLowerCase(Locale.ROOT))
+                        .executes(ctx -> caveTeleport(ctx.getSource(), ctx.getSource().getPlayerOrException(), theme)));
+            }
+        }
+        return Commands.literal("cave").executes(ctx -> caves(ctx.getSource(), ctx.getSource().getPlayerOrException())).then(tp);
+    }
+
+    /** Teleports into a decorated cave of the closest region of {@code theme} (for testing and exploring). */
+    private static int caveTeleport(CommandSourceStack source, ServerPlayer player, CaveDecoratorFeature.Theme theme) {
+        BlockPos pos = player.blockPosition();
+        int y = theme == CaveDecoratorFeature.Theme.MAGMA ? Math.min(pos.getY(), -1) : pos.getY();
+        BlockPos region = CaveDecoratorFeature.nearest(player.serverLevel().getSeed(), theme, pos.getX(), y, pos.getZ());
+        BlockPos spot = region == null ? null : CaveDecoratorFeature.findCaveSpot(player.serverLevel(), theme, region);
+        if (spot == null) {
+            source.sendFailure(Component.translatable("command.arcanequest.cave_not_found", theme.displayName()));
+            return 0;
+        }
+        player.teleportTo(spot.getX() + 0.5, spot.getY(), spot.getZ() + 0.5);
+        source.sendSuccess(() -> Component.translatable("command.arcanequest.cave_teleported", theme.displayName(),
+                spot.getX(), spot.getY(), spot.getZ()), false);
+        return 1;
+    }
+
+    /** Cave region of the player's position and the closest region of every other kind on the same layer. */
+    private static int caves(CommandSourceStack source, ServerPlayer player) {
+        long seed = player.serverLevel().getSeed();
+        BlockPos pos = player.blockPosition();
+        CaveDecoratorFeature.Theme here = CaveDecoratorFeature.themeAt(seed, pos.getX(), pos.getY(), pos.getZ());
+        source.sendSuccess(() -> Component.translatable("command.arcanequest.cave_here", here.displayName(),
+                Component.translatable(pos.getY() < 0 ? "cave.arcanequest.layer_deep" : "cave.arcanequest.layer_upper")), false);
+        for (CaveDecoratorFeature.Theme theme : CaveDecoratorFeature.Theme.values()) {
+            if (theme == here || theme == CaveDecoratorFeature.Theme.PLAIN) {
+                continue;
+            }
+            // Magma caves only exist below y = 0
+            int y = theme == CaveDecoratorFeature.Theme.MAGMA ? Math.min(pos.getY(), -1) : pos.getY();
+            BlockPos found = CaveDecoratorFeature.nearest(seed, theme, pos.getX(), y, pos.getZ());
+            if (found != null) {
+                double dx = found.getX() - pos.getX(), dz = found.getZ() - pos.getZ();
+                source.sendSuccess(() -> Component.translatable("command.arcanequest.cave_nearest", theme.displayName(),
+                        (int) Math.sqrt(dx * dx + dz * dz), Gates.direction(dx, dz), found.getX(), found.getZ()), false);
+            }
+        }
         return 1;
     }
 

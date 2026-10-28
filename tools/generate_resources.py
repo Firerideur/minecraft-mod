@@ -294,6 +294,74 @@ def generate_worldgen():
     ore_feature("ore_mithril", 8, 8, -32, 56, "mithril_ore", "deepslate_mithril_ore")
     ore_feature("ore_arcanite", 5, 5, -64, 16, "arcanite_ore", "deepslate_arcanite_ore")
     ore_feature("ore_adamantite", 4, 3, -64, -24, None, "adamantite_ore", air_discard=0.5)
+    generate_caves()
+
+
+def uniform_height(low, high):
+    return {"type": "minecraft:uniform", "min_inclusive": {"absolute": low}, "max_inclusive": {"absolute": high}}
+
+
+def uniform_float(low, high):
+    return {"type": "minecraft:uniform", "min_inclusive": low, "max_exclusive": high}
+
+
+def generate_caves():
+    """Better Caves style: giant caverns, wide winding tunnels, deep ravines, underground lakes and cave regions."""
+    carver_base = {"lava_level": {"above_bottom": 8}, "replaceable": "#minecraft:overworld_carver_replaceables"}
+    carvers = {
+        # One huge flat-floored chamber with very wide tunnels (see CavernCarver, which picks its own floor_level)
+        "cavern": {"type": f"{MODID}:cavern", "config": {
+            **carver_base, "probability": 0.04, "y": uniform_height(-48, 24), "yScale": uniform_float(0.5, 0.7),
+            "horizontal_radius_multiplier": uniform_float(1.0, 1.6), "vertical_radius_multiplier": uniform_float(0.9, 1.3),
+            "floor_level": uniform_float(-0.75, -0.45)}},
+        # More, wider, winding tunnels between the caverns
+        "winding_tunnels": {"type": "minecraft:cave", "config": {
+            **carver_base, "probability": 0.08, "y": uniform_height(-56, 48), "yScale": uniform_float(0.3, 0.9),
+            "horizontal_radius_multiplier": uniform_float(1.2, 2.2), "vertical_radius_multiplier": uniform_float(1.0, 1.6),
+            "floor_level": uniform_float(-1.0, -0.5)}},
+        # Deep, wide ravines
+        "deep_ravine": {"type": "minecraft:canyon", "config": {
+            **carver_base, "probability": 0.012, "y": uniform_height(-24, 40), "yScale": {"type": "minecraft:constant", "value": 3.0},
+            "vertical_rotation": uniform_float(-0.125, 0.125),
+            "shape": {"distance_factor": uniform_float(0.75, 1.0),
+                      "thickness": {"type": "minecraft:trapezoid", "min": 2.0, "max": 9.0, "plateau": 3.0},
+                      "width_smoothness": 3, "horizontal_radius_factor": uniform_float(1.0, 1.4),
+                      "vertical_radius_default_factor": 1.2, "vertical_radius_center_factor": 0.0}}},
+    }
+    for name, carver in carvers.items():
+        write_json(DATA / MODID / "worldgen" / "configured_carver" / f"{name}.json", carver)
+    write_json(DATA / MODID / "forge" / "biome_modifier" / "add_cave_carvers.json", {
+        "type": f"{MODID}:add_carvers", "biomes": "#minecraft:is_overworld",
+        "carvers": [rl(name) for name in carvers], "step": "air",
+    })
+
+    # Underground lakes dug into cave floors (see UndergroundLakeFeature; vanilla water lakes crash underground)
+    write_json(DATA / MODID / "worldgen" / "configured_feature" / "underground_lake.json",
+               {"type": rl("underground_lake"), "config": {}})
+    write_json(DATA / MODID / "worldgen" / "placed_feature" / "underground_lake.json", {
+        "feature": rl("underground_lake"),
+        "placement": [
+            {"type": "minecraft:count", "count": 2},
+            {"type": "minecraft:in_square"},
+            {"type": "minecraft:height_range", "height": uniform_height(-50, 40)},
+            {"type": "minecraft:environment_scan", "direction_of_search": "down", "max_steps": 24,
+             "allowed_search_condition": {"type": "minecraft:matching_blocks", "blocks": ["minecraft:air", "minecraft:cave_air"]},
+             "target_condition": {"type": "minecraft:all_of", "predicates": [
+                 {"type": "minecraft:solid"},
+                 {"type": "minecraft:matching_blocks", "blocks": ["minecraft:air", "minecraft:cave_air"], "offset": [0, 1, 0]}]}},
+            {"type": "minecraft:surface_relative_threshold_filter", "heightmap": "OCEAN_FLOOR_WG", "max_inclusive": -12},
+            {"type": "minecraft:biome"},
+        ],
+    })
+    # Cave regions (see CaveDecoratorFeature): once per chunk, after the vanilla cave decorations
+    write_json(DATA / MODID / "worldgen" / "configured_feature" / "cave_decorator.json",
+               {"type": rl("cave_decorator"), "config": {}})
+    write_json(DATA / MODID / "worldgen" / "placed_feature" / "cave_decorator.json",
+               {"feature": rl("cave_decorator"), "placement": []})
+    for name, step in (("underground_lake", "lakes"), ("cave_decorator", "underground_decoration")):
+        write_json(DATA / MODID / "forge" / "biome_modifier" / f"add_{name}.json", {
+            "type": "forge:add_features", "biomes": "#minecraft:is_overworld", "features": rl(name), "step": step,
+        })
 
 
 # ---------------------------------------------------------------------------

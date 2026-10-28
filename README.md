@@ -164,6 +164,21 @@ Niveau des monstres : 4-9 (★), 16-21 (★★), 28-33 (★★★), 40-45 (★�
 - **Sortir** : la sortie est dans la première salle (et dans la salle du boss une fois nettoyée).
 - `/aq gate [étoiles]` ouvre une porte devant vous (pour tester).
 
+### Grottes (style Better Caves)
+Le sous-sol de l'Overworld est beaucoup plus spectaculaire (nouveaux mondes ou nouvelles zones explorées seulement) :
+- **Cavernes géantes** : d'immenses salles au sol plat (20 à 35 blocs de large) reliées par des tunnels très larges.
+- **Plus de tunnels**, plus larges et sinueux, et des **ravins profonds** plus larges.
+- **Lacs souterrains** creusés dans le sol des grottes (eau, parfois lave tout en bas), qui ne débordent jamais.
+- **Régions de grottes** (environ 100 blocs de large, une couche au-dessus de Y 0 et une en dessous) :
+  - **Grottes moussues** : mousse, fougères, azalées, lianes à baies lumineuses, racines pendantes, fleurs de spores.
+  - **Grottes de cristal** : calcite et améthyste, cristaux au sol, aux murs et au plafond.
+  - **Grottes gelées** : neige, glace compacte et glace bleue, stalagmites et stalactites de glace.
+  - **Grottes à champignons** : mycélium, champignons, champignons géants, champilumes au plafond, lichen lumineux.
+  - **Grottes de magma** (sous Y 0) : basalte, pierre noire, magma, petites mares de lave, colonnes de basalte.
+  - **Catacombes** : murs de briques (pierre ou ardoise des abîmes) fissurées et moussues, gravier, os, crânes, toiles d'araignée et lanternes des âmes.
+  - Les grottes ordinaires, les grottes luxuriantes, les grottes de spéléothèmes et les abîmes restent comme dans le jeu de base.
+- `/aq cave` : la région où vous êtes et la plus proche de chaque type ; `/aq cave tp <type>` vous y téléporte (op).
+
 ### Magie
 Mana de base : 20 (+5 par Intelligence, +15 par pièce d'armure d'arcanite). Clic droit avec un bâton pour lancer son sort.
 
@@ -260,6 +275,7 @@ Fabrication : forge de fusion (3 mithril, 2 arcanite, haut fourneau, 3 briques d
 - `/aq reset [joueur]` : rembourse les points de stats
 - `/aq info [joueur]`
 - `/aq gate [1-7]` : ouvre une porte devant soi
+- `/aq cave` : région de grottes actuelle et la plus proche de chaque type ; `/aq cave tp <mossy|crystal|frozen|fungal|magma|catacombs>` : téléporte dans la plus proche
 
 ## Développement
 

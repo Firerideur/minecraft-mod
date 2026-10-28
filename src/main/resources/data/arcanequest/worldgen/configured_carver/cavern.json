@@ -1,0 +1,39 @@
+{
+  "type": "arcanequest:cavern",
+  "config": {
+    "lava_level": {
+      "above_bottom": 8
+    },
+    "replaceable": "#minecraft:overworld_carver_replaceables",
+    "probability": 0.04,
+    "y": {
+      "type": "minecraft:uniform",
+      "min_inclusive": {
+        "absolute": -48
+      },
+      "max_inclusive": {
+        "absolute": 24
+      }
+    },
+    "yScale": {
+      "type": "minecraft:uniform",
+      "min_inclusive": 0.5,
+      "max_exclusive": 0.7
+    },
+    "horizontal_radius_multiplier": {
+      "type": "minecraft:uniform",
+      "min_inclusive": 1.0,
+      "max_exclusive": 1.6
+    },
+    "vertical_radius_multiplier": {
+      "type": "minecraft:uniform",
+      "min_inclusive": 0.9,
+      "max_exclusive": 1.3
+    },
+    "floor_level": {
+      "type": "minecraft:uniform",
+      "min_inclusive": -0.75,
+      "max_exclusive": -0.45
+    }
+  }
+}

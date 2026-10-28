@@ -626,5 +626,18 @@
   "dungeon.arcanequest.ghoul_crypt": "Ghoul Crypt",
   "dungeon.arcanequest.insect_jungle": "Giant Insect Jungle",
   "dungeon.arcanequest.infernal_throne": "Infernal Throne",
-  "message.arcanequest.charmed": "The succubus charms you and draws you to her..."
+  "message.arcanequest.charmed": "The succubus charms you and draws you to her...",
+  "cave.arcanequest.plain": "Ordinary caves",
+  "cave.arcanequest.mossy": "Mossy caves",
+  "cave.arcanequest.crystal": "Crystal caves",
+  "cave.arcanequest.frozen": "Frozen caves",
+  "cave.arcanequest.fungal": "Mushroom caves",
+  "cave.arcanequest.magma": "Magma caves",
+  "cave.arcanequest.catacombs": "Catacombs",
+  "cave.arcanequest.layer_upper": "between Y 0 and the surface",
+  "cave.arcanequest.layer_deep": "below Y 0",
+  "command.arcanequest.cave_here": "Caves here (%2$s): %1$s",
+  "command.arcanequest.cave_nearest": "%s: %s blocks (%s), around X %s Z %s",
+  "command.arcanequest.cave_not_found": "No %s found nearby",
+  "command.arcanequest.cave_teleported": "%s: teleported to %s %s %s"
 }

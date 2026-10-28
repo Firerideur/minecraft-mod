@@ -626,5 +626,18 @@
   "dungeon.arcanequest.ghoul_crypt": "Crypte des goules",
   "dungeon.arcanequest.insect_jungle": "Jungle des insectes géants",
   "dungeon.arcanequest.infernal_throne": "Trône infernal",
-  "message.arcanequest.charmed": "La succube vous charme et vous attire à elle..."
+  "message.arcanequest.charmed": "La succube vous charme et vous attire à elle...",
+  "cave.arcanequest.plain": "Grottes ordinaires",
+  "cave.arcanequest.mossy": "Grottes moussues",
+  "cave.arcanequest.crystal": "Grottes de cristal",
+  "cave.arcanequest.frozen": "Grottes gelées",
+  "cave.arcanequest.fungal": "Grottes à champignons",
+  "cave.arcanequest.magma": "Grottes de magma",
+  "cave.arcanequest.catacombs": "Catacombes",
+  "cave.arcanequest.layer_upper": "entre Y 0 et la surface",
+  "cave.arcanequest.layer_deep": "sous Y 0",
+  "command.arcanequest.cave_here": "Grottes ici (%2$s) : %1$s",
+  "command.arcanequest.cave_nearest": "%s : %s blocs (%s), vers X %s Z %s",
+  "command.arcanequest.cave_not_found": "Aucune %s trouvée à proximité",
+  "command.arcanequest.cave_teleported": "%s : téléporté en %s %s %s"
 }

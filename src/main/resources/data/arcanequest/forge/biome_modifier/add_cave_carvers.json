@@ -1,0 +1,10 @@
+{
+  "type": "arcanequest:add_carvers",
+  "biomes": "#minecraft:is_overworld",
+  "carvers": [
+    "arcanequest:cavern",
+    "arcanequest:winding_tunnels",
+    "arcanequest:deep_ravine"
+  ],
+  "step": "air"
+}

@@ -19,6 +19,7 @@ import com.firerideur.arcanequest.stats.StatsEvents;
 import com.firerideur.arcanequest.weapon.WeaponEvents;
 import com.mojang.logging.LogUtils;
 import net.minecraft.resources.ResourceLocation;
+import com.firerideur.arcanequest.worldgen.ModWorldgen;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -46,6 +47,7 @@ public class ArcaneQuest {
         ModMenus.MENUS.register(modEventBus);
         ModRecipes.TYPES.register(modEventBus);
         ModRecipes.SERIALIZERS.register(modEventBus);
+        ModWorldgen.register(modEventBus);
 
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(ModEntities::registerAttributes);
