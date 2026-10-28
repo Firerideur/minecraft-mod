@@ -54,7 +54,7 @@ public class ArcaneEnchantingScreen extends AbstractContainerScreen<ArcaneEnchan
     /** Power, chaos and arcana as small bars, and the highest level the table reaches. */
     private void renderStats(GuiGraphics g) {
         float power = menu.stats[0] / 10.0F;
-        int x = leftPos + 8, y = topPos + 20;
+        int x = leftPos + 8, y = topPos + 24;
         stat(g, Component.translatable("screen.arcanequest.enchanting.power"), String.format("%.1f", power),
                 power / ArcaneEnchanting.MAX_POWER, 0xFF7A4FD0, x, y);
         stat(g, Component.translatable("screen.arcanequest.enchanting.chaos"), menu.stats[1] + "%", menu.stats[1] / 100.0F,
@@ -62,8 +62,8 @@ public class ArcaneEnchantingScreen extends AbstractContainerScreen<ArcaneEnchan
         stat(g, Component.translatable("screen.arcanequest.enchanting.arcana"), menu.stats[2] + "%", menu.stats[2] / 100.0F,
                 0xFF4FA8D0, x, y + 24);
         g.pose().pushPose();
-        g.pose().translate(x, topPos + 70, 0);
-        g.pose().scale(0.7F, 0.7F, 1);
+        g.pose().translate(x, topPos + 79, 0);
+        g.pose().scale(0.6F, 0.6F, 1);
         g.drawString(font, Component.translatable("screen.arcanequest.enchanting.max_level", Math.round(power * 2)), 0, 0, UiKit.GOLD_LIGHT, false);
         g.pose().popPose();
     }

@@ -33,7 +33,7 @@ import java.util.List;
  * to level 100, enchantments past their usual maximum, more of them with Arcana.
  */
 public class ArcaneEnchantingMenu extends AbstractContainerMenu {
-    public static final int ITEM_X = 15, LAPIS_X = 35, SLOT_Y = 47;
+    public static final int ITEM_X = 15, LAPIS_X = 35, SLOT_Y = 56;
     public static final int INVENTORY_Y = 104;
 
     private final Container slotsContainer = new SimpleContainer(2) {
@@ -87,6 +87,8 @@ public class ArcaneEnchantingMenu extends AbstractContainerMenu {
             addDataSlot(DataSlot.shared(stats, i));
         }
         addDataSlot(seed).set(inventory.player.getEnchantmentSeed());
+        // Show the table's stats right away, before anything is put in
+        slotsChanged(slotsContainer);
     }
 
     private ArcaneEnchanting.Stats tableStats() {

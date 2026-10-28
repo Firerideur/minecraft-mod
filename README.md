@@ -83,13 +83,13 @@ Chaque classe a ses propres aptitudes actives, débloquées en montant de niveau
 
 | Classe | 20 | 30 | 40 | 50 | 75 | 100 (ultime) |
 |---|---|---|---|---|---|---|
-| Berserker | Tourbillon | Cri de guerre | Frénésie sanglante | Soif de sang (peur) | Fracas | — |
+| Berserker | Tourbillon | Cri de guerre | **Aura de sang** ✦ | Soif de sang (peur) | Fracas | — |
 | Seigneur de guerre | ↑ | ↑ | ↑ | Soif de sang | Furie | Cataclysme |
 | Bourreau | ↑ | ↑ | ↑ | Exécution | Moisson | Sentence de mort |
-| Gardien | Provocation | Coup de bouclier | Rempart | Fracas | Peau de fer | — |
+| Gardien | Provocation | Coup de bouclier | **Pics de terre** ✦ | Rempart | Peau de fer | — |
 | Forteresse | ↑ | ↑ | ↑ | Bastion | Séisme | Goliath (géant 15 s) |
 | Gardien runique | ↑ | ↑ | ↑ | Bouclier de mana | Glyphe de garde | Égide runique |
-| Assassin | Mutilation | Pas de l'ombre | Lame empoisonnée | Furtivité | Ruée des dagues | — |
+| Assassin | Mutilation | Pas de l'ombre ✦ | Lame empoisonnée | Furtivité | Ruée des dagues | — |
 | Ninja | ↑ | ↑ | ↑ | Bombe fumigène | Tempête de shurikens | Mille entailles |
 | Assassin des ombres | ↑ | ↑ | ↑ | Ruée des dagues | Danse des lames | Assassinat |
 | Mage | Boule de feu | Nova de givre | Chaîne d'éclairs | Lance de flammes | Météore | — |
@@ -98,10 +98,10 @@ Chaque classe a ses propres aptitudes actives, débloquées en montant de niveau
 | Paladin | Châtiment | Aura de soin | Ruée | Jugement | Bouclier divin | — |
 | Croisé | ↑ | ↑ | ↑ | Étendard sacré | Tourbillon | Croisade |
 | Chevalier sacré | ↑ | ↑ | ↑ | Bouclier divin | Sanctuaire | Lumière des Souverains |
-| Duelliste | Ruée | Parade | Rafale de coups | Danse de l'épée | Danse des lames | — |
+| Duelliste | Ruée | Parade | **Garde du vent** ✦ | Danse de l'épée | Rafale de coups | — |
 | Maître d'armes | ↑ | ↑ | ↑ | Danse des lames | Onde tranchante | Fendre-ciel |
 | Lame-vent | ↑ | ↑ | ↑ | Danse de l'épée | Tornade | Danse de la tempête |
-| Rôdeur | Tir multiple | Piège | Tir perçant | Tir de repli | Pluie de flèches | — |
+| Rôdeur | Tir multiple | Piège | **Flèche de givre** ✦ | Tir perçant | Pluie de flèches | — |
 | Tireur d'élite | ↑ | ↑ | ↑ | Œil de lynx | Flèche explosive | Flèche céleste |
 | Chasseur | ↑ | ↑ | ↑ | Meute | Marque du chasseur | Hurlement de Rakan |
 | Lame-sort | Lame runique | Ruée | Boule de feu | Taille arcanique | Bouclier de mana | — |
@@ -113,14 +113,14 @@ Chaque classe a ses propres aptitudes actives, débloquées en montant de niveau
 | Arcaniste | Clignement | Barrage arcanique | Bouclier de mana | Puits de gravité | Chaîne d'éclairs | — |
 | Chronomancien | ↑ | ↑ | ↑ | Arrêt du temps | Rembobinage | Effondrement temporel |
 | Mage de bataille | ↑ | ↑ | ↑ | Lame runique | Météore | Avatar arcanique |
-| Moine | Rafale de coups | Ruée | Peau de fer | Paume du dragon | Tornade | — |
+| Moine | Rafale de coups | Ruée | **Méditation** ✦ | Paume du dragon | Tornade | — |
 | Grand maître | ↑ | ↑ | ↑ | Paume du dragon | Séisme | Forme bestiale |
 | Moine de fer | ↑ | ↑ | ↑ | Provocation | Rempart | Corps adamantin |
 | Nécromancien | Invocation des ombres | Drain de vie | Malédiction | Explosion d'ombre | Moisson d'âmes | — |
 | Seigneur liche | ↑ | ↑ | ↑ | Nova de givre | Lève-toi ! | Peste de Yogumunt |
 | **Monarque des Ombres** | Ruée des dagues | Échange d'ombre | Lève-toi ! (extraction) | Autorité du Souverain | Peur du dragon | Domaine du Monarque |
 
-(↑ = aptitude gardée de la première classe.) Quelques mécaniques : **peur** (Soif de sang, Peur du dragon : les monstres fuient et ne peuvent plus cibler personne), **Furtivité** (premier coup ×2), **Autorité du Souverain** (télékinésie : soulève puis écrase, accroupi pour repousser), **Échange d'ombre** (apparaître à la place d'une ombre visée), **Domaine du Monarque** (+50 % de dégâts des ombres), transformations temporaires (**Goliath**, **Forme bestiale**), **Marque du chasseur** (+30 % de dégâts), **Grâce salvatrice** (survivre à un coup mortel).
+(↑ = aptitude gardée de la première classe ; ✦ = sort des classes martiales.) **Toutes les classes ont de la magie** : chaque lignée a au moins un sort parmi ses 3 premières aptitudes, que ses éveils gardent, et ces sorts coûtent au plus 20 de mana (utilisables sans Intelligence) : **Aura de sang** (les ennemis proches saignent 6 s, vous buvez 30 % de leur sang), **Pics de terre** (pics de roche en ligne qui projettent en l'air), **Garde du vent** (rafale, vitesse et mur de vent qui dévie flèches et sorts), **Flèche de givre** (éclate et gèle autour de l'impact), **Méditation** (soin, régénération et résistance) ; **Pas de l'ombre** est devenu un sort d'ombre. Quelques mécaniques : **peur** (Soif de sang, Peur du dragon : les monstres fuient et ne peuvent plus cibler personne), **Furtivité** (premier coup ×2), **Autorité du Souverain** (télékinésie : soulève puis écrase, accroupi pour repousser), **Échange d'ombre** (apparaître à la place d'une ombre visée), **Domaine du Monarque** (+50 % de dégâts des ombres), transformations temporaires (**Goliath**, **Forme bestiale**), **Marque du chasseur** (+30 % de dégâts), **Grâce salvatrice** (survivre à un coup mortel).
 
 ### Portes et donjons (style Solo Leveling)
 Des **Portes** s'ouvrent près des joueurs dans l'Overworld (toutes les 5 minutes, 40 % de chance ; un message indique la distance et la direction). Elles sont classées de **1 à 7 étoiles** : plus il y a d'étoiles, plus la porte est rare et dangereuse. Une porte reste ouverte un jour Minecraft.
@@ -188,6 +188,39 @@ Le sous-sol de l'Overworld est beaucoup plus spectaculaire (nouveaux mondes ou n
   - **Catacombes** : murs de briques (pierre ou ardoise des abîmes) fissurées et moussues, gravier, os, crânes, toiles d'araignée et lanternes des âmes.
   - Les grottes ordinaires, les grottes luxuriantes, les grottes de spéléothèmes et les abîmes restent comme dans le jeu de base.
 - `/aq cave` : la région où vous êtes et la plus proche de chaque type ; `/aq cave tp <type>` vous y téléporte (op).
+
+### Enchantements (30 nouveaux)
+Ils s'obtiennent à la table d'enchantement (classique ou arcanique), dans les coffres et chez les villageois. Les livres enchantés du mod affichent ce que fait chaque enchantement.
+
+| Pour | Enchantements |
+|---|---|
+| **Armes** | Vol de vie (I-III), Bourreau (I-III, +12 % sous 35 % de vie), Coup critique (I-III), Tueur de géants (I-V, bonus contre les boss), Hémorragie (I-III, saignement qui ignore l'armure), Frappe de foudre (I-III), Moisson d'âmes (I-III, mana à chaque victime), Morsure du givre (I-II), Venin (I-II) ; **haches** : Fendoir (I-III, touche les ennemis autour) |
+| **Outils** | Filon (I-III : mine tout le filon, 16/32/64 blocs), Bûcheron (abat l'arbre entier), Fonte automatique (minerais en lingots, sable en verre…), Télékinésie (le butin va dans l'inventaire), Sagesse (I-III, +25 % d'XP vanilla et de classe) — accroupi pour miner un seul bloc |
+| **Armures** | Vitalité (I-V, +1 cœur par niveau), Célérité (I-III, bottes), Bond (I-II, bottes : sauts plus hauts, montée des marches), Esprit arcanique (I-III, casque : +10 mana max et +15 % de régénération), Rajeunissement (I-III, plastron), Esquive (I-III, jambières), Vision nocturne (casque), Retour de flamme (I-II, plastron), **Second souffle** (trésor, plastron : survivre à un coup mortel toutes les 5 min) |
+| **Arcs et arbalètes** | Flèches explosives (I-II, sans abîmer le terrain), Tireur d'élite (I-III, plus de dégâts de loin) |
+| **Bâtons** (désormais enchantables) | Puissance arcanique (I-V, +10 % de sorts), Économie de mana (I-III), Incantation rapide (I-III) — Puissance et Économie renforcent aussi les **aptitudes magiques de classe** quand le bâton est en main |
+| **Tout objet** | **Lié à l'âme** (trésor : l'objet reste avec vous à la mort) |
+
+### Table d'enchantement arcanique (style Apotheosis)
+Recette : une table d'enchantement entourée de 3 arcanites, sur 3 obsidiennes pleureuses. Les bibliothèques placées autour (mêmes emplacements qu'une table classique, un bloc d'air entre les deux) lui donnent trois statistiques, visibles dans son interface :
+- **Puissance** : le niveau maximal d'enchantement est le double (jusqu'à **100**, contre 30 pour une table classique). Chaque bibliothèque n'ajoute de la puissance que jusqu'à son **plafond** : il faut de meilleures bibliothèques pour aller plus haut.
+- **Hasard** : fait varier la puissance de chaque enchantement, en plus ou en moins (15 % de base).
+- **Arcane** : rend les enchantements rares aussi probables que les communs, en ajoute parfois un de plus, et dès **25 %** donne accès aux **enchantements trésors** (Raccommodage, Lié à l'âme, Second souffle…).
+- Un enchantement assez puissant **dépasse le niveau maximal habituel** (jusqu'à +3 : Tranchant VIII, Hémorragie VI…).
+
+| Bibliothèque | Puissance | Plafond | Hasard | Arcane | Recette (autour d'une bibliothèque) |
+|---|---|---|---|---|---|
+| Bibliothèque classique | +1 | 15 | — | — | — |
+| Renforcée | +1,5 | 20 | +3 % | — | 4 ardoise des abîmes polie |
+| De mithril | +2 | 25 | — | +4 % | 4 lingots de mithril |
+| Ancrée | +1 | 30 | **−12 %** | — | 4 obsidiennes + 4 chaînes (stabilise) |
+| Infernale | +2,5 | 30 | +8 % | — | briques du Nether + bâtons de blaze |
+| Abyssale | +2,5 | 30 | — | +6 % | briques de prismarine + cristaux |
+| D'arcanite | +3 | 35 | +2 % | +8 % | 4 arcanites |
+| D'adamantite | +4 | 40 | +4 % | +4 % | 4 lingots d'adamantite |
+| Draconique | +5 | 50 | +5 % | +12 % | briques de pierre de l'End + souffle du dragon |
+
+Les bibliothèques du mod alimentent aussi les tables classiques (plafonnées à 30 niveaux).
 
 ### Magie
 Mana de base : 20 (+5 par Intelligence, +15 par pièce d'armure d'arcanite). Clic droit avec un bâton pour lancer son sort.
