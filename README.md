@@ -236,7 +236,9 @@ Forge d'armes : plan de marteau + 5 lingots + hampe.
 
 ### Interface
 - **K** : menu du personnage (inventaire, artisanat, compétences/stats, carte, paramètres).
-- **Carte** : onglet du menu avec position, biome, dimension, jour et monstres proches. **M** : affiche/masque la mini-carte.
+- **Carte** : onglet du menu avec position, biome, dimension et jour. **M** : affiche/masque la mini-carte.
+  - Les **monstres** apparaissent en petites figurines (les boss plus grands ; statues et mimiques endormies restent cachées), les **objets au sol** en points rouges, les autres joueurs en points blancs.
+  - **Vue des grottes** : sous terre, la carte montre les galeries autour de votre hauteur (sol des grottes, roche en noir, niveaux plus bas assombris, eau et lave visibles) et la mini-carte affiche « Grottes · Y ».
 - Boussole en haut, plaque de la cible (niveau, nom, vie), barres de boss ornées (compactes pour les champions).
 
 ### Fusion de minerais

@@ -498,20 +498,29 @@ public class CharacterScreen extends AbstractContainerScreen<CharacterMenu> {
                 .orElse(Component.literal("?"));
         line = info(g, Component.translatable("screen.arcanequest.map.biome"), biome, infoX, line);
         var dimension = minecraft.level.dimension().location();
-        line = info(g, Component.translatable("screen.arcanequest.map.dimension"),
-                Component.translatable("dimension.arcanequest." + dimension.getPath()), infoX, line);
+        MutableComponent where = Component.translatable("dimension.arcanequest." + dimension.getPath());
+        if (WorldMap.isUnderground()) {
+            where.append(" · ").append(Component.translatable("screen.arcanequest.map.view_cave"));
+        }
+        line = info(g, Component.translatable("screen.arcanequest.map.dimension"), where, infoX, line);
         long day = minecraft.level.getDayTime() / 24000L + 1;
         line = info(g, Component.translatable("screen.arcanequest.map.day"), Component.literal(String.valueOf(day)), infoX, line);
-        g.fill(infoX, line + 4, infoX + 3, line + 7, 0xFFE03030);
-        g.drawString(font, Component.translatable("screen.arcanequest.map.legend_mob"), infoX + 6, line + 2, UiKit.TEXT_DIM, false);
-        g.fill(infoX, line + 16, infoX + 3, line + 19, 0xFFFFFFFF);
-        g.drawString(font, Component.translatable("screen.arcanequest.map.legend_player"), infoX + 6, line + 14, UiKit.TEXT_DIM, false);
+        g.pose().pushPose();
+        g.pose().translate(infoX - 2, line - 1, 0);
+        g.pose().scale(0.5F, 0.5F, 1.0F);
+        g.renderItem(new ItemStack(Items.ZOMBIE_HEAD), 0, 0);
+        g.pose().popPose();
+        g.drawString(font, Component.translatable("screen.arcanequest.map.legend_mob"), infoX + 8, line, UiKit.TEXT_DIM, false);
+        g.fill(infoX + 1, line + 12, infoX + 4, line + 15, 0xFFE02020);
+        g.drawString(font, Component.translatable("screen.arcanequest.map.legend_item"), infoX + 8, line + 10, UiKit.TEXT_DIM, false);
+        g.fill(infoX + 1, line + 22, infoX + 4, line + 25, 0xFFFFFFFF);
+        g.drawString(font, Component.translatable("screen.arcanequest.map.legend_player"), infoX + 8, line + 20, UiKit.TEXT_DIM, false);
     }
 
     private int info(GuiGraphics g, Component label, Component value, int x, int y) {
         g.drawString(font, label, x, y, UiKit.GOLD, false);
         g.drawString(font, value, x, y + 10, UiKit.TEXT, false);
-        return y + 24;
+        return y + 22;
     }
 
     private static Component bonus(Stat stat, int value) {

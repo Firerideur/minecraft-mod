@@ -112,5 +112,9 @@ public final class ArcaneHud {
         g.blit(UiKit.ATLAS, x + MINIMAP_SIZE - 5, y - 4, 109, 0, 9, 9);
         g.blit(UiKit.ATLAS, x - 4, y + MINIMAP_SIZE - 5, 100, 9, 9, 9);
         g.blit(UiKit.ATLAS, x + MINIMAP_SIZE - 5, y + MINIMAP_SIZE - 5, 109, 9, 9, 9);
+        if (WorldMap.isUnderground() && mc.player != null) {
+            Component cave = Component.translatable("hud.arcanequest.map.cave", mc.player.getBlockY());
+            g.drawCenteredString(mc.font, cave, x + MINIMAP_SIZE / 2, y + MINIMAP_SIZE + 5, UiKit.GOLD_LIGHT);
+        }
     }
 }
