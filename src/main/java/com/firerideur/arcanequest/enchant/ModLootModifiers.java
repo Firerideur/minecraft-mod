@@ -1,6 +1,7 @@
 package com.firerideur.arcanequest.enchant;
 
 import com.firerideur.arcanequest.ArcaneQuest;
+import com.firerideur.arcanequest.jobs.JobLootModifier;
 import com.mojang.serialization.MapCodec;
 import net.minecraftforge.common.loot.IGlobalLootModifier;
 import net.minecraftforge.registries.DeferredRegister;
@@ -13,6 +14,8 @@ public final class ModLootModifiers {
 
     public static final RegistryObject<MapCodec<EnchantedLootModifier>> ENCHANTED_LOOT =
             LOOT_MODIFIERS.register("enchanted_loot", () -> EnchantedLootModifier.CODEC);
+    public static final RegistryObject<MapCodec<JobLootModifier>> JOB_LOOT =
+            LOOT_MODIFIERS.register("job_loot", () -> JobLootModifier.CODEC);
 
     private ModLootModifiers() {}
 }

@@ -22,6 +22,7 @@ import net.minecraft.resources.ResourceLocation;
 import com.firerideur.arcanequest.enchant.EnchantmentEvents;
 import com.firerideur.arcanequest.enchant.ModEffects;
 import com.firerideur.arcanequest.enchant.ModLootModifiers;
+import com.firerideur.arcanequest.jobs.JobEvents;
 import com.firerideur.arcanequest.worldgen.ModWorldgen;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
@@ -63,6 +64,7 @@ public class ArcaneQuest {
         MinecraftForge.EVENT_BUS.register(SkillRuntime.class);
         MinecraftForge.EVENT_BUS.register(Gates.class);
         MinecraftForge.EVENT_BUS.register(EnchantmentEvents.class);
+        MinecraftForge.EVENT_BUS.register(JobEvents.class);
         MinecraftForge.EVENT_BUS.register(MobEvents.class);
         MinecraftForge.EVENT_BUS.register(WeaponEvents.class);
         MinecraftForge.EVENT_BUS.register(HammerItem.class);

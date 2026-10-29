@@ -1,6 +1,7 @@
 {
   "replace": false,
   "entries": [
+    "arcanequest:job_loot",
     "arcanequest:enchanted_loot"
   ]
 }

@@ -189,6 +189,19 @@ Le sous-sol de l'Overworld est beaucoup plus spectaculaire (nouveaux mondes ou n
   - Les grottes ordinaires, les grottes luxuriantes, les grottes de spéléothèmes et les abîmes restent comme dans le jeu de base.
 - `/aq cave` : la région où vous êtes et la plus proche de chaque type ; `/aq cave tp <type>` vous y téléporte (op).
 
+### Métiers
+Cinq métiers, de niveau 1 à 50, qui progressent en faisant le travail (menu **K → Métiers** : niveau, barre d'expérience, bonus ; survoler un métier montre ses atouts). Chaque gain affiche « +XP » et chaque niveau un grand titre ; un niveau de métier donne aussi de l'expérience de personnage.
+
+| Métier | Expérience | Bonus (grandit avec le niveau) | Atouts débloqués |
+|---|---|---|---|
+| **Mineur** | Minerais (3 pour le charbon… 14 diamant, 20 adamantite, 25 débris antiques), un peu la pierre | Vitesse de minage +1 %/niv., double minerai 0,6 %/niv. | 15 : vision nocturne sous Y 0 · 30 : +50 % d'XP des minerais · 50 : doubles parfois triples |
+| **Bûcheron** | Bûches | Vitesse de coupe +1,5 %/niv., double bûche 0,8 %/niv. | 15 : pommes · 30 : Célérité après chaque bûche · 50 : pommes dorées |
+| **Fermier** | Cultures mûres, reproduction des animaux | Double récolte 1 %/niv. | 10 : **replantation automatique** · 25 : fait pousser les cultures autour · 40 : doubles parfois triples |
+| **Chasseur** | Monstres et animaux tués (plus pour les forts et les boss) | Dégâts contre les créatures +0,5 %/niv., double butin 1 %/niv. | 15 : +25 % d'XP de classe · 30 : émeraudes · 45 : chaque victime rend 1 cœur |
+| **Pêcheur** | Pêche (plus pour les trésors) | Double prise 0,8 %/niv. | 15 : trésors en plus · 30 : canne inusable · 45 : cœur de la mer |
+
+`/aq job <métier> <niveau> [joueur]` règle le niveau d'un métier (op).
+
 ### Enchantements (30 nouveaux)
 Ils s'obtiennent à la table d'enchantement (classique ou arcanique), dans les coffres et chez les villageois. Les livres enchantés du mod affichent ce que fait chaque enchantement.
 

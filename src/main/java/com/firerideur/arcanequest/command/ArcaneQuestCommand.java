@@ -1,6 +1,7 @@
 package com.firerideur.arcanequest.command;
 
 import com.firerideur.arcanequest.dungeon.Gates;
+import com.firerideur.arcanequest.jobs.Job;
 import com.firerideur.arcanequest.network.ModNetwork;
 import com.firerideur.arcanequest.stats.PlayerClass;
 import com.firerideur.arcanequest.stats.PlayerStats;
@@ -59,6 +60,7 @@ public final class ArcaneQuestCommand {
                         .then(Commands.argument("stars", IntegerArgumentType.integer(1, Gates.MAX_STARS))
                                 .executes(ctx -> openGate(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "stars")))))
                 .then(caveCommand())
+                .then(jobCommand())
                 .then(Commands.literal("reset")
                         .executes(ctx -> reset(ctx.getSource(), ctx.getSource().getPlayerOrException()))
                         .then(Commands.argument("player", EntityArgument.player())
@@ -111,6 +113,29 @@ public final class ArcaneQuestCommand {
         modify(player, stats -> stats.setPlayerClass(playerClass));
         source.sendSuccess(() -> Component.translatable("command.arcanequest.class_set", player.getDisplayName(),
                 playerClass.displayName()), true);
+        return 1;
+    }
+
+    /** {@code /aq job <job> <level> [player]}: sets a job's level (for testing). */
+    private static LiteralArgumentBuilder<CommandSourceStack> jobCommand() {
+        var command = Commands.literal("job");
+        for (Job job : Job.values()) {
+            command.then(Commands.literal(job.key()).then(Commands.argument("level", IntegerArgumentType.integer(1, Job.MAX_LEVEL))
+                    .executes(ctx -> setJob(ctx.getSource(), ctx.getSource().getPlayerOrException(), job,
+                            IntegerArgumentType.getInteger(ctx, "level")))
+                    .then(Commands.argument("player", EntityArgument.player())
+                            .executes(ctx -> setJob(ctx.getSource(), EntityArgument.getPlayer(ctx, "player"), job,
+                                    IntegerArgumentType.getInteger(ctx, "level"))))));
+        }
+        return command;
+    }
+
+    private static int setJob(CommandSourceStack source, ServerPlayer player, Job job, int level) {
+        StatsCapability.get(player).ifPresent(stats -> {
+            stats.setJobLevel(job, level);
+            ModNetwork.sync(player);
+        });
+        source.sendSuccess(() -> Component.translatable("command.arcanequest.job_set", job.displayName(), level, player.getDisplayName()), true);
         return 1;
     }
 

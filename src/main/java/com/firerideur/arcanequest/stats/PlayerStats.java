@@ -1,5 +1,6 @@
 package com.firerideur.arcanequest.stats;
 
+import com.firerideur.arcanequest.jobs.Job;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraftforge.common.capabilities.AutoRegisterCapability;
 
@@ -22,6 +23,12 @@ public class PlayerStats {
     private float mana;
     /** One bit per boss defeated (see {@link PlayerClass.BossKills}), for hidden classes. */
     private int bossKills;
+    private final int[] jobLevels = new int[Job.values().length];
+    private final long[] jobXp = new long[Job.values().length];
+
+    {
+        Arrays.fill(jobLevels, 1);
+    }
 
     /** Experience needed to go from {@code level} to {@code level + 1}. */
     public static long xpForNextLevel(int level) {
@@ -123,6 +130,35 @@ public class PlayerStats {
         points = (level - 1) * POINTS_PER_LEVEL;
     }
 
+    public int getJobLevel(Job job) {
+        return jobLevels[job.ordinal()];
+    }
+
+    public long getJobXp(Job job) {
+        return jobXp[job.ordinal()];
+    }
+
+    /** Adds job experience. Returns the number of job levels gained. */
+    public int addJobXp(Job job, long amount) {
+        int i = job.ordinal();
+        int gained = 0;
+        jobXp[i] += amount;
+        while (jobLevels[i] < Job.MAX_LEVEL && jobXp[i] >= Job.xpForNextLevel(jobLevels[i])) {
+            jobXp[i] -= Job.xpForNextLevel(jobLevels[i]);
+            jobLevels[i]++;
+            gained++;
+        }
+        if (jobLevels[i] >= Job.MAX_LEVEL) {
+            jobXp[i] = 0;
+        }
+        return gained;
+    }
+
+    public void setJobLevel(Job job, int level) {
+        jobLevels[job.ordinal()] = Math.max(1, Math.min(Job.MAX_LEVEL, level));
+        jobXp[job.ordinal()] = 0;
+    }
+
     public void copyFrom(PlayerStats other) {
         level = other.level;
         xp = other.xp;
@@ -131,6 +167,8 @@ public class PlayerStats {
         playerClass = other.playerClass;
         mana = other.mana;
         bossKills = other.bossKills;
+        System.arraycopy(other.jobLevels, 0, jobLevels, 0, jobLevels.length);
+        System.arraycopy(other.jobXp, 0, jobXp, 0, jobXp.length);
     }
 
     public CompoundTag save() {
@@ -144,6 +182,14 @@ public class PlayerStats {
         tag.putString("class", playerClass.key());
         tag.putFloat("mana", mana);
         tag.putInt("boss_kills", bossKills);
+        CompoundTag jobs = new CompoundTag();
+        for (Job job : Job.values()) {
+            CompoundTag entry = new CompoundTag();
+            entry.putInt("level", getJobLevel(job));
+            entry.putLong("xp", getJobXp(job));
+            jobs.put(job.key(), entry);
+        }
+        tag.put("jobs", jobs);
         return tag;
     }
 
@@ -157,5 +203,11 @@ public class PlayerStats {
         playerClass = PlayerClass.byKey(tag.getString("class"));
         mana = tag.getFloat("mana");
         bossKills = tag.getInt("boss_kills");
+        CompoundTag jobs = tag.getCompound("jobs");
+        for (Job job : Job.values()) {
+            CompoundTag entry = jobs.getCompound(job.key());
+            jobLevels[job.ordinal()] = Math.max(1, Math.min(Job.MAX_LEVEL, entry.contains("level") ? entry.getInt("level") : 1));
+            jobXp[job.ordinal()] = entry.getLong("xp");
+        }
     }
 }

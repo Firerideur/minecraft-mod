@@ -195,5 +195,7 @@ def generate(write_json, data, lang_fr, lang_en):
     write_json(items / "tool_or_weapon.json", {"values": ["#minecraft:enchantable/mining", "#minecraft:enchantable/weapon"]})
     # Autosmelt and Telekinesis on block drops
     write_json(data / MODID / "loot_modifiers" / "enchanted_loot.json", {"type": f"{MODID}:enchanted_loot", "conditions": []})
+    # Jobs first (double harvests), so Telekinesis then takes everything
+    write_json(data / MODID / "loot_modifiers" / "job_loot.json", {"type": f"{MODID}:job_loot", "conditions": []})
     write_json(data / "forge" / "loot_modifiers" / "global_loot_modifiers.json",
-               {"replace": False, "entries": [f"{MODID}:enchanted_loot"]})
+               {"replace": False, "entries": [f"{MODID}:job_loot", f"{MODID}:enchanted_loot"]})

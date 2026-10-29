@@ -4,6 +4,7 @@ import com.firerideur.arcanequest.character.CharacterMenu;
 import com.firerideur.arcanequest.character.CharacterMenu.View;
 import com.firerideur.arcanequest.client.ui.GoldButton;
 import com.firerideur.arcanequest.client.ui.UiKit;
+import com.firerideur.arcanequest.jobs.Job;
 import com.firerideur.arcanequest.magic.Mana;
 import com.firerideur.arcanequest.network.ChooseClassPacket;
 import com.firerideur.arcanequest.network.ModNetwork;
@@ -42,7 +43,7 @@ public class CharacterScreen extends AbstractContainerScreen<CharacterMenu> {
     private static final int HEIGHT = 170;
     /** Leave room for the HUD medallion and bars above the menu. */
     private static final int MIN_TOP = 50;
-    private static final int TAB_Y = 2, TAB_SPACING = 26;
+    private static final int TAB_Y = 2, TAB_SPACING = 22;
     private static final int SKILL_ROW_Y = 50, SKILL_ROW_H = 14, SKILLS_H = 154;
     private static final int CLASS_Y = 116;
 
@@ -51,6 +52,7 @@ public class CharacterScreen extends AbstractContainerScreen<CharacterMenu> {
         CRAFTING("crafting", new ItemStack(Items.CRAFTING_TABLE)),
         SKILLS("skills", new ItemStack(Items.EXPERIENCE_BOTTLE)),
         ABILITIES("abilities", new ItemStack(Items.ENCHANTED_BOOK)),
+        JOBS("jobs", new ItemStack(Items.IRON_PICKAXE)),
         MAP("map", new ItemStack(Items.FILLED_MAP)),
         SETTINGS("settings", new ItemStack(Items.COMPARATOR));
 
@@ -119,7 +121,7 @@ public class CharacterScreen extends AbstractContainerScreen<CharacterMenu> {
         lastTab = newTab;
         menu.setView(switch (newTab) {
             case CRAFTING -> View.CRAFTING;
-            case SKILLS, ABILITIES -> View.SKILLS;
+            case SKILLS, ABILITIES, JOBS -> View.SKILLS;
             case MAP -> View.MAP;
             default -> View.INVENTORY;
         });
@@ -207,6 +209,8 @@ public class CharacterScreen extends AbstractContainerScreen<CharacterMenu> {
         renderTooltip(g, mouseX, mouseY);
         if (tab == Tab.ABILITIES) {
             renderAbilityTooltip(g, mouseX, mouseY);
+        } else if (tab == Tab.JOBS) {
+            renderJobTooltip(g, mouseX, mouseY);
         } else if (tab == Tab.SKILLS) {
             renderClassTooltip(g, mouseX, mouseY);
         }
@@ -219,6 +223,8 @@ public class CharacterScreen extends AbstractContainerScreen<CharacterMenu> {
             renderSkills(g);
         } else if (tab == Tab.ABILITIES) {
             renderAbilities(g);
+        } else if (tab == Tab.JOBS) {
+            renderJobs(g);
         } else if (tab == Tab.MAP) {
             renderMap(g, partialTick);
         } else {
@@ -448,6 +454,65 @@ public class CharacterScreen extends AbstractContainerScreen<CharacterMenu> {
         font.getSplitter().splitLines(playerClass.lore(), 240, Style.EMPTY)
                 .forEach(line -> lines.add(Component.literal(line.getString()).withStyle(ChatFormatting.ITALIC).withColor(UiKit.TEXT_DIM)));
         g.renderComponentTooltip(font, lines, mouseX, mouseY);
+    }
+
+    private static final int JOB_ROW_Y = 24, JOB_ROW_H = 26;
+
+    /** Each job: icon, level, experience bar and its current bonus; hovering shows its perks. */
+    private void renderJobs(GuiGraphics g) {
+        int x = leftPos + CharacterMenu.INVENTORY_X;
+        int y = topPos;
+        int w = CharacterMenu.EQUIPMENT_X + CharacterMenu.EQUIPMENT_W - CharacterMenu.INVENTORY_X;
+        UiKit.panel(g, x, y, w, SKILLS_H);
+        UiKit.title(g, font, Component.translatable("screen.arcanequest.tab.jobs"), x + 8, y + 9, w - 16);
+        PlayerStats stats = ClientStats.get();
+        for (Job job : Job.values()) {
+            int rowY = y + JOB_ROW_Y + job.ordinal() * JOB_ROW_H;
+            int level = stats.getJobLevel(job);
+            UiKit.slot(g, x + 10, rowY, false);
+            g.renderItem(new ItemStack(job.icon()), x + 11, rowY + 1);
+            g.drawString(font, job.displayName(), x + 34, rowY, UiKit.GOLD_LIGHT, false);
+            Component levelText = Component.translatable("screen.arcanequest.job_level", level);
+            g.drawString(font, levelText, x + 34 + font.width(job.displayName()) + 6, rowY, UiKit.TEXT, false);
+            boolean max = level >= Job.MAX_LEVEL;
+            long next = Job.xpForNextLevel(level);
+            float progress = max ? 1.0F : stats.getJobXp(job) / (float) next;
+            int barX = x + 34, barW = 120;
+            UiKit.bar(g, barX, rowY + 12, barW, 4, progress, jobColor(job));
+            UiKit.barText(g, font, max ? "MAX" : stats.getJobXp(job) + " / " + next, barX + barW / 2, rowY + 12, 0.5F);
+            g.pose().pushPose();
+            g.pose().translate(barX + barW + 10, rowY + 4, 0);
+            g.pose().scale(0.6F, 0.6F, 1);
+            g.drawWordWrap(font, job.bonus(level), 0, 0, (int) ((w - barW - 54) / 0.6F), UiKit.TEXT_DIM);
+            g.pose().popPose();
+        }
+    }
+
+    private void renderJobTooltip(GuiGraphics g, int mouseX, int mouseY) {
+        int x = leftPos + CharacterMenu.INVENTORY_X;
+        int w = CharacterMenu.EQUIPMENT_X + CharacterMenu.EQUIPMENT_W - CharacterMenu.INVENTORY_X;
+        int row = Math.floorDiv(mouseY - topPos - JOB_ROW_Y + 2, JOB_ROW_H);
+        if (mouseX < x || mouseX > x + w || row < 0 || row >= Job.values().length) {
+            return;
+        }
+        Job job = Job.values()[row];
+        int level = ClientStats.get().getJobLevel(job);
+        List<Component> lines = new ArrayList<>();
+        lines.add(job.displayName().copy().withStyle(ChatFormatting.GOLD));
+        lines.add(Component.translatable("screen.arcanequest.job_level", level).withStyle(ChatFormatting.WHITE));
+        lines.add(job.bonus(level).copy().withStyle(ChatFormatting.GRAY));
+        lines.add(Component.translatable("job.arcanequest." + job.key() + ".how").withStyle(ChatFormatting.DARK_AQUA));
+        for (int perk = 0; perk < job.perkCount(); perk++) {
+            boolean unlocked = job.hasPerk(level, perk);
+            lines.add(Component.literal(unlocked ? "✔ " : "✖ ").append(job.perk(perk))
+                    .withStyle(unlocked ? ChatFormatting.GREEN : ChatFormatting.DARK_GRAY));
+        }
+        g.renderComponentTooltip(font, lines, mouseX, mouseY);
+    }
+
+    private static int jobColor(Job job) {
+        Integer color = job.color().getColor();
+        return 0xFF000000 | (color == null ? 0xAAAAAA : color);
     }
 
     private void renderAbilityTooltip(GuiGraphics g, int mouseX, int mouseY) {
